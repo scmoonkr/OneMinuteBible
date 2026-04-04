@@ -5,6 +5,7 @@ import genesisImageB from '~/assets/images/genesis_1_20_23.png';
 import genesisImageC from '~/assets/images/genesis_1_26_28.png';
 import cardImage1 from '~/assets/images/card1.png';
 import cardImage2 from '~/assets/images/card2.png';
+import infographImage from '~/assets/images/infograph.png';
 
 const shareCards = [
   {
@@ -148,7 +149,34 @@ function goToVerse(reference: string) {
         </div>
       </div>
     </section>
+    
+    <section class="home-hero">
+      <img
+        :src="infographImage"
+        alt="Bible reading"
+        class="home-hero-image"
+      >
+      <div class="home-hero-overlay" />
 
+      <!-- <div class="home-hero-content">
+        <h1 class="home-hero-title">
+          읽고, 멈추고, 남겨보세요
+        </h1>
+
+        <p class="home-hero-copy">
+          성경을 색으로 읽어보세요
+        </p>
+
+        <button
+          type="button"
+          class="home-hero-button"
+          @click="goRead"
+        >
+          말씀 시작하기
+        </button>
+      </div> -->
+    </section>
+    
     <section class="home-preview">
       <div class="home-preview-list home-preview-list--shares">
         <div class="home-preview-heading">
@@ -192,6 +220,16 @@ function goToVerse(reference: string) {
         <HomeStorySlider :image="cardImage1" :slides="leftStorySlides" :interval-ms="5000" />
         <HomeStorySlider :image="cardImage2" :slides="rightStorySlides" :interval-ms="5000" />
       </div>
+    </section>
+    <section class="home-bottom-cta">
+      <p class="home-bottom-cta-copy">말씀으로 가기</p>
+      <button
+        type="button"
+        class="home-bottom-cta-button"
+        @click="goRead"
+      >
+        말씀 시작하기
+      </button>
     </section>
   </div>
 </template>
