@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
       aria-label="이전 슬라이드"
       @click="goPrev"
     >
-      <span aria-hidden="true">‹</span>
+      <span aria-hidden="true">&lsaquo;</span>
     </button>
 
     <div class="story-slider-viewport">
@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
       aria-label="다음 슬라이드"
       @click="goNext"
     >
-      <span aria-hidden="true">›</span>
+      <span aria-hidden="true">&rsaquo;</span>
     </button>
 
     <div class="story-slider-dots">
