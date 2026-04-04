@@ -43,6 +43,50 @@ const shareCards = [
   },
 ];
 
+const storySlides = [
+  {
+    id: 'slide-1',
+    chapter: '1장',
+    title: ['처음은', '누가 시작했을까요'],
+  },
+  {
+    id: 'slide-2',
+    chapter: '2장',
+    title: ['아무것도 없던 곳에서', '무엇이 시작되었습니다'],
+  },
+  {
+    id: 'slide-3',
+    chapter: '3장',
+    title: ['빛이 생기고', '어둠이 나뉘고'],
+  },
+  {
+    id: 'slide-4',
+    chapter: '4장',
+    title: ['하늘과 땅이', '자리를 잡고'],
+  },
+  {
+    id: 'slide-5',
+    chapter: '5장',
+    title: ['생명이', '하나씩 채워집니다'],
+  },
+  {
+    id: 'slide-6',
+    chapter: '6장',
+    title: ['질서가', '조금씩 만들어집니다'],
+  },
+  {
+    id: 'slide-7',
+    chapter: '7장',
+    title: ['그 마지막에', '사람이 놓입니다'],
+  },
+  {
+    id: 'slide-8',
+    chapter: '8장',
+    title: ['지금 내 삶은', '누가 시작하고 있나요'],
+    footer: ['함께 성경을 읽는 시온입니다 😊', '시온은 말씀으로 시작합니다'],
+  },
+];
+
 function goRead() {
   return navigateTo('/read');
 }
@@ -136,18 +180,47 @@ function goToVerse(reference: string) {
       </div>
     </section>
 
-    <section class="home-cta">
-      <p class="home-cta-copy">
-        이미 많은 사람들이 말씀 위에 나눔을 남기고 있습니다
-      </p>
+    <section class="home-story">
+      <div class="home-story-list">
+        <article
+          v-for="slide in storySlides"
+          :key="slide.id"
+          class="home-story-card"
+        >
+          <img
+            src="/Images/card1.png"
+            alt=""
+            class="home-story-card-bg"
+          >
 
-      <button
-        type="button"
-        class="home-cta-button"
-        @click="goRead"
-      >
-        말씀 시작하기
-      </button>
+          <div class="home-story-card-overlay">
+            <span class="home-story-card-chapter">
+              [{{ slide.chapter }}]
+            </span>
+
+            <h2 class="home-story-card-title">
+              <span
+                v-for="line in slide.title"
+                :key="`${slide.id}-${line}`"
+              >
+                {{ line }}
+              </span>
+            </h2>
+
+            <p
+              v-if="slide.footer"
+              class="home-story-card-footer"
+            >
+              <span
+                v-for="line in slide.footer"
+                :key="`${slide.id}-${line}`"
+              >
+                {{ line }}
+              </span>
+            </p>
+          </div>
+        </article>
+      </div>
     </section>
   </div>
 </template>
