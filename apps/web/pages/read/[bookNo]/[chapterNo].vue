@@ -1,5 +1,6 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { BibleChapter, BibleVerse, ReadingPaint, ReflectionItem } from '~/composables/useBible';
+import { bibleBooks } from '~/data/bibleTable';
 
 type PaletteItem = {
   category: string;
@@ -35,6 +36,12 @@ const identity = useReaderIdentity();
 const bookNo = computed(() => Number(route.params.bookNo) || 1);
 const chapterNo = computed(() => Number(route.params.chapterNo) || 1);
 const readerId = computed(() => identity.readerId.value);
+const currentBookMeta = computed(() => bibleBooks.find((item) => item.bookNo === bookNo.value) || bibleBooks[0]);
+const bookLabel = computed(() => currentBookMeta.value?.church || chapter.value?.book || '창세기');
+const chapterBookShort = computed(() => currentBookMeta.value?.churchKor || bookLabel.value.charAt(0) || '창');
+const maxChapterNo = computed(() => currentBookMeta.value?.chapter || 1);
+const chapterLabel = computed(() => `${bookLabel.value} ${chapterNo.value}장`);
+const chapterInput = ref(String(chapterNo.value));
 const selectedCategory = ref(categoryPalette[0].category);
 const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
@@ -48,8 +55,6 @@ const paints = ref<ReadingPaint[]>([]);
 const reflections = ref<ReflectionItem[]>([]);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
-const chapterButtons = [1, 2, 3];
-
 const { data, pending, error } = await useAsyncData(
   () => `bible-read-${bookNo.value}-${chapterNo.value}`,
   () => bible.readChapter({ bookNo: bookNo.value, chapterNo: chapterNo.value }),
@@ -60,11 +65,26 @@ const { data, pending, error } = await useAsyncData(
 );
 
 const chapter = computed(() => data.value?.data ?? null);
-const chapterLabel = computed(() => `${chapter.value?.book || '창세기'} ${chapterNo.value}장`);
-const chapterBookShort = computed(() => {
-  const book = chapter.value?.book || '창세기';
-  return book.charAt(0) || '창';
+
+const visibleChapterNumbers = computed(() => {
+  const max = maxChapterNo.value;
+  const current = Math.min(Math.max(chapterNo.value, 1), max);
+  let start = Math.max(1, current - 2);
+  let end = Math.min(max, current + 2);
+
+  while (end - start < 4 && start > 1) {
+    start -= 1;
+  }
+
+  while (end - start < 4 && end < max) {
+    end += 1;
+  }
+
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 });
+
+const showLeadingEllipsis = computed(() => visibleChapterNumbers.value[0] > 1);
+const showTrailingEllipsis = computed(() => visibleChapterNumbers.value[visibleChapterNumbers.value.length - 1] < maxChapterNo.value);
 
 const paintMap = computed(() => {
   const map = new Map<number, ReadingPaint>();
@@ -95,6 +115,7 @@ const chapterStats = computed(() => {
 
   return [
     { label: '장 주제', value: chapter.value?.subject || '미정' },
+    { label: '전체 장 수', value: `${maxChapterNo.value}장` },
     { label: '블록 수', value: `${paragraphs.length}개` },
     { label: '직접 말씀', value: `${sayCount}개` },
     { label: '내가 칠한 절', value: `${selectedVerseIds.value.length}개` },
@@ -179,6 +200,54 @@ function getDisplayCategoryLabel(verse: BibleVerse) {
 
 function getVerseTextColor(verse: BibleVerse) {
   return verse.say ? '#bf2d2d' : '#2f261d';
+}
+
+function navigateTo(targetBookNo: number, targetChapterNo: number) {
+  const targetBook = bibleBooks.find((item) => item.bookNo === targetBookNo) || currentBookMeta.value;
+  const nextChapter = Math.min(Math.max(targetChapterNo, 1), targetBook.chapter);
+  router.push(`/read/${targetBook.bookNo}/${nextChapter}`);
+}
+
+function handleBookChange(event: Event) {
+  const nextBookNo = Number((event.target as HTMLSelectElement).value);
+  if (!nextBookNo) {
+    return;
+  }
+
+  const nextBook = bibleBooks.find((item) => item.bookNo === nextBookNo);
+  if (!nextBook) {
+    return;
+  }
+
+  navigateTo(nextBookNo, Math.min(chapterNo.value, nextBook.chapter));
+}
+
+function moveToFirstChapter() {
+  navigateTo(bookNo.value, 1);
+}
+
+function moveToPreviousChapter() {
+  navigateTo(bookNo.value, chapterNo.value - 1);
+}
+
+function moveToNextChapter() {
+  navigateTo(bookNo.value, chapterNo.value + 1);
+}
+
+function moveToLastChapter() {
+  navigateTo(bookNo.value, maxChapterNo.value);
+}
+
+function submitChapterInput() {
+  const nextChapterNo = Number(chapterInput.value);
+
+  if (!Number.isInteger(nextChapterNo)) {
+    setToast('장 번호를 숫자로 입력해 주세요.');
+    chapterInput.value = String(chapterNo.value);
+    return;
+  }
+
+  navigateTo(bookNo.value, nextChapterNo);
 }
 
 function handlePickCategory(category: string) {
@@ -336,12 +405,14 @@ watch(
   () => [bookNo.value, chapterNo.value, chapter.value?.paragraphs?.length],
   async () => {
     if (!chapter.value) {
+      chapterInput.value = String(chapterNo.value);
       return;
     }
 
     showSourceCategories.value = false;
     showAllSharing.value = false;
     reflectionText.value = '';
+    chapterInput.value = String(chapterNo.value);
     await loadChapterState();
   },
   { immediate: true },
@@ -352,14 +423,62 @@ watch(
   <div class="reading-page">
     <section class="mvp-card mvp-main">
       <section class="mvp-hero">
+        <div class="mvp-reading-nav">
+          <div class="mvp-reading-nav-row">
+            <label class="mvp-nav-field">
+              <span>성경선택</span>
+              <select class="mvp-nav-select" :value="bookNo" @change="handleBookChange">
+                <option v-for="book in bibleBooks" :key="book.bookNo" :value="book.bookNo">
+                  {{ book.church }}
+                </option>
+              </select>
+            </label>
+
+            <div class="mvp-nav-book-meta">
+              <span class="mvp-meta-pill">{{ currentBookMeta.churchKor }}</span>
+              <span class="mvp-meta-pill">전체 {{ maxChapterNo }}장</span>
+              <span class="mvp-meta-pill">DB: Bible</span>
+            </div>
+          </div>
+
+          <div class="mvp-reading-nav-row mvp-reading-nav-row--chapter">
+            <span class="mvp-nav-label">장선택</span>
+            <div class="mvp-chapter-pager">
+              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo <= 1" @click="moveToFirstChapter()">&lt;&lt;</button>
+              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo <= 1" @click="moveToPreviousChapter()">&lt;</button>
+              <span v-if="showLeadingEllipsis" class="mvp-nav-ellipsis">...</span>
+              <button
+                v-for="chapterItem in visibleChapterNumbers"
+                :key="chapterItem"
+                type="button"
+                :class="['mvp-chip-button', { active: chapterItem === chapterNo }]"
+                @click="navigateTo(bookNo, chapterItem)"
+              >
+                {{ chapterItem }}
+              </button>
+              <span v-if="showTrailingEllipsis" class="mvp-nav-ellipsis">...</span>
+              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo >= maxChapterNo" @click="moveToNextChapter()">&gt;</button>
+              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo >= maxChapterNo" @click="moveToLastChapter()">&gt;&gt;</button>
+            </div>
+
+            <div class="mvp-nav-input-wrap">
+              <label class="mvp-nav-field mvp-nav-field--inline">
+                <span>장입력</span>
+                <input v-model="chapterInput" class="mvp-nav-input" inputmode="numeric" @keyup.enter="submitChapterInput()" />
+              </label>
+              <button type="button" class="mvp-toolbar-button active" @click="submitChapterInput()">이동</button>
+            </div>
+          </div>
+        </div>
+
         <div class="mvp-hero-grid">
           <div>
             <p class="mvp-eyebrow">One Minute Bible Reading MVP</p>
             <p class="mvp-deck">원본 `bible_edit` 블록은 유지하고, 내가 고른 카테고리와 한 줄 나눔은 따로 저장합니다.</p>
             <h1 class="mvp-title">{{ chapterLabel }}</h1>
             <div class="mvp-meta-list">
-              <span class="mvp-meta-pill">책 {{ chapter?.bookNo || bookNo }}</span>
-              <span class="mvp-meta-pill">장 {{ chapter?.chapterNo || chapterNo }}</span>
+              <span class="mvp-meta-pill">책 {{ currentBookMeta.bookNo }}</span>
+              <span class="mvp-meta-pill">장 {{ chapterNo }}</span>
               <span class="mvp-meta-pill">블록 {{ chapter?.paragraphs?.length || 0 }}개</span>
               <span class="mvp-meta-pill">내가 칠한 절 {{ selectedVerseIds.length }}개</span>
             </div>
@@ -368,17 +487,6 @@ watch(
           <div class="mvp-hero-summary">
             <h2>{{ chapter?.subject || '장 주제 미정' }}</h2>
             <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p>
-            <div class="mvp-chapters">
-              <button
-                v-for="chapterItem in chapterButtons"
-                :key="chapterItem"
-                type="button"
-                :class="['mvp-chip-button', { active: chapterItem === chapterNo }]"
-                @click="router.push(`/read/${bookNo}/${chapterItem}`)"
-              >
-                창세기 {{ chapterItem }}장
-              </button>
-            </div>
           </div>
         </div>
       </section>
