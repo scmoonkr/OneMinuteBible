@@ -102,6 +102,10 @@ function goToVerse(reference: string) {
 
     <section class="home-preview">
       <div class="home-preview-list home-preview-list--shares">
+        <div class="home-preview-heading">
+          잠시 멈춤. 나눔
+        </div>
+
         <button
           v-for="card in shareCards"
           :key="card.id"

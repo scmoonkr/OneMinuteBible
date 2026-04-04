@@ -1557,6 +1557,15 @@ input {
   gap: 1.25rem;
 }
 
+.home-preview-heading {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #2b211a;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: left;
+}
+
 .home-preview-card {
   width: 100%;
   text-align: left;
