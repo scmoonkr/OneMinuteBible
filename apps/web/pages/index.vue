@@ -87,20 +87,6 @@ const storySlides = [
   },
 ];
 
-const currentStoryPage = ref(0);
-
-const storyPages = computed(() => {
-  const pages = [];
-
-  for (let index = 0; index < storySlides.length; index += 2) {
-    pages.push(storySlides.slice(index, index + 2));
-  }
-
-  return pages;
-});
-
-const storyPageCount = computed(() => storyPages.value.length);
-
 function goRead() {
   return navigateTo('/read');
 }
@@ -109,18 +95,6 @@ function goToVerse(reference: string) {
   const match = reference.match(/^창(\d+):/);
   const chapterNo = match?.[1] ?? '1';
   return navigateTo(`/read/1/${chapterNo}`);
-}
-
-function goPrevStoryPage() {
-  currentStoryPage.value = currentStoryPage.value === 0
-    ? storyPageCount.value - 1
-    : currentStoryPage.value - 1;
-}
-
-function goNextStoryPage() {
-  currentStoryPage.value = currentStoryPage.value === storyPageCount.value - 1
-    ? 0
-    : currentStoryPage.value + 1;
 }
 </script>
 
@@ -207,83 +181,7 @@ function goNextStoryPage() {
     </section>
 
     <section class="home-story">
-      <div class="home-story-header">
-        <strong>시온 슬라이드 뉴스</strong>
-
-        <div class="home-story-controls">
-          <button
-            type="button"
-            class="home-story-control"
-            @click="goPrevStoryPage"
-          >
-            이전
-          </button>
-
-          <span class="home-story-page">
-            {{ currentStoryPage + 1 }} / {{ storyPageCount }}
-          </span>
-
-          <button
-            type="button"
-            class="home-story-control"
-            @click="goNextStoryPage"
-          >
-            다음
-          </button>
-        </div>
-      </div>
-
-      <div class="home-story-viewport">
-        <div
-          class="home-story-track"
-          :style="{ transform: `translateX(-${currentStoryPage * 100}%)` }"
-        >
-          <div
-            v-for="(page, pageIndex) in storyPages"
-            :key="`page-${pageIndex}`"
-            class="home-story-page-panel"
-          >
-            <article
-              v-for="slide in page"
-              :key="slide.id"
-              class="home-story-card"
-            >
-              <img
-                src="/Images/card1.png"
-                alt=""
-                class="home-story-card-bg"
-              >
-
-              <div class="home-story-card-overlay">
-                <span class="home-story-card-chapter">
-                  [{{ slide.chapter }}]
-                </span>
-
-                <h2 class="home-story-card-title">
-                  <span
-                    v-for="line in slide.title"
-                    :key="`${slide.id}-${line}`"
-                  >
-                    {{ line }}
-                  </span>
-                </h2>
-
-                <p
-                  v-if="slide.footer"
-                  class="home-story-card-footer"
-                >
-                  <span
-                    v-for="line in slide.footer"
-                    :key="`${slide.id}-${line}`"
-                  >
-                    {{ line }}
-                  </span>
-                </p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div>
+      <HomeStorySlider :slides="storySlides" :interval-ms="5000" />
     </section>
   </div>
 </template>
