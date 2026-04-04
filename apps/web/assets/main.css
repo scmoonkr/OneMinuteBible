@@ -798,13 +798,17 @@ input {
 .mvp-segment-picked {
   display: flex;
   align-items: flex-start;
+  flex-wrap: nowrap;
   gap: 0.35rem;
   text-align: left;
   margin-top: 0.15rem;
 }
 
 .mvp-segment-picked-category {
+  flex: none;
+  white-space: nowrap;
   font-weight: 700;
+  font-size: 0.9rem;
   color: #4a3426;
 }
 
@@ -816,6 +820,8 @@ input {
 }
 
 .mvp-segment-picked-text {
+  flex: 1 1 auto;
+  min-width: 0;
   line-height: 1.6;
   font-size: 0.98rem;
 }
@@ -933,10 +939,14 @@ input {
 .mvp-share-card-line {
   display: flex;
   align-items: flex-start;
+  flex-wrap: nowrap;
   gap: 0.35rem;
 }
 
 .mvp-share-card-category {
+  flex: none;
+  white-space: nowrap;
+  font-size: 0.9rem;
   color: #4a3426;
 }
 
@@ -954,6 +964,8 @@ input {
 }
 
 .mvp-share-card-text {
+  flex: 1 1 auto;
+  min-width: 0;
   line-height: 1.6;
 }
 

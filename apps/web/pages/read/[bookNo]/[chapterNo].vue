@@ -340,13 +340,13 @@ function wrapCanvasText(
 function getCanvasSharePrefixWidth(
   context: CanvasRenderingContext2D,
   item: { category: string; verseNo: number },
-  titleFont: string,
-  titleSize: number,
+  categoryFont: string,
+  numberFont: string,
 ) {
   const categoryText = `[${item.category}]`;
-  context.font = titleFont;
+  context.font = categoryFont;
   const categoryWidth = context.measureText(categoryText).width;
-  context.font = `700 ${Math.max(18, titleSize - 8)}px "Noto Sans KR", sans-serif`;
+  context.font = numberFont;
   const numberWidth = context.measureText(String(item.verseNo)).width;
   return categoryWidth + 14 + numberWidth + 14;
 }
@@ -396,16 +396,17 @@ function getShareLayout(items: typeof sharedVerseDetails.value) {
   const fittedLayout = layoutPresets
     .map((preset) => {
       const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
-      const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
+      const titleFont = `600 ${Math.max(20, preset.bodySize - 2)}px "Noto Sans KR", sans-serif`;
       const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
+      const numberFont = `700 ${Math.max(18, preset.bodySize - 4)}px "Noto Sans KR", sans-serif`;
 
       const cardLayouts = items.map((item) => {
-        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, preset.titleSize);
+        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, numberFont);
         measure.font = bodyFont;
         const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
-        const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
+        const contentHeight = Math.max(preset.bodySize, verseLines.length * preset.lineHeight);
         const cardHeight = preset.cardPaddingY * 2 + contentHeight;
-        return { item, verseLines, cardHeight, prefixWidth };
+        return { item, verseLines, cardHeight, prefixWidth, numberFont };
       });
 
       const totalHeight = preset.outerPadding * 2
@@ -424,15 +425,16 @@ function getShareLayout(items: typeof sharedVerseDetails.value) {
     || (() => {
       const preset = layoutPresets[layoutPresets.length - 1];
       const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
-      const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
+      const titleFont = `600 ${Math.max(20, preset.bodySize - 2)}px "Noto Sans KR", sans-serif`;
       const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
+      const numberFont = `700 ${Math.max(18, preset.bodySize - 4)}px "Noto Sans KR", sans-serif`;
       const cardLayouts = items.map((item) => {
-        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, preset.titleSize);
+        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, numberFont);
         measure.font = bodyFont;
         const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
-        const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
+        const contentHeight = Math.max(preset.bodySize, verseLines.length * preset.lineHeight);
         const cardHeight = preset.cardPaddingY * 2 + contentHeight;
-        return { item, verseLines, cardHeight, prefixWidth };
+        return { item, verseLines, cardHeight, prefixWidth, numberFont };
       });
       const totalHeight = preset.outerPadding * 2
         + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
@@ -511,7 +513,7 @@ async function createShareImageBlobForItems(items: typeof sharedVerseDetails.val
 
   let currentY = preset.outerPadding;
 
-  cardLayouts.forEach(({ item, verseLines, cardHeight, prefixWidth }) => {
+  cardLayouts.forEach(({ item, verseLines, cardHeight, prefixWidth, numberFont }) => {
     const x = preset.outerPadding;
     const y = currentY;
     const cardWidth = width - preset.outerPadding * 2;
@@ -536,7 +538,7 @@ async function createShareImageBlobForItems(items: typeof sharedVerseDetails.val
     const categoryWidth = context.measureText(categoryText).width;
     const noX = startX + categoryWidth + 14;
     context.fillStyle = '#bf2d2d';
-    context.font = `700 ${Math.max(18, preset.titleSize - 8)}px "Noto Sans KR", sans-serif`;
+    context.font = numberFont;
     context.fillText(String(item.verseNo), noX, startY - 2);
 
     const verseX = startX + prefixWidth;
