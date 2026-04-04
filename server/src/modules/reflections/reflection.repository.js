@@ -1,4 +1,4 @@
-import { getDatabase } from '../../config/db.js';
+﻿import { getDatabase } from '../../config/db.js';
 
 const COLLECTION_NAME = 'reflections';
 
@@ -14,8 +14,27 @@ export async function listReflections(query = {}) {
     .toArray();
 }
 
-export async function insertReflection(document) {
+export async function upsertReflection(document) {
   const database = getDatabase();
-  await database.collection(COLLECTION_NAME).insertOne(document);
+  const filter = {
+    userNo: document.userNo,
+    bookNo: document.bookNo,
+    chapterNo: document.chapterNo,
+    verseRange: document.verseRange,
+  };
+
+  const { createdAt, ...updatable } = document;
+
+  await database.collection(COLLECTION_NAME).updateOne(
+    filter,
+    {
+      $set: updatable,
+      $setOnInsert: {
+        createdAt,
+      },
+    },
+    { upsert: true },
+  );
+
   return document;
 }

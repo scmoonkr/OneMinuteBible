@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs';
+﻿import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
@@ -11,6 +11,8 @@ import {
   findRefreshToken,
   findUserByEmail,
   findUserById,
+  findUserByNickname,
+  getNextUserNo,
   markPasswordResetTokenUsed,
   revokeRefreshToken,
   savePasswordResetToken,
@@ -36,7 +38,7 @@ function buildTokenId() {
 
 function sanitizeUser(user) {
   return {
-    userId: user.userId,
+    userNo: user.userNo,
     email: user.email,
     nickname: user.nickname,
     profileImage: user.profileImage || '',
@@ -52,6 +54,7 @@ async function issueTokens(user) {
   const accessToken = jwt.sign(
     {
       userId: user.userId,
+      userNo: user.userNo,
       email: user.email,
       nickname: user.nickname,
     },
@@ -62,6 +65,7 @@ async function issueTokens(user) {
   const refreshToken = jwt.sign(
     {
       userId: user.userId,
+      userNo: user.userNo,
       tokenId,
     },
     env.jwtRefreshSecret,
@@ -72,6 +76,7 @@ async function issueTokens(user) {
   await saveRefreshToken({
     tokenId,
     userId: user.userId,
+    userNo: user.userNo,
     email: user.email,
     createdAt: now,
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -97,13 +102,31 @@ function requireConfiguredKakao() {
   }
 }
 
+export async function checkNicknameAvailability(nicknameValue = '') {
+  const nickname = String(nicknameValue || '').trim();
+  if (!nickname) {
+    throw appError('Nickname is required.', 400);
+  }
+
+  const existingUser = await findUserByNickname(nickname);
+  return {
+    nickname,
+    available: !existingUser,
+  };
+}
+
 export async function signUp(body = {}) {
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
   const nickname = String(body.nickname || '').trim();
+  const nicknameChecked = body.nicknameChecked === true;
 
   if (!email || !password || !nickname) {
     throw appError('Email, password, and nickname are required.', 400);
+  }
+
+  if (!nicknameChecked) {
+    throw appError('Nickname duplicate check is required.', 400);
   }
 
   const existingUser = await findUserByEmail(email);
@@ -111,12 +134,19 @@ export async function signUp(body = {}) {
     throw appError('This email is already registered.', 409);
   }
 
+  const existingNickname = await findUserByNickname(nickname);
+  if (existingNickname) {
+    throw appError('This nickname is already in use.', 409);
+  }
+
   const now = new Date().toISOString();
   const userId = buildUserId();
+  const userNo = await getNextUserNo();
   const passwordHash = await bcrypt.hash(password, 10);
 
   const user = {
     userId,
+    userNo,
     email,
     nickname,
     profileImage: '',
@@ -128,6 +158,7 @@ export async function signUp(body = {}) {
 
   const account = {
     userId,
+    userNo,
     provider: 'local',
     providerUserId: email,
     email,
@@ -402,6 +433,7 @@ export async function loginWithKakaoCode(code) {
     const now = new Date().toISOString();
     user = {
       userId: buildUserId(),
+      userNo: await getNextUserNo(),
       email: kakaoEmail,
       nickname,
       profileImage,
@@ -415,6 +447,7 @@ export async function loginWithKakaoCode(code) {
 
   account = {
     userId: user.userId,
+    userNo: user.userNo,
     provider: 'kakao',
     providerUserId: kakaoId,
     email: kakaoEmail,

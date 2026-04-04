@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import type { BibleChapter, BibleVerse, ReadingPaint, ReflectionItem, SelectedVerseItem } from '~/composables/useBible';
+import type { BibleChapter, BibleVerse, ReflectionItem, SelectedVerseItem } from '~/composables/useBible';
 import { bibleBooks } from '~/data/bibleTable';
 
 type PaletteItem = {
@@ -25,13 +25,12 @@ const categoryPalette: PaletteItem[] = [
 ];
 
 const route = useRoute();
+const router = useRouter();
 const bible = useBible();
 const auth = useAuth();
-const identity = useReaderIdentity();
 
 const bookNo = computed(() => Number(route.params.bookNo) || 1);
 const chapterNo = computed(() => Number(route.params.chapterNo) || 1);
-const readerId = computed(() => identity.readerId.value);
 const currentBookMeta = computed(() => bibleBooks.find((item) => item.bookNo === bookNo.value) || bibleBooks[0]);
 const currentTestament = computed<'old' | 'new'>(() => currentBookMeta.value?.testament || 'old');
 const testamentBooks = computed(() => bibleBooks.filter((item) => item.testament === currentTestament.value));
@@ -45,13 +44,12 @@ const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
 const reflectionText = ref('');
 const toast = ref('');
+const copyingImageKey = ref('');
 const copyingMessage = ref(false);
-const savingPaintKey = ref('');
 const savingReflection = ref(false);
-const clearingPaints = ref(false);
-const paints = ref<ReadingPaint[]>([]);
-const reflections = ref<ReflectionItem[]>([]);
 const localSelectedVerseItems = ref<SelectedVerseItem[]>([]);
+const reflections = ref<ReflectionItem[]>([]);
+const selectedShareReflection = ref<ReflectionItem | null>(null);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { data, pending, error } = await useAsyncData(
@@ -77,38 +75,10 @@ const visibleChapterNumbers = computed(() => {
 });
 const showLeadingEllipsis = computed(() => visibleChapterNumbers.value[0] > 1);
 const showTrailingEllipsis = computed(() => visibleChapterNumbers.value[visibleChapterNumbers.value.length - 1] < maxChapterNo.value);
-
-function normalizeSelectedVerseItems(items: unknown): SelectedVerseItem[] {
-  if (!Array.isArray(items)) return [];
-
-  const normalized: SelectedVerseItem[] = [];
-
-  items.forEach((item: any) => {
-      const verseNo = Number(item?.verseNo);
-      const category = String(item?.category || '').trim();
-      const verse = String(item?.verse || '').trim();
-
-      if (!Number.isInteger(verseNo) || verseNo < 1 || !category || !verse) {
-        return;
-      }
-
-      normalized.push({
-        verseNo,
-        category,
-        verse,
-        godSay: item?.godSay === true,
-      });
-  });
-
-  return normalized.filter((item, index, array) => {
-    const key = `${item.verseNo}|${item.category}|${item.verse}|${item.godSay ? '1' : '0'}`;
-    return array.findIndex((candidate) => `${candidate.verseNo}|${candidate.category}|${candidate.verse}|${candidate.godSay ? '1' : '0'}` === key) === index;
-  });
-}
-
 const selectedVerseItems = computed(() => localSelectedVerseItems.value);
 const selectedVerseIds = computed(() => [...new Set(selectedVerseItems.value.map((item) => item.verseNo))].sort((a, b) => a - b));
-const myReflections = computed(() => reflections.value.filter((item) => item.userId === readerId.value));
+const currentUserNo = computed(() => auth.currentUser.value?.userNo || 0);
+const myReflections = computed(() => reflections.value.filter((item) => item.userNo === currentUserNo.value));
 const sharingList = computed(() => (showAllSharing.value ? reflections.value : myReflections.value));
 const latestMyReflection = computed(() => myReflections.value[0] || null);
 
@@ -132,6 +102,39 @@ function setToast(message: string) {
   }, 2400);
 }
 
+function formatRelativeTime(value?: string | null) {
+  if (!value) return '';
+
+  const targetTime = new Date(value).getTime();
+  if (Number.isNaN(targetTime)) return '';
+
+  const diffSeconds = Math.max(1, Math.floor((Date.now() - targetTime) / 1000));
+
+  if (diffSeconds < 60) return `${diffSeconds}초전`;
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes}분전`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}시간전`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 14) return `${diffDays}일전`;
+
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 5) return `${diffWeeks}주전`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths}개월전`;
+
+  const diffYears = Math.floor(diffDays / 365);
+  return `${diffYears}년전`;
+}
+
+function getReflectionDisplayName(item: ReflectionItem) {
+  return item.nickname?.trim() || `#${item.userNo}`;
+}
+
 function getPaletteMetaBySourceCategory(sourceCategory?: string | null) {
   if (!sourceCategory) return null;
   return categoryPalette.find((item) => item.category === sourceCategory || item.categories.includes(sourceCategory)) || null;
@@ -151,7 +154,16 @@ function getDisplayBackground(verse: BibleVerse) {
     return sourceMeta?.soft || '#ffffff';
   }
   const savedPaint = getSavedPaint(verse);
-  return savedPaint ? getPaletteMetaBySourceCategory(savedPaint.category)?.soft || '#fffdf8' : '#ffffff';
+  return savedPaint ? getPaletteMetaBySourceCategory(savedPaint.category)?.soft || '#ffffff' : '#ffffff';
+}
+
+function getDisplayBorderColor(verse: BibleVerse) {
+  if (showSourceCategories.value) {
+    const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
+    return sourceMeta?.color || 'rgba(80, 54, 29, 0.14)';
+  }
+  const savedPaint = getSavedPaint(verse);
+  return savedPaint ? getPaletteMetaBySourceCategory(savedPaint.category)?.color || 'rgba(80, 54, 29, 0.14)' : 'rgba(80, 54, 29, 0.08)';
 }
 
 function getDisplayMarker(verse: BibleVerse) {
@@ -164,9 +176,14 @@ function getDisplayMarker(verse: BibleVerse) {
 }
 
 function getDisplayCategoryLabel(verse: BibleVerse) {
-  if (!showSourceCategories.value) return '';
+  const savedPaint = getSavedPaint(verse);
+  if (!showSourceCategories.value) return savedPaint?.category || '';
   const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
   return sourceMeta?.category || getSourceCategory(verse);
+}
+
+function getSelectedCategoryLabel(verse: BibleVerse) {
+  return getSavedPaint(verse)?.category || '';
 }
 
 function getVerseTextColor(verse: BibleVerse) {
@@ -188,10 +205,6 @@ function handleBookChange(event: Event) {
   const nextBookNo = Number((event.target as HTMLSelectElement).value);
   if (!Number.isInteger(nextBookNo)) return;
   moveToChapter(nextBookNo, 1);
-}
-
-function getParagraphNoForVerse(verseNo: number) {
-  return chapter.value?.paragraphs.find((paragraph) => paragraph.verses.some((verse) => verse.verseNo === verseNo))?.paragraphNo || 1;
 }
 
 function moveToFirstChapter() { moveToChapter(bookNo.value, 1); }
@@ -236,42 +249,295 @@ function formatVerseRange(verseIds: number[]) {
   return `${chapterBookShort.value}${chapterNo.value}:${ranges.join(',')}`;
 }
 
+function getParagraphNoForVerse(verseNo: number) {
+  return chapter.value?.paragraphs.find((paragraph) => paragraph.verses.some((verse) => verse.verseNo === verseNo))?.paragraphNo || 1;
+}
+
 const selectedVerseRange = computed(() => formatVerseRange(selectedVerseIds.value));
+const selectedVerseDetails = computed(() => (
+  selectedVerseItems.value
+    .map((item) => ({
+      ...item,
+      label: `${chapterBookShort.value}${chapterNo.value}:${item.verseNo}`,
+      palette: getPaletteMetaBySourceCategory(item.category),
+    }))
+    .sort((left, right) => {
+      if (left.verseNo !== right.verseNo) return left.verseNo - right.verseNo;
+      return left.verse.localeCompare(right.verse, 'ko');
+    })
+));
+const shareReflection = computed(() => selectedShareReflection.value);
+const sharedVerseDetails = computed(() => (
+  (shareReflection.value?.verseIDs || [])
+    .map((item) => ({
+      ...item,
+      label: `${chapterBookShort.value}${chapterNo.value}:${item.verseNo}`,
+      palette: getPaletteMetaBySourceCategory(item.category),
+    }))
+    .sort((left, right) => {
+      if (left.verseNo !== right.verseNo) return left.verseNo - right.verseNo;
+      return left.verse.localeCompare(right.verse, 'ko');
+    })
+));
+const shareImageLabels = computed(() => (
+  shareImagePageItems.value.length <= 1
+    ? ['이미지']
+    : shareImagePageItems.value.map((_, index) => `이미지${index + 1}`)
+));
 
 const shareMessage = computed(() => {
-  const reflection = latestMyReflection.value?.text || reflectionText.value.trim() || '오늘 붙든 말씀을 한 줄로 적어 보세요.';
+  const reflection = shareReflection.value?.text || '';
   return [
-    selectedVerseRange.value || `${chapterBookShort.value}${chapterNo.value}`,
     reflection,
     `#모줄성 #${bookLabel.value}`,
   ].join('\n');
 });
 
+function wrapCanvasText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let currentLine = '';
+
+  const flushLine = () => {
+    if (currentLine) lines.push(currentLine);
+    currentLine = '';
+  };
+
+  words.forEach((word) => {
+    const nextLine = currentLine ? `${currentLine} ${word}` : word;
+    if (context.measureText(nextLine).width <= maxWidth) {
+      currentLine = nextLine;
+      return;
+    }
+
+    if (!currentLine) {
+      let chunk = '';
+      for (const char of word) {
+        const nextChunk = `${chunk}${char}`;
+        if (context.measureText(nextChunk).width <= maxWidth) {
+          chunk = nextChunk;
+        } else {
+          if (chunk) lines.push(chunk);
+          chunk = char;
+        }
+      }
+      currentLine = chunk;
+      return;
+    }
+
+    flushLine();
+    currentLine = word;
+  });
+
+  flushLine();
+  return lines.length ? lines : [''];
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  context.beginPath();
+  context.moveTo(x + radius, y);
+  context.lineTo(x + width - radius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + radius);
+  context.lineTo(x + width, y + height - radius);
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  context.lineTo(x + radius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - radius);
+  context.lineTo(x, y + radius);
+  context.quadraticCurveTo(x, y, x + radius, y);
+  context.closePath();
+}
+
+async function createShareImageBlob() {
+  const items = sharedVerseDetails.value;
+  if (!items.length) return null;
+  return createShareImageBlobForItems(items);
+}
+
+function getShareLayout(items: typeof sharedVerseDetails.value) {
+  const width = 1080;
+  const height = 1350;
+  const layoutPresets = [
+    { outerPadding: 42, cardGap: 28, cardPaddingX: 38, cardPaddingY: 30, titleSize: 38, bodySize: 30, lineHeight: 46, borderRadius: 24 },
+    { outerPadding: 38, cardGap: 24, cardPaddingX: 34, cardPaddingY: 28, titleSize: 36, bodySize: 28, lineHeight: 42, borderRadius: 22 },
+    { outerPadding: 34, cardGap: 20, cardPaddingX: 30, cardPaddingY: 24, titleSize: 34, bodySize: 26, lineHeight: 38, borderRadius: 20 },
+    { outerPadding: 30, cardGap: 18, cardPaddingX: 26, cardPaddingY: 22, titleSize: 32, bodySize: 24, lineHeight: 34, borderRadius: 18 },
+    { outerPadding: 24, cardGap: 14, cardPaddingX: 22, cardPaddingY: 18, titleSize: 28, bodySize: 21, lineHeight: 30, borderRadius: 16 },
+  ] as const;
+
+  const canvas = document.createElement('canvas');
+  const measure = canvas.getContext('2d');
+  if (!measure) return null;
+
+  const fittedLayout = layoutPresets
+    .map((preset) => {
+      const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
+      const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
+      const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
+
+      measure.font = bodyFont;
+
+      const cardLayouts = items.map((item) => {
+        const verseLines = wrapCanvasText(measure, item.verse, contentWidth);
+        const headerHeight = preset.titleSize + 10;
+        const verseHeight = Math.max(preset.lineHeight, verseLines.length * preset.lineHeight);
+        const cardHeight = preset.cardPaddingY * 2 + headerHeight + 18 + verseHeight;
+        return { item, verseLines, cardHeight };
+      });
+
+      const totalHeight = preset.outerPadding * 2
+        + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
+        + preset.cardGap * Math.max(0, cardLayouts.length - 1);
+
+      return {
+        preset,
+        titleFont,
+        bodyFont,
+        cardLayouts,
+        totalHeight,
+      };
+    })
+    .find((entry) => entry.totalHeight <= height)
+    || (() => {
+      const preset = layoutPresets[layoutPresets.length - 1];
+      const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
+      const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
+      const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
+      measure.font = bodyFont;
+      const cardLayouts = items.map((item) => {
+        const verseLines = wrapCanvasText(measure, item.verse, contentWidth);
+        const headerHeight = preset.titleSize + 10;
+        const verseHeight = Math.max(preset.lineHeight, verseLines.length * preset.lineHeight);
+        const cardHeight = preset.cardPaddingY * 2 + headerHeight + 18 + verseHeight;
+        return { item, verseLines, cardHeight };
+      });
+      const totalHeight = preset.outerPadding * 2
+        + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
+        + preset.cardGap * Math.max(0, cardLayouts.length - 1);
+
+      return { preset, titleFont, bodyFont, cardLayouts, totalHeight };
+    })();
+
+  return {
+    width,
+    height,
+    ...fittedLayout,
+  };
+}
+
+const shareImagePageItems = computed(() => {
+  const items = sharedVerseDetails.value;
+  if (!items.length) return [];
+
+  const layout = getShareLayout(items);
+  if (!layout) return [];
+
+  const maxContentHeight = layout.height - layout.preset.outerPadding * 2;
+  const pages: typeof items[] = [];
+  let currentPage: typeof items = [];
+  let currentHeight = 0;
+
+  layout.cardLayouts.forEach(({ item, cardHeight }, index) => {
+    const nextHeight = currentPage.length === 0
+      ? cardHeight
+      : currentHeight + layout.preset.cardGap + cardHeight;
+
+    if (currentPage.length > 0 && nextHeight > maxContentHeight) {
+      pages.push(currentPage);
+      currentPage = [item];
+      currentHeight = cardHeight;
+      return;
+    }
+
+    currentPage.push(item);
+    currentHeight = currentPage.length === 1
+      ? cardHeight
+      : currentHeight + layout.preset.cardGap + cardHeight;
+
+    if (index === layout.cardLayouts.length - 1 && currentPage.length) {
+      pages.push(currentPage);
+    }
+  });
+
+  return pages;
+});
+
+async function createShareImageBlobForItems(items: typeof sharedVerseDetails.value) {
+  const layout = getShareLayout(items);
+  if (!layout) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = layout.width;
+  canvas.height = layout.height;
+
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+
+  const {
+    width,
+    height,
+    preset,
+    titleFont,
+    bodyFont,
+    cardLayouts,
+    totalHeight,
+  } = layout;
+
+  context.fillStyle = '#f7f0e5';
+  context.fillRect(0, 0, width, height);
+
+  let currentY = Math.max(preset.outerPadding, Math.floor((height - Math.min(totalHeight, height)) / 2));
+
+  cardLayouts.forEach(({ item, verseLines, cardHeight }) => {
+    const x = preset.outerPadding;
+    const y = currentY;
+    const cardWidth = width - preset.outerPadding * 2;
+
+    drawRoundedRect(context, x, y, cardWidth, cardHeight, preset.borderRadius);
+    context.fillStyle = item.palette?.soft || '#ffffff';
+    context.fill();
+    context.lineWidth = 3;
+    context.strokeStyle = item.palette?.color || '#d7cabc';
+    context.stroke();
+
+    context.fillStyle = '#2f261d';
+    context.font = titleFont;
+    context.textBaseline = 'top';
+    context.fillText(`${item.label} ${item.category}`, x + preset.cardPaddingX, y + preset.cardPaddingY);
+
+    context.font = bodyFont;
+    let lineY = y + preset.cardPaddingY + preset.titleSize + 24;
+    verseLines.forEach((line) => {
+      context.fillStyle = item.godSay ? '#bf2d2d' : '#2f261d';
+      context.fillText(line, x + preset.cardPaddingX, lineY);
+      lineY += preset.lineHeight;
+    });
+
+    currentY += cardHeight + preset.cardGap;
+  });
+
+  return await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), 'image/png');
+  });
+}
+
 async function loadChapterState() {
-  auth.syncSession();
-  identity.ensureGuestId();
+  const reflectionResponse = await bible.listReflections({
+    bookNo: bookNo.value,
+    chapterNo: chapterNo.value,
+  });
 
-  if (!chapter.value) {
-    paints.value = [];
-    reflections.value = [];
-    return;
-  }
-
-  const [paintResponse, reflectionResponse] = await Promise.all([
-    bible.listReadingPaints({
-      userId: readerId.value,
-      bookNo: bookNo.value,
-      chapterNo: chapterNo.value,
-    }),
-    bible.listReflections({
-      bookNo: bookNo.value,
-      chapterNo: chapterNo.value,
-    }),
-  ]);
-
-  paints.value = paintResponse.data;
   reflections.value = reflectionResponse.data;
-  localSelectedVerseItems.value = normalizeSelectedVerseItems(paintResponse.data[0]?.verseIDs);
 }
 
 function buildNextSelectedItems(verse: BibleVerse) {
@@ -284,10 +550,7 @@ function buildNextSelectedItems(verse: BibleVerse) {
     }
 
     return selectedVerseItems.value.map((item) => {
-      if (getVerseItemKey(item) !== key) {
-        return item;
-      }
-
+      if (getVerseItemKey(item) !== key) return item;
       return {
         ...item,
         category: selectedCategory.value,
@@ -307,66 +570,32 @@ function buildNextSelectedItems(verse: BibleVerse) {
   ];
 }
 
-async function handleVerseClick(verse: BibleVerse) {
-  savingPaintKey.value = getVerseItemKey(verse);
-  const previousSelectedItems = [...selectedVerseItems.value];
-
-  try {
-    const nextSelectedItems = buildNextSelectedItems(verse);
-    localSelectedVerseItems.value = nextSelectedItems;
-
-    if (!nextSelectedItems.length) {
-      await bible.clearReadingPaints({
-        userId: readerId.value,
-        bookNo: bookNo.value,
-        chapterNo: chapterNo.value,
-      });
-      paints.value = [];
-      localSelectedVerseItems.value = [];
-      setToast('선택한 성경을 비웠습니다.');
-      return;
-    }
-
-    const response = await bible.saveReadingPaint({
-      userId: readerId.value,
-      bookNo: bookNo.value,
-      chapterNo: chapterNo.value,
-      verseRange: formatVerseRange(nextSelectedItems.map((item) => item.verseNo)),
-      verseIDs: nextSelectedItems,
-      updatedAt: new Date().toISOString(),
-    });
-
-    paints.value = [response.data];
-    localSelectedVerseItems.value = normalizeSelectedVerseItems(response.data?.verseIDs);
-    setToast(`${verse.verseNo}절 선택을 저장했습니다.`);
-  } catch (error: any) {
-    localSelectedVerseItems.value = previousSelectedItems;
-    setToast(error?.data?.message || error?.message || '색칠 저장 중 오류가 발생했습니다.');
-  } finally {
-    savingPaintKey.value = '';
-  }
+function handleVerseClick(verse: BibleVerse) {
+  localSelectedVerseItems.value = buildNextSelectedItems(verse);
 }
 
-async function resetCurrentChapter() {
-  clearingPaints.value = true;
-  try {
-    await bible.clearReadingPaints({
-      userId: readerId.value,
-      bookNo: bookNo.value,
-      chapterNo: chapterNo.value,
-    });
-    paints.value = [];
-    localSelectedVerseItems.value = [];
-    reflectionText.value = '';
-    setToast('현재 창에서 내가 선택한 색칠을 지웠습니다.');
-  } catch (error: any) {
-    setToast(error?.data?.message || error?.message || '현재 창 초기화 중 오류가 발생했습니다.');
-  } finally {
-    clearingPaints.value = false;
-  }
+function resetCurrentChapter() {
+  localSelectedVerseItems.value = [];
+  reflectionText.value = '';
+  setToast('현재 창에서 선택한 내용을 지웠습니다.');
+}
+
+function applyReflectionSelection(item: ReflectionItem) {
+  localSelectedVerseItems.value = item.verseIDs || [];
+  reflectionText.value = item.text || '';
+  selectedShareReflection.value = item;
+  if (showSourceCategories.value) showSourceCategories.value = false;
 }
 
 async function submitReflection() {
+  auth.syncSession();
+
+  if (!auth.currentUser.value?.userNo || !auth.token.value) {
+    const redirect = encodeURIComponent(route.fullPath);
+    await router.push(`/login?redirect=${redirect}`);
+    return;
+  }
+
   if (!selectedVerseItems.value.length) {
     setToast('선택한 성경절이 없습니다.');
     return;
@@ -381,7 +610,9 @@ async function submitReflection() {
 
   try {
     const response = await bible.saveReflection({
-      userId: readerId.value,
+      rid: shareReflection.value?.rid,
+      userNo: auth.currentUser.value.userNo,
+      nickname: auth.currentUser.value.nickname,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
       paragraphNo: getParagraphNoForVerse(selectedVerseItems.value[0]?.verseNo || 1),
@@ -392,8 +623,8 @@ async function submitReflection() {
       createdAt: new Date().toISOString(),
     });
 
-    reflections.value = [response.data, ...reflections.value];
-    reflectionText.value = '';
+    reflections.value = [response.data, ...reflections.value.filter((item) => !(item.userNo === response.data.userNo && item.verseRange === response.data.verseRange))];
+    selectedShareReflection.value = response.data;
     setToast('한줄나누기를 저장했습니다.');
   } catch (error: any) {
     setToast(error?.data?.message || error?.message || '한줄나누기 저장 중 오류가 발생했습니다.');
@@ -405,12 +636,52 @@ async function submitReflection() {
 async function copyShareMessage() {
   copyingMessage.value = true;
   try {
+    if (!shareReflection.value) {
+      setToast('한줄나누기를 저장한 뒤 공유할 수 있습니다.');
+      return;
+    }
     await navigator.clipboard.writeText(shareMessage.value);
-    setToast('SNS 공유 문구를 복사했습니다.');
+    setToast('메시지·태그를 복사했습니다.');
   } catch {
-    setToast('공유 문구를 복사하지 못했습니다.');
+    setToast('메시지·태그를 복사하지 못했습니다.');
   } finally {
     copyingMessage.value = false;
+  }
+}
+
+async function copyShareImage(pageIndex?: number) {
+  const copyKey = pageIndex === undefined ? 'single' : `page-${pageIndex}`;
+  copyingImageKey.value = copyKey;
+  try {
+    if (!shareReflection.value) {
+      setToast('한줄나누기를 저장한 뒤 공유할 수 있습니다.');
+      return;
+    }
+    const pageItems = pageIndex === undefined
+      ? sharedVerseDetails.value
+      : shareImagePageItems.value[pageIndex] || [];
+    const imageBlob = await createShareImageBlobForItems(pageItems);
+
+    if (!imageBlob) {
+      setToast('복사할 이미지가 없습니다.');
+      return;
+    }
+
+    if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+      setToast('현재 브라우저에서는 이미지 복사를 지원하지 않습니다.');
+      return;
+    }
+
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'image/png': imageBlob,
+      }),
+    ]);
+    setToast('공유 이미지를 복사했습니다.');
+  } catch {
+    setToast('이미지 복사에 실패했습니다.');
+  } finally {
+    copyingImageKey.value = '';
   }
 }
 
@@ -425,6 +696,8 @@ watch(
     showSourceCategories.value = false;
     showAllSharing.value = false;
     reflectionText.value = '';
+    localSelectedVerseItems.value = [];
+    selectedShareReflection.value = null;
     chapterInput.value = String(chapterNo.value);
     await loadChapterState();
   },
@@ -437,77 +710,74 @@ watch(
     <section class="mvp-card mvp-main">
       <section class="mvp-hero">
         <div class="mvp-reading-nav">
-          <div class="mvp-reading-nav-row">
-            <div class="mvp-testament-tabs">
-              <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'old' }]" @click="moveToTestament('old')">구약</button>
-              <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'new' }]" @click="moveToTestament('new')">신약</button>
-            </div>
+          <div class="mvp-reading-nav-row mvp-reading-nav-row--top">
+            <div class="mvp-reading-nav-left">
+              <div class="mvp-testament-tabs">
+                <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'old' }]" @click="moveToTestament('old')">구약</button>
+                <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'new' }]" @click="moveToTestament('new')">신약</button>
+              </div>
 
-            <label class="mvp-nav-field mvp-nav-field--select">
-              <span>성경 선택</span>
-              <select class="mvp-nav-select mvp-nav-select--short" :value="bookNo" @change="handleBookChange">
-                <option v-for="book in testamentBooks" :key="book.bookNo" :value="book.bookNo">
-                  {{ book.church }}
-                </option>
-              </select>
-            </label>
-          </div>
-
-          <div class="mvp-reading-nav-row mvp-reading-nav-row--chapter">
-            <span class="mvp-nav-label">장선택</span>
-            <div class="mvp-chapter-pager">
-              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToFirstChapter()"><i class="fa-solid fa-angles-left" /></button>
-              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToPreviousChapter()"><i class="fa-solid fa-angle-left" /></button>
-              <span v-if="showLeadingEllipsis" class="mvp-nav-ellipsis">...</span>
-              <button
-                v-for="chapterItem in visibleChapterNumbers"
-                :key="chapterItem"
-                type="button"
-                :class="['mvp-chip-button', { active: chapterItem === chapterNo }]"
-                @click="moveToChapter(bookNo, chapterItem)"
-              >
-                {{ chapterItem }}
-              </button>
-              <span v-if="showTrailingEllipsis" class="mvp-nav-ellipsis">...</span>
-              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToNextChapter()"><i class="fa-solid fa-angle-right" /></button>
-              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToLastChapter()"><i class="fa-solid fa-angles-right" /></button>
-            </div>
-
-            <div class="mvp-nav-input-wrap">
-              <label class="mvp-nav-field mvp-nav-field--inline">
-                <span>장입력</span>
-                <input v-model="chapterInput" class="mvp-nav-input" inputmode="numeric" @keyup.enter="submitChapterInput()" />
+              <label class="mvp-nav-field mvp-nav-field--select">
+                <select class="mvp-nav-select mvp-nav-select--short" :value="bookNo" @change="handleBookChange">
+                  <option v-for="book in testamentBooks" :key="book.bookNo" :value="book.bookNo">
+                    {{ book.church }}
+                  </option>
+                </select>
               </label>
-              <button type="button" class="mvp-toolbar-button active" @click="submitChapterInput()">이동</button>
+            </div>
+
+            <div class="mvp-reading-nav-right">
+              <div class="mvp-chapter-pager">
+                <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToFirstChapter()"><i class="fa-solid fa-angles-left" /></button>
+                <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToPreviousChapter()"><i class="fa-solid fa-angle-left" /></button>
+                <span v-if="showLeadingEllipsis" class="mvp-nav-ellipsis">...</span>
+                <button
+                  v-for="chapterItem in visibleChapterNumbers"
+                  :key="chapterItem"
+                  type="button"
+                  :class="['mvp-chip-button', { active: chapterItem === chapterNo }]"
+                  @click="moveToChapter(bookNo, chapterItem)"
+                >
+                  {{ chapterItem }}
+                </button>
+                <span v-if="showTrailingEllipsis" class="mvp-nav-ellipsis">...</span>
+                <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToNextChapter()"><i class="fa-solid fa-angle-right" /></button>
+                <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToLastChapter()"><i class="fa-solid fa-angles-right" /></button>
+              </div>
+
+              <div class="mvp-nav-input-wrap">
+                <label class="mvp-nav-field mvp-nav-field--inline mvp-nav-field--input">
+                  <input v-model="chapterInput" class="mvp-nav-input mvp-nav-input--compact" inputmode="numeric" @keyup.enter="submitChapterInput()" />
+                  <button type="button" class="mvp-nav-input-action" aria-label="장 이동" @click="submitChapterInput()">
+                    <i class="fa-solid fa-paper-plane" />
+                  </button>
+                </label>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="mvp-hero-grid">
-          <div>
-            <h1 class="mvp-title">{{ chapterLabel }}</h1>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
+            <h2 class="mvp-title">{{ chapterLabel }}</h2>
+            <h4 class="mvp-block-title">장별 주제</h4>
           </div>
 
           <div class="mvp-hero-summary">
-            <h2>{{ chapter?.subject || '장 주제 미정' }}</h2>
-            <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p>
+            <h4>{{ chapter?.subject || '장 주제 미정' }}</h4>
+            <!-- <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p> -->
           </div>
         </div>
       </section>
 
       <section class="mvp-section">
-        <div class="mvp-section-header">
-          <h2>12 Color Table</h2>
-        </div>
 
         <div class="mvp-toolbar">
           <div class="mvp-toolbar-actions">
             <button type="button" :class="['mvp-toolbar-button', { active: showSourceCategories }]" @click="showSourceCategories = !showSourceCategories">
               {{ showSourceCategories ? '내 선택 보기' : '카테고리 보기' }}
             </button>
-            <button type="button" class="mvp-toolbar-button" :disabled="clearingPaints" @click="resetCurrentChapter()">
-              {{ clearingPaints ? '초기화 중' : '현재창초기화' }}
-            </button>
+            <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">현재창초기화</button>
           </div>
 
           <div class="mvp-palette">
@@ -531,18 +801,13 @@ watch(
       </section>
 
       <section class="mvp-section">
-        <div class="mvp-section-header">
-          <h2>블록 읽기</h2>
-        </div>
 
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
         <p v-else-if="error" class="mvp-muted">{{ error.message }}</p>
 
         <div v-else-if="chapter" class="mvp-paragraphs">
           <article v-for="paragraph in chapter.paragraphs" :key="paragraph.paragraphNo" class="mvp-paragraph-card">
-            <p class="mvp-block-index">블록 {{ paragraph.paragraphNo }}</p>
-            <h3 class="mvp-block-title">{{ paragraph.subject || '블록 주제 없음' }}</h3>
-            <div class="mvp-block-summary">{{ paragraph.summary || paragraph.excerpt || '문단 요약이 아직 없습니다.' }}</div>
+            <h4 class="mvp-block-title">{{ paragraph.subject || '블록 주제 없음' }}</h4>
 
             <div class="mvp-segments">
               <button
@@ -550,18 +815,17 @@ watch(
                 :key="`${paragraph.paragraphNo}-${verse.verseNo}-${verse.verse}`"
                 type="button"
                 :class="['segment', { painted: Boolean(getSavedPaint(verse)), say: verse.godSay || verse.say }]"
-                :style="{ background: getDisplayBackground(verse) }"
+                :style="{ background: getDisplayBackground(verse), borderColor: getDisplayBorderColor(verse) }"
                 @click="handleVerseClick(verse)"
               >
-                <span class="mvp-segment-mark" :style="{ background: getDisplayMarker(verse) }" />
-                <span class="mvp-segment-text" :style="{ color: getVerseTextColor(verse) }">{{ verse.verse }}</span>
-                <span class="mvp-segment-meta">
-                  <template v-if="getDisplayCategoryLabel(verse)">
-                    {{ getDisplayCategoryLabel(verse) }} ·
-                  </template>
-                  {{ chapterBookShort }}{{ chapterNo }}:{{ verse.verseNo }}
-                  <template v-if="verse.godSay || verse.say"> · 직접 말씀</template>
-                  <template v-if="savingPaintKey === getVerseItemKey(verse)"> · 저장 중</template>
+                <span v-if="getSelectedCategoryLabel(verse)" class="mvp-segment-picked">
+                  <span class="mvp-segment-picked-category">[{{ getSelectedCategoryLabel(verse) }}]</span>
+                  <sup class="mvp-segment-picked-no">{{ verse.verseNo }}</sup>
+                  <span class="mvp-segment-picked-text" :style="{ color: getVerseTextColor(verse) }">{{ verse.verse }}</span>
+                </span>
+                <span v-else class="mvp-segment-plain">
+                  <sup class="mvp-segment-picked-no">{{ verse.verseNo }}</sup>
+                  <span class="mvp-segment-picked-text" :style="{ color: getVerseTextColor(verse) }">{{ verse.verse }}</span>
                 </span>
               </button>
             </div>
@@ -572,26 +836,33 @@ watch(
 
     <aside class="mvp-card mvp-sidebar">
       <section class="mvp-sidebar-block">
-        <h2>한줄나누기</h2>
+        <h3>한줄나누기</h3>
         <textarea
           v-model="reflectionText"
           class="mvp-textarea"
           placeholder="내가 선택한 성경절을 붙들고 한 줄 나눔을 적어 주세요."
         />
-        <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div>
+        <!-- <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div> -->
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
-            {{ savingReflection ? '저장 중' : '한줄나누기저장' }}
+            {{ savingReflection ? '저장 중' : '한줄나눔 저장' }}
           </button>
           <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
-            {{ showAllSharing ? '나눔감추기' : '나눔보기' }}
+            {{ showAllSharing ? '나눔감추기' : '나눔전체 보기' }}
           </button>
         </div>
         <p v-if="toast" class="mvp-muted">{{ toast }}</p>
         <div class="mvp-sharing-list">
-          <article v-for="item in sharingList" :key="`${item.userId}-${item.verseRange}-${item.updatedAt}`" class="mvp-sharing-item">
-            <strong>{{ item.userId === readerId ? '내 나눔' : item.userId }}</strong>
-            <span>{{ item.verseRange }}</span>
+          <article
+            v-for="item in sharingList"
+            :key="`${item.userNo}-${item.verseRange}-${item.updatedAt}`"
+            class="mvp-sharing-item"
+            @click="applyReflectionSelection(item)"
+          >
+            <div class="mvp-sharing-head">
+              <strong>{{ getReflectionDisplayName(item) }} <span>{{ formatRelativeTime(item.updatedAt) }}</span></strong>
+              <span>{{ item.verseRange }}</span>
+            </div>
             <p>{{ item.text }}</p>
           </article>
           <p v-if="!sharingList.length" class="mvp-muted">아직 저장된 나눔이 없습니다.</p>
@@ -599,13 +870,41 @@ watch(
       </section>
 
       <section class="mvp-sidebar-block">
-        <h2>SNS 공유 준비</h2>
+        <h3>SNS 공유 준비</h3>
         <div class="mvp-toolbar-actions">
-          <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage" @click="copyShareMessage()">
-            {{ copyingMessage ? '복사 중' : 'SNS 공유 문구 복사' }}
+          <button
+            v-for="(label, index) in shareImageLabels"
+            :key="label"
+            type="button"
+            class="mvp-toolbar-button active"
+            :disabled="copyingImageKey !== '' || !shareReflection"
+            @click="copyShareImage(shareImageLabels.length === 1 ? undefined : index)"
+          >
+            {{ copyingImageKey === (shareImageLabels.length === 1 ? 'single' : `page-${index}`) ? '복사 중' : label }}
+          </button>
+          <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage || !shareReflection" @click="copyShareMessage()">
+            {{ copyingMessage ? '복사 중' : '메시지' }}
           </button>
         </div>
-        <pre class="mvp-share-preview">{{ shareMessage }}</pre>
+        <div class="mvp-share-card">
+          <div class="mvp-share-card-verses">
+            <div
+              v-for="item in sharedVerseDetails"
+              :key="`${item.label}-${item.category}-${item.verse}`"
+              class="mvp-share-card-verse"
+              :style="{ background: item.palette?.soft || '#ffffff', borderColor: item.palette?.color || '#d7cabc' }"
+            >
+              <strong>{{ item.label }}</strong>
+              <span>{{ item.category }}</span>
+              <p :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</p>
+            </div>
+            <p v-if="!sharedVerseDetails.length" class="mvp-muted"></p>
+          </div>
+        </div>
+        <div class="mvp-share-copy-text">
+          <p>{{ shareReflection?.text || '' }}</p>
+          <strong v-if="shareReflection">#모줄성 #{{ bookLabel }}</strong>
+        </div>
       </section>
     </aside>
   </div>

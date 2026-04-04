@@ -1,4 +1,4 @@
-﻿import { insertReflection, listReflections } from './reflection.repository.js';
+﻿import { listReflections, upsertReflection } from './reflection.repository.js';
 import {
   normalizeSelectedVerseItems,
   parsePositiveInteger,
@@ -14,9 +14,16 @@ function parseReflectionQuery(params = {}) {
   const paragraphNo = parsePositiveInteger(params.paragraphNo, 'paragraphNo', {
     required: false,
   });
+  const userNo = parsePositiveInteger(params.userNo, 'userNo', {
+    required: false,
+  });
 
   if (paragraphNo !== undefined) {
     query.paragraphNo = paragraphNo;
+  }
+
+  if (userNo !== undefined) {
+    query.userNo = userNo;
   }
 
   return query;
@@ -24,15 +31,20 @@ function parseReflectionQuery(params = {}) {
 
 export async function getReflections(params = {}) {
   const query = parseReflectionQuery(params);
-
   return listReflections(query);
 }
 
 export async function saveReflection(body = {}) {
   const now = new Date().toISOString();
+  const nickname = typeof body.nickname === 'string' ? body.nickname.trim() : '';
+  const rid = typeof body.rid === 'string' && body.rid.trim()
+    ? body.rid.trim()
+    : `r_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   const document = {
-    userId: requireTrimmedString(body.userId, 'userId'),
+    rid,
+    userNo: parsePositiveInteger(body.userNo, 'userNo'),
+    nickname: nickname || undefined,
     bookNo: parsePositiveInteger(body.bookNo, 'bookNo'),
     chapterNo: parsePositiveInteger(body.chapterNo, 'chapterNo'),
     paragraphNo: parsePositiveInteger(body.paragraphNo, 'paragraphNo'),
@@ -40,8 +52,11 @@ export async function saveReflection(body = {}) {
     verseIDs: normalizeSelectedVerseItems(body.verseIDs),
     text: requireTrimmedString(body.text, 'text'),
     updatedAt: now,
-    createdAt: now,
+    createdAt: String(body.createdAt || now),
   };
 
-  return insertReflection(document);
+  return upsertReflection(document);
 }
+
+
+

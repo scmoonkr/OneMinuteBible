@@ -1,8 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { ReflectionItem } from '~/composables/useBible';
 
 const bible = useBible();
-const identity = useReaderIdentity();
+const auth = useAuth();
 
 const reflections = ref<ReflectionItem[]>([]);
 const loading = ref(true);
@@ -11,13 +11,14 @@ const errorMessage = ref('');
 const { data, pending, error, refresh } = await useAsyncData(
   'review-reflections',
   async () => {
-    identity.ensureGuestId();
+    if (!auth.currentUser.value?.userNo) {
+      return { ok: true, data: [] };
+    }
 
     return await bible.listReflections({
-      userId: identity.readerId.value,
+      userNo: auth.currentUser.value.userNo,
       bookNo: 1,
       chapterNo: 1,
-      mine: true,
     });
   },
   {

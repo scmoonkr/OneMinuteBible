@@ -1,4 +1,4 @@
-import { getDatabase } from '../../config/db.js';
+﻿import { getDatabase } from '../../config/db.js';
 
 const USERS_COLLECTION = 'users';
 const AUTH_ACCOUNTS_COLLECTION = 'auth_accounts';
@@ -14,6 +14,15 @@ export async function findUserByEmail(email) {
   );
 }
 
+export async function findUserByNickname(nickname) {
+  const database = getDatabase();
+
+  return database.collection(USERS_COLLECTION).findOne(
+    { nickname },
+    { projection: { _id: 0 } },
+  );
+}
+
 export async function findUserById(userId) {
   const database = getDatabase();
 
@@ -21,6 +30,20 @@ export async function findUserById(userId) {
     { userId },
     { projection: { _id: 0 } },
   );
+}
+
+export async function getNextUserNo() {
+  const database = getDatabase();
+  const latestUser = await database.collection(USERS_COLLECTION).find(
+    {},
+    {
+      sort: { userNo: -1 },
+      projection: { _id: 0, userNo: 1 },
+      limit: 1,
+    },
+  ).next();
+
+  return Number(latestUser?.userNo || 0) + 1;
 }
 
 export async function findAuthAccountByEmail(email) {

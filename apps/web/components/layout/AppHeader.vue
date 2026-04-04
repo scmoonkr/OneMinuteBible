@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 const route = useRoute();
 const auth = useAuth();
 
@@ -10,7 +10,7 @@ const mainMenus = [
   { label: 'Sharing', to: '/sharing' },
 ];
 
-const isAuthenticated = computed(() => Boolean(auth.currentUser.value?.userId || auth.token.value));
+const isAuthenticated = computed(() => Boolean(auth.currentUser.value?.userNo || auth.token.value));
 const displayName = computed(() => auth.currentUser.value?.nickname || auth.currentUser.value?.email || 'Guest');
 
 function isMenuActive(path: string) {

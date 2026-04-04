@@ -1,9 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { ReflectionItem } from '~/composables/useBible';
 import { sharingGuide } from '~/composables/useMvpContent';
 
 const bible = useBible();
-const identity = useReaderIdentity();
+const auth = useAuth();
 
 const curatedSharing = [
   {
@@ -21,13 +21,14 @@ const curatedSharing = [
 const { data, pending, error, refresh } = await useAsyncData(
   'sharing-mine',
   async () => {
-    identity.ensureGuestId();
+    if (!auth.currentUser.value?.userNo) {
+      return { ok: true, data: [] };
+    }
 
     return await bible.listReflections({
-      userId: identity.readerId.value,
+      userNo: auth.currentUser.value.userNo,
       bookNo: 1,
       chapterNo: 1,
-      mine: true,
     });
   },
   {

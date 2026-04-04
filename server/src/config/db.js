@@ -8,16 +8,20 @@ async function ensureCoreIndexes(database) {
   await Promise.all([
     database.collection('users').createIndexes([
       { key: { userId: 1 }, name: 'users_userId' },
+      { key: { userNo: 1 }, name: 'users_userNo' },
       { key: { email: 1 }, name: 'users_email' },
+      { key: { nickname: 1 }, name: 'users_nickname' },
     ]),
     database.collection('auth_accounts').createIndexes([
       { key: { provider: 1, providerUserId: 1 }, name: 'auth_accounts_provider_user' },
       { key: { email: 1, provider: 1 }, name: 'auth_accounts_email_provider' },
       { key: { userId: 1 }, name: 'auth_accounts_userId' },
+      { key: { userNo: 1 }, name: 'auth_accounts_userNo' },
     ]),
     database.collection('auth_refresh_tokens').createIndexes([
       { key: { tokenId: 1 }, name: 'auth_refresh_tokens_tokenId' },
       { key: { userId: 1 }, name: 'auth_refresh_tokens_userId' },
+      { key: { userNo: 1 }, name: 'auth_refresh_tokens_userNo' },
     ]),
     database.collection('password_reset_tokens').createIndexes([
       { key: { tokenId: 1 }, name: 'password_reset_tokens_tokenId' },
@@ -26,16 +30,9 @@ async function ensureCoreIndexes(database) {
     database.collection(env.mongoCollectionBibleEdit).createIndexes([
       { key: { bookNo: 1, chapterNo: 1, verseNo: 1 }, name: 'bible_edit_lookup' },
     ]),
-    database.collection('reading_paints').createIndexes([
-      {
-        key: { userId: 1, bookNo: 1, chapterNo: 1, paragraphNo: 1, verseRange: 1 },
-        name: 'reading_paints_lookup',
-      },
-      { key: { userId: 1, bookNo: 1, chapterNo: 1 }, name: 'reading_paints_chapter' },
-    ]),
     database.collection('reflections').createIndexes([
-      { key: { userId: 1, bookNo: 1, chapterNo: 1, paragraphNo: 1 }, name: 'reflections_lookup' },
-      { key: { userId: 1, bookNo: 1, chapterNo: 1, updatedAt: -1 }, name: 'reflections_recent' },
+      { key: { userNo: 1, bookNo: 1, chapterNo: 1, verseRange: 1 }, name: 'reflections_unique_userNo' },
+      { key: { bookNo: 1, chapterNo: 1, updatedAt: -1 }, name: 'reflections_recent_userNo' },
     ]),
   ]);
 }

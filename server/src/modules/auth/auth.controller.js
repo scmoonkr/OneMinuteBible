@@ -1,5 +1,6 @@
-import {
+﻿import {
   changePassword,
+  checkNicknameAvailability,
   getKakaoAuthorizationUrl,
   getMyProfile,
   login,
@@ -15,6 +16,15 @@ export async function signupLocal(req, res, next) {
   try {
     const result = await signUp(req.body);
     return res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function checkNickname(req, res, next) {
+  try {
+    const result = await checkNicknameAvailability(String(req.query.nickname || ''));
+    return res.json({ ok: true, data: result });
   } catch (error) {
     return next(error);
   }

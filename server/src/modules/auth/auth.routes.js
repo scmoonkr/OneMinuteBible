@@ -1,7 +1,8 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 import {
   changeMyPassword,
+  checkNickname,
   forgotPassword,
   kakaoAuthorize,
   kakaoCallback,
@@ -15,6 +16,7 @@ import {
 
 const router = Router();
 
+router.get('/nickname-check', checkNickname);
 router.post('/signup', signupLocal);
 router.post('/login', loginLocal);
 router.post('/refresh', refreshAuth);

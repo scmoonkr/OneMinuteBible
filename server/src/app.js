@@ -2,7 +2,6 @@
 import cors from 'cors';
 import authRouter from './modules/auth/auth.routes.js';
 import bibleRouter from './modules/bible/bible.routes.js';
-import readingRouter from './modules/reading/reading.routes.js';
 import reflectionRouter from './modules/reflections/reflection.routes.js';
 
 const app = express();
@@ -22,7 +21,6 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRouter);
 app.use('/api/bible', bibleRouter);
-app.use('/api/reading-paints', readingRouter);
 app.use('/api/reflections', reflectionRouter);
 
 app.use((error, req, res, next) => {

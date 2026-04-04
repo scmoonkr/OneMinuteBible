@@ -12,14 +12,57 @@ const form = reactive({
   password: '',
 });
 const errorMessage = ref('');
+const nicknameMessage = ref('');
 const loading = ref(false);
+const checkingNickname = ref(false);
+const nicknameChecked = ref(false);
+const checkedNickname = ref('');
+
+watch(() => form.nickname, () => {
+  nicknameChecked.value = false;
+  checkedNickname.value = '';
+  nicknameMessage.value = '';
+});
+
+async function verifyNickname() {
+  checkingNickname.value = true;
+  errorMessage.value = '';
+  nicknameMessage.value = '';
+
+  try {
+    const response = await auth.checkNickname(form.nickname);
+    if (!response.data.available) {
+      nicknameChecked.value = false;
+      checkedNickname.value = '';
+      nicknameMessage.value = '이미 사용 중인 닉네임입니다.';
+      return;
+    }
+
+    nicknameChecked.value = true;
+    checkedNickname.value = form.nickname.trim();
+    nicknameMessage.value = '사용 가능한 닉네임입니다.';
+  } catch (error: any) {
+    nicknameChecked.value = false;
+    checkedNickname.value = '';
+    nicknameMessage.value = error?.data?.message || error?.message || '닉네임 확인 중 오류가 발생했습니다.';
+  } finally {
+    checkingNickname.value = false;
+  }
+}
 
 async function submit() {
   loading.value = true;
   errorMessage.value = '';
 
   try {
-    await auth.signup(form);
+    if (!nicknameChecked.value || checkedNickname.value !== form.nickname.trim()) {
+      throw new Error('닉네임 중복확인을 먼저 해주세요.');
+    }
+
+    await auth.signup({
+      ...form,
+      nicknameChecked: true,
+    });
     await router.push('/account');
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.message || '회원가입 중 오류가 발생했습니다.';
@@ -32,13 +75,19 @@ async function submit() {
 <template>
   <section class="panel-card">
     <h1>회원가입</h1>
-    <p class="muted">닉네임, 이메일, 비밀번호로 바로 가입하는 기본 흐름입니다.</p>
+    <p class="muted">닉네임 중복확인 후 이메일과 비밀번호로 가입합니다.</p>
 
     <div class="auth-form">
       <label>
         닉네임
-        <input v-model="form.nickname" type="text" />
+        <div style="display: flex; gap: 0.6rem;">
+          <input v-model="form.nickname" type="text" />
+          <button class="ghost-button" type="button" :disabled="checkingNickname" @click="verifyNickname()">
+            {{ checkingNickname ? '확인 중' : '중복확인' }}
+          </button>
+        </div>
       </label>
+      <p v-if="nicknameMessage" class="muted">{{ nicknameMessage }}</p>
       <label>
         이메일
         <input v-model="form.email" type="email" />

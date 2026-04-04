@@ -1,4 +1,4 @@
-export type BibleVerse = {
+﻿export type BibleVerse = {
   verse: string;
   verseNo: number;
   category?: string;
@@ -42,25 +42,29 @@ export type SelectedVerseItem = {
 };
 
 export type ReadingPaint = {
-  userId: string;
+  userNo: number;
   bookNo: number;
   chapterNo: number;
   verseRange: string;
   verseIDs: SelectedVerseItem[];
+  text?: string;
   updatedAt: string;
+  createdAt?: string;
 };
 
 export type ReflectionItem = {
-  userId: string;
+  rid?: string;
+  userNo: number;
+  nickname?: string;
   bookNo: number;
   chapterNo: number;
   paragraphNo: number;
   verseRange: string;
   verseIDs: SelectedVerseItem[];
   text: string;
-  mine?: boolean;
   updatedAt: string;
   createdAt: string;
+  mine?: boolean;
 };
 
 type ReadChapterParams = {
@@ -77,43 +81,8 @@ export function useBible() {
     });
   }
 
-  async function listReadingPaints(query: {
-    userId: string;
-    bookNo: number;
-    chapterNo: number;
-  }) {
-    return await $fetch<{ ok: boolean; data: ReadingPaint[] }>(
-      `${config.public.apiBase}/api/reading-paints`,
-      { query },
-    );
-  }
-
-  async function saveReadingPaint(body: ReadingPaint) {
-    return await $fetch<{ ok: boolean; data: ReadingPaint }>(
-      `${config.public.apiBase}/api/reading-paints`,
-      {
-        method: 'POST',
-        body,
-      },
-    );
-  }
-
-  async function clearReadingPaints(query: {
-    userId: string;
-    bookNo: number;
-    chapterNo: number;
-  }) {
-    return await $fetch<{ ok: boolean; data: { deletedCount: number } }>(
-      `${config.public.apiBase}/api/reading-paints`,
-      {
-        method: 'DELETE',
-        query,
-      },
-    );
-  }
-
   async function listReflections(query: {
-    userId?: string;
+    userNo?: number;
     bookNo: number;
     chapterNo: number;
     paragraphNo?: number;
@@ -137,9 +106,6 @@ export function useBible() {
 
   return {
     readChapter,
-    listReadingPaints,
-    saveReadingPaint,
-    clearReadingPaints,
     listReflections,
     saveReflection,
   };

@@ -1,5 +1,5 @@
-type AuthUser = {
-  userId: string;
+﻿export type AuthUser = {
+  userNo: number;
   email: string;
   nickname: string;
   profileImage?: string;
@@ -72,7 +72,16 @@ export function useAuth() {
     }
   }
 
-  async function signup(body: { email: string; password: string; nickname: string }) {
+  async function checkNickname(nickname: string) {
+    return await $fetch<{ ok: boolean; data: { nickname: string; available: boolean } }>(
+      `${config.public.apiBase}/api/auth/nickname-check`,
+      {
+        query: { nickname },
+      },
+    );
+  }
+
+  async function signup(body: { email: string; password: string; nickname: string; nicknameChecked: boolean }) {
     const response = await $fetch<{ ok: boolean; data: AuthPayload }>(
       `${config.public.apiBase}/api/auth/signup`,
       {
@@ -227,6 +236,7 @@ export function useAuth() {
     refreshToken,
     currentUser,
     syncSession,
+    checkNickname,
     signup,
     login,
     loginWithKakaoCode,
