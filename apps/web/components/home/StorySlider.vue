@@ -74,16 +74,16 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="story-slider">
-    <button
-      type="button"
-      class="story-slider-arrow story-slider-arrow--left"
-      aria-label="이전 슬라이드"
-      @click="goPrev"
-    >
-      <span aria-hidden="true">&lsaquo;</span>
-    </button>
-
     <div class="story-slider-viewport">
+      <button
+        type="button"
+        class="story-slider-arrow story-slider-arrow--left"
+        aria-label="이전 슬라이드"
+        @click="goPrev"
+      >
+        <span aria-hidden="true">&lsaquo;</span>
+      </button>
+
       <div
         class="story-slider-track"
         :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
@@ -127,16 +127,16 @@ onBeforeUnmount(() => {
           </div>
         </article>
       </div>
-    </div>
 
-    <button
-      type="button"
-      class="story-slider-arrow story-slider-arrow--right"
-      aria-label="다음 슬라이드"
-      @click="goNext"
-    >
-      <span aria-hidden="true">&rsaquo;</span>
-    </button>
+      <button
+        type="button"
+        class="story-slider-arrow story-slider-arrow--right"
+        aria-label="다음 슬라이드"
+        @click="goNext"
+      >
+        <span aria-hidden="true">&rsaquo;</span>
+      </button>
+    </div>
 
     <div class="story-slider-dots">
       <button
