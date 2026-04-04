@@ -895,9 +895,9 @@ watch(
             @click="applyReflectionSelection(item)"
           >
             <div class="mvp-sharing-head">
-              <strong>{{ getReflectionDisplayName(item) }} <span>{{ formatRelativeTime(item.updatedAt) }}</span></strong>
-              <span>{{ item.verseRange }}</span>
+              <span><strong>{{ getReflectionDisplayName(item) }}</strong> {{ formatRelativeTime(item.updatedAt) }}</span>
             </div>
+              <span>{{ item.verseRange }}</span>
             <p>{{ item.text }}</p>
           </article>
           <p v-if="!sharingList.length" class="mvp-muted">아직 저장된 나눔이 없습니다.</p>
