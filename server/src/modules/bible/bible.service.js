@@ -1,4 +1,4 @@
-﻿import { findBibleRows } from './bible.repository.js';
+import { findBibleRows } from './bible.repository.js';
 import { parsePositiveInteger } from '../../utils/validation.js';
 
 export function convertToBibleChapter(rows = []) {
@@ -37,6 +37,7 @@ export function convertToBibleChapter(rows = []) {
         startVerse: row.verseNo,
         endVerse: row.verseNo,
         subject: row.subject || '',
+        excerpt: row.excerpt || '',
         summary: row.summary || row.excerpt || '',
         verses: [],
       };

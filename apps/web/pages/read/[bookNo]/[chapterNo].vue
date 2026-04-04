@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import type { BibleChapter, BibleVerse, ReadingPaint, ReflectionItem } from '~/composables/useBible';
 
 type PaletteItem = {
@@ -26,19 +26,6 @@ const categoryPalette: PaletteItem[] = [
   { category: '신앙', category2: '신앙•회개', categories: ['신앙', '회개'], categoryEng: 'faith', color: '#FF9966', soft: '#ffeac0', eng: 'Faith' },
 ];
 
-const sampleSharing = {
-  1: [
-    { userName: '소은', verseRange: '창세기 1:3', text: '빛은 상황보다 먼저 온 말씀이라고 느꼈어요.' },
-    { userName: '민호', verseRange: '창세기 1:26-28', text: '형상대로 지음 받았다는 말이 오늘 제 정체성을 붙들어 줬어요.' },
-  ],
-  2: [
-    { userName: '유진', verseRange: '창세기 2:3', text: '안식은 멈춤이 아니라 하나님이 기뻐하신 질서에 머무는 것 같아요.' },
-  ],
-  3: [
-    { userName: '지안', verseRange: '창세기 3:9', text: '네가 어디 있느냐는 정죄보다 찾으시는 질문처럼 다가왔어요.' },
-  ],
-};
-
 const route = useRoute();
 const router = useRouter();
 const bible = useBible();
@@ -49,21 +36,21 @@ const bookNo = computed(() => Number(route.params.bookNo) || 1);
 const chapterNo = computed(() => Number(route.params.chapterNo) || 1);
 const readerId = computed(() => identity.readerId.value);
 const selectedCategory = ref(categoryPalette[0].category);
-const showCategory = ref(false);
+const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
 const reflectionText = ref('');
 const toast = ref('');
 const copyingMessage = ref(false);
 const savingReflection = ref(false);
 const savingPaintKey = ref('');
-const selectedVerseIds = ref<number[]>([]);
+const clearingPaints = ref(false);
 const paints = ref<ReadingPaint[]>([]);
 const reflections = ref<ReflectionItem[]>([]);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 const chapterButtons = [1, 2, 3];
 
-const { data, pending, error, refresh } = await useAsyncData(
+const { data, pending, error } = await useAsyncData(
   () => `bible-read-${bookNo.value}-${chapterNo.value}`,
   () => bible.readChapter({ bookNo: bookNo.value, chapterNo: chapterNo.value }),
   {
@@ -74,7 +61,10 @@ const { data, pending, error, refresh } = await useAsyncData(
 
 const chapter = computed(() => data.value?.data ?? null);
 const chapterLabel = computed(() => `${chapter.value?.book || '창세기'} ${chapterNo.value}장`);
-const chapterRangeLabel = computed(() => `창세기 ${chapterNo.value}`);
+const chapterBookShort = computed(() => {
+  const book = chapter.value?.book || '창세기';
+  return book.charAt(0) || '창';
+});
 
 const paintMap = computed(() => {
   const map = new Map<number, ReadingPaint>();
@@ -88,6 +78,16 @@ const paintMap = computed(() => {
   return map;
 });
 
+const selectedVerseIds = computed(() => {
+  const verseIds = paints.value.flatMap((paint) => paint.verseIDs);
+  return [...new Set(verseIds)].sort((left, right) => left - right);
+});
+
+const myReflections = computed(() => reflections.value.filter((item) => item.userId === readerId.value));
+const sharingList = computed(() => (showAllSharing.value ? reflections.value : myReflections.value));
+const latestMyReflection = computed(() => myReflections.value[0] || null);
+const selectedVerseRange = computed(() => formatVerseRange(selectedVerseIds.value));
+
 const chapterStats = computed(() => {
   const paragraphs = chapter.value?.paragraphs || [];
   const allVerses = paragraphs.flatMap((paragraph) => paragraph.verses);
@@ -97,25 +97,8 @@ const chapterStats = computed(() => {
     { label: '장 주제', value: chapter.value?.subject || '미정' },
     { label: '블록 수', value: `${paragraphs.length}개` },
     { label: '직접 말씀', value: `${sayCount}개` },
-    { label: '내가 칠한 절', value: `${paintMap.value.size}개` },
+    { label: '내가 칠한 절', value: `${selectedVerseIds.value.length}개` },
   ];
-});
-
-const sharingList = computed(() => {
-  const mine = reflections.value.map((item) => ({
-    userName: '내 묵상',
-    verseRange: item.verseRange,
-    text: item.text,
-    mine: true,
-    updatedAt: item.updatedAt,
-  }));
-  const others = (sampleSharing[chapterNo.value as 1 | 2 | 3] || []).map((item, index) => ({
-    ...item,
-    mine: false,
-    updatedAt: `${index}`,
-  }));
-
-  return showAllSharing.value ? [...mine, ...others] : mine;
 });
 
 const shareMessage = computed(() => {
@@ -125,17 +108,15 @@ const shareMessage = computed(() => {
       .filter(Boolean)
       .map((category) => `#${category}`),
   )];
-  const reflection = reflections.value[0]?.text || '오늘 붙든 말씀을 한 줄로 적어 보세요.';
+  const reflection = latestMyReflection.value?.text || '오늘 붙든 말씀을 한 줄로 적어 보세요.';
 
   return [
-    `${chapter.value?.subject || `창세기 ${chapterNo.value}장`}에서 붙든 한 줄`,
+    `${chapter.value?.subject || chapterLabel.value}에서 붙든 한 줄`,
     selectedVerseRange.value ? `선택 범위: ${selectedVerseRange.value}` : '선택한 절이 아직 없습니다.',
     `나눔: ${reflection}`,
-    ['#모줄성', `#창세기${chapterNo.value}장`, ...tags].join(' '),
+    ['#모줄성', `#${chapterBookShort.value}${chapterNo.value}`, ...tags].join(' '),
   ].join('\n');
 });
-
-const selectedVerseRange = computed(() => formatVerseRange(selectedVerseIds.value));
 
 function setToast(message: string) {
   toast.value = message;
@@ -168,10 +149,9 @@ function getSourceCategory(verse: BibleVerse) {
 }
 
 function getDisplayBackground(verse: BibleVerse) {
-  const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
-
-  if (showCategory.value && sourceMeta) {
-    return sourceMeta.soft;
+  if (showSourceCategories.value) {
+    const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
+    return sourceMeta?.soft || '#ffffff';
   }
 
   const savedPaint = getSavedPaint(verse.verseNo);
@@ -179,10 +159,9 @@ function getDisplayBackground(verse: BibleVerse) {
 }
 
 function getDisplayMarker(verse: BibleVerse) {
-  const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
-
-  if (showCategory.value && sourceMeta) {
-    return sourceMeta.color;
+  if (showSourceCategories.value) {
+    const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
+    return sourceMeta?.color || '#d7cabc';
   }
 
   const savedPaint = getSavedPaint(verse.verseNo);
@@ -190,7 +169,7 @@ function getDisplayMarker(verse: BibleVerse) {
 }
 
 function getDisplayCategoryLabel(verse: BibleVerse) {
-  if (!showCategory.value) {
+  if (!showSourceCategories.value) {
     return '';
   }
 
@@ -204,24 +183,9 @@ function getVerseTextColor(verse: BibleVerse) {
 
 function handlePickCategory(category: string) {
   selectedCategory.value = category;
-  if (showCategory.value) {
-    showCategory.value = false;
+  if (showSourceCategories.value) {
+    showSourceCategories.value = false;
   }
-}
-
-function toggleVerseSelection(verseNo: number) {
-  if (selectedVerseIds.value.includes(verseNo)) {
-    selectedVerseIds.value = selectedVerseIds.value.filter((value) => value !== verseNo);
-    return;
-  }
-
-  selectedVerseIds.value = [...selectedVerseIds.value, verseNo].sort((a, b) => a - b);
-}
-
-function resetCurrentChapter() {
-  selectedVerseIds.value = [];
-  reflectionText.value = '';
-  setToast('현재 장 선택을 초기화했습니다.');
 }
 
 function formatVerseRange(verseIds: number[]) {
@@ -246,7 +210,11 @@ function formatVerseRange(verseIds: number[]) {
   }
 
   ranges.push(start === end ? `${start}` : `${start}-${end}`);
-  return `${chapterRangeLabel.value}:${ranges.join(',')}`;
+  return `${chapterBookShort.value}${chapterNo.value}:${ranges.join(',')}`;
+}
+
+function formatSingleVerseRange(verseNo: number) {
+  return `${chapterBookShort.value}${chapterNo.value}:${verseNo}`;
 }
 
 function getParagraphNoForVerse(verseNo: number) {
@@ -270,10 +238,8 @@ async function loadChapterState() {
       chapterNo: chapterNo.value,
     }),
     bible.listReflections({
-      userId: readerId.value,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
-      mine: true,
     }),
   ]);
 
@@ -281,14 +247,7 @@ async function loadChapterState() {
   reflections.value = reflectionResponse.data;
 }
 
-async function refreshChapter() {
-  await refresh();
-  await loadChapterState();
-  setToast('본문과 저장 상태를 다시 불러왔습니다.');
-}
-
 async function handleVerseClick(paragraphNo: number, verseNo: number) {
-  toggleVerseSelection(verseNo);
   savingPaintKey.value = `${paragraphNo}:${verseNo}`;
 
   try {
@@ -297,7 +256,7 @@ async function handleVerseClick(paragraphNo: number, verseNo: number) {
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
       paragraphNo,
-      verseRange: formatVerseRange([verseNo]),
+      verseRange: formatSingleVerseRange(verseNo),
       verseIDs: [verseNo],
       category: selectedCategory.value,
       updatedAt: new Date().toISOString(),
@@ -311,9 +270,28 @@ async function handleVerseClick(paragraphNo: number, verseNo: number) {
   }
 }
 
+async function resetCurrentChapter() {
+  clearingPaints.value = true;
+
+  try {
+    await bible.clearReadingPaints({
+      userId: readerId.value,
+      bookNo: bookNo.value,
+      chapterNo: chapterNo.value,
+    });
+    reflectionText.value = '';
+    await loadChapterState();
+    setToast('현재 창에서 내가 선택한 색칠을 지웠습니다.');
+  } catch (error: any) {
+    setToast(error?.data?.message || error?.message || '현재 창 초기화 중 오류가 발생했습니다.');
+  } finally {
+    clearingPaints.value = false;
+  }
+}
+
 async function submitReflection() {
   if (!selectedVerseIds.value.length || !selectedVerseRange.value || !reflectionText.value.trim()) {
-    setToast('구절을 선택하고 한 줄 묵상을 입력해 주세요.');
+    setToast('선택한 절과 한 줄 나눔을 입력해 주세요.');
     return;
   }
 
@@ -334,9 +312,9 @@ async function submitReflection() {
     });
     reflectionText.value = '';
     await loadChapterState();
-    setToast(`선택 범위 저장: ${selectedVerseRange.value}`);
+    setToast(`한 줄 나눔을 저장했습니다. ${selectedVerseRange.value}`);
   } catch (error: any) {
-    setToast(error?.data?.message || error?.message || '묵상 저장 중 오류가 발생했습니다.');
+    setToast(error?.data?.message || error?.message || '한 줄 나눔 저장 중 오류가 발생했습니다.');
   } finally {
     savingReflection.value = false;
   }
@@ -361,10 +339,9 @@ watch(
       return;
     }
 
-    showCategory.value = false;
+    showSourceCategories.value = false;
     showAllSharing.value = false;
     reflectionText.value = '';
-    selectedVerseIds.value = [];
     await loadChapterState();
   },
   { immediate: true },
@@ -378,7 +355,7 @@ watch(
         <div class="mvp-hero-grid">
           <div>
             <p class="mvp-eyebrow">One Minute Bible Reading MVP</p>
-            <p class="mvp-deck">Bottom-up: 구절에서 시작해 블록과 장으로 올라갑니다. Top-down: 장과 블록을 먼저 보고 구절로 내려갑니다.</p>
+            <p class="mvp-deck">원본 `bible_edit` 블록은 유지하고, 내가 고른 카테고리와 한 줄 나눔은 따로 저장합니다.</p>
             <h1 class="mvp-title">{{ chapterLabel }}</h1>
             <div class="mvp-meta-list">
               <span class="mvp-meta-pill">책 {{ chapter?.bookNo || bookNo }}</span>
@@ -409,16 +386,17 @@ watch(
       <section class="mvp-section">
         <div class="mvp-section-header">
           <h2>12 Color Table</h2>
-          <p>색을 먼저 고르고, 아래 절을 누르면 그 category로 칠해집니다.</p>
+          <p>위에서 주제를 고르고 아래 성경 절을 누르면 해당 배경색으로 저장됩니다.</p>
         </div>
 
         <div class="mvp-toolbar">
           <div class="mvp-toolbar-actions">
-            <button type="button" :class="['mvp-toolbar-button', { active: showCategory }]" @click="showCategory = !showCategory">
-              {{ showCategory ? '카테고리 숨기기' : '카테고리 보기' }}
+            <button type="button" :class="['mvp-toolbar-button', { active: showSourceCategories }]" @click="showSourceCategories = !showSourceCategories">
+              {{ showSourceCategories ? '내 선택 보기' : '카테고리 보기' }}
             </button>
-            <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">현재 장 선택 초기화</button>
-            <button type="button" class="mvp-toolbar-button" @click="refreshChapter()">다시 불러오기</button>
+            <button type="button" class="mvp-toolbar-button" :disabled="clearingPaints" @click="resetCurrentChapter()">
+              {{ clearingPaints ? '초기화 중' : '현재창초기화' }}
+            </button>
           </div>
 
           <div class="mvp-palette">
@@ -443,7 +421,7 @@ watch(
       <section class="mvp-section">
         <div class="mvp-section-header">
           <h2>블록 읽기</h2>
-          <p>기본 상태에서는 카테고리와 배경색을 숨기고, 직접 말씀은 red로만 강조합니다.</p>
+          <p>블록은 `paragraph` 기준입니다. 직접 말씀(`say: true`)은 빨간 글자만 적용됩니다.</p>
         </div>
 
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
@@ -454,7 +432,7 @@ watch(
             <p class="mvp-block-index">블록 {{ paragraph.paragraphNo }}</p>
             <h3 class="mvp-block-title">{{ paragraph.subject || '블록 주제 없음' }}</h3>
             <div class="mvp-block-summary">
-              {{ paragraph.summary || '문단 요약이 아직 없습니다.' }}
+              {{ paragraph.excerpt || paragraph.summary || '문단 요약이 아직 없습니다.' }}
             </div>
 
             <div class="mvp-segments">
@@ -462,7 +440,7 @@ watch(
                 v-for="verse in paragraph.verses"
                 :key="`${paragraph.paragraphNo}-${verse.verseNo}-${verse.verse}`"
                 type="button"
-                :class="['segment', { painted: Boolean(getSavedPaint(verse.verseNo)), 'selected-target': selectedVerseIds.includes(verse.verseNo), say: verse.say }]"
+                :class="['segment', { painted: Boolean(getSavedPaint(verse.verseNo)), say: verse.say }]"
                 :style="{ background: getDisplayBackground(verse) }"
                 @click="handleVerseClick(paragraph.paragraphNo, verse.verseNo)"
               >
@@ -472,7 +450,7 @@ watch(
                   <template v-if="getDisplayCategoryLabel(verse)">
                     {{ getDisplayCategoryLabel(verse) }} ·
                   </template>
-                  창세기 {{ chapterNo }}:{{ verse.verseNo }}
+                  {{ chapterBookShort }}{{ chapterNo }}:{{ verse.verseNo }}
                   <template v-if="verse.say"> · 직접 말씀</template>
                   <template v-if="savingPaintKey === `${paragraph.paragraphNo}:${verse.verseNo}`"> · 저장 중</template>
                 </span>
@@ -487,7 +465,7 @@ watch(
       <section class="mvp-sidebar-block">
         <p class="mvp-eyebrow">Legend</p>
         <h2>카테고리 색</h2>
-        <p class="mvp-muted">`카테고리 보기`를 눌렀을 때만 원래 category와 배경색이 드러납니다.</p>
+        <p class="mvp-muted">`카테고리 보기`를 눌렀을 때만 서버에서 받은 원래 category가 드러납니다.</p>
         <div class="mvp-legend">
           <div v-for="item in categoryPalette" :key="item.category" class="mvp-legend-item">
             <span class="mvp-legend-dot" :style="{ background: item.soft }" />
@@ -508,25 +486,25 @@ watch(
 
       <section class="mvp-sidebar-block">
         <p class="mvp-eyebrow">Sharing</p>
-        <h2>한 줄 나누기</h2>
+        <h2>한줄나누기</h2>
         <textarea
           v-model="reflectionText"
           class="mvp-textarea"
-          placeholder="이 장에서 지금 무엇이 보였나요?"
+          placeholder="내가 선택한 성경절을 붙들고 한 줄 나눔을 적어 주세요."
         />
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
-            {{ savingReflection ? '저장 중' : '한 줄 나누기' }}
+            {{ savingReflection ? '저장 중' : '한줄나누기' }}
           </button>
           <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
-            {{ showAllSharing ? '내 나눔만 보기' : '나눔' }}
+            {{ showAllSharing ? '내 것만 보기' : '나눔' }}
           </button>
         </div>
         <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 절이 아직 없습니다.' }}</div>
         <p v-if="toast" class="mvp-muted">{{ toast }}</p>
         <div class="mvp-sharing-list">
-          <article v-for="item in sharingList" :key="`${item.userName}-${item.verseRange}-${item.updatedAt}`" class="mvp-sharing-item">
-            <strong>{{ item.mine ? '내 묵상' : item.userName }}</strong>
+          <article v-for="item in sharingList" :key="`${item.userId}-${item.verseRange}-${item.updatedAt}`" class="mvp-sharing-item">
+            <strong>{{ item.userId === readerId ? '내 나눔' : item.userId }}</strong>
             <span>{{ item.verseRange }}</span>
             <p>{{ item.text }}</p>
           </article>
@@ -537,7 +515,7 @@ watch(
       <section class="mvp-sidebar-block">
         <p class="mvp-eyebrow">Share</p>
         <h2>SNS 공유 준비</h2>
-        <p class="mvp-muted">선택한 절 범위와 나눔 내용, 태그를 포함합니다.</p>
+        <p class="mvp-muted">내가 선택한 절 범위와 최근 나눔 내용을 함께 복사합니다.</p>
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage" @click="copyShareMessage()">
             {{ copyingMessage ? '복사 중' : 'SNS 공유 문구 복사' }}

@@ -14,6 +14,7 @@ export type BibleParagraph = {
   endVerse: number;
   subject: string;
   summary: string;
+  excerpt?: string;
   verses: BibleVerse[];
 };
 
@@ -92,6 +93,20 @@ export function useBible() {
     );
   }
 
+  async function clearReadingPaints(query: {
+    userId: string;
+    bookNo: number;
+    chapterNo: number;
+  }) {
+    return await $fetch<{ ok: boolean; data: { deletedCount: number } }>(
+      `${config.public.apiBase}/api/reading-paints`,
+      {
+        method: 'DELETE',
+        query,
+      },
+    );
+  }
+
   async function listReflections(query: {
     userId?: string;
     bookNo: number;
@@ -119,6 +134,7 @@ export function useBible() {
     readChapter,
     listReadingPaints,
     saveReadingPaint,
+    clearReadingPaints,
     listReflections,
     saveReflection,
   };

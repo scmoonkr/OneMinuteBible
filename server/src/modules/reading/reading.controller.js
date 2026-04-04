@@ -1,4 +1,8 @@
-import { getReadingPaints, saveReadingPaint } from './reading.service.js';
+import {
+  clearReadingPaints,
+  getReadingPaints,
+  saveReadingPaint,
+} from './reading.service.js';
 
 export async function listPaints(req, res, next) {
   try {
@@ -20,6 +24,19 @@ export async function createPaint(req, res, next) {
     return res.status(201).json({
       ok: true,
       data: saved,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function removePaints(req, res, next) {
+  try {
+    const result = await clearReadingPaints(req.query);
+
+    return res.json({
+      ok: true,
+      data: result,
     });
   } catch (error) {
     return next(error);

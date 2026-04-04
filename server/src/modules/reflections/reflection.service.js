@@ -1,4 +1,4 @@
-﻿import { insertReflection, listReflections } from './reflection.repository.js';
+import { insertReflection, listReflections } from './reflection.repository.js';
 import {
   normalizeIntegerList,
   parseOptionalBoolean,
@@ -7,8 +7,8 @@ import {
 } from '../../utils/validation.js';
 
 function parseReflectionQuery(params = {}) {
+  const userId = String(params.userId ?? '').trim();
   const query = {
-    userId: requireTrimmedString(params.userId, 'userId'),
     bookNo: parsePositiveInteger(params.bookNo, 'bookNo'),
     chapterNo: parsePositiveInteger(params.chapterNo, 'chapterNo'),
   };
@@ -22,7 +22,10 @@ function parseReflectionQuery(params = {}) {
     query.paragraphNo = paragraphNo;
   }
 
-  if (mine !== undefined) {
+  if (mine === true) {
+    query.userId = userId || requireTrimmedString(params.userId, 'userId');
+    query.mine = true;
+  } else if (mine !== undefined) {
     query.mine = mine;
   }
 

@@ -34,3 +34,12 @@ export async function upsertReadingPaint(document) {
 
   return document;
 }
+
+export async function deleteReadingPaints(query = {}) {
+  const database = getDatabase();
+  const result = await database.collection(COLLECTION_NAME).deleteMany(query);
+
+  return {
+    deletedCount: result.deletedCount || 0,
+  };
+}

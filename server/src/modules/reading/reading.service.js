@@ -1,4 +1,8 @@
-﻿import { listReadingPaints, upsertReadingPaint } from './reading.repository.js';
+import {
+  deleteReadingPaints,
+  listReadingPaints,
+  upsertReadingPaint,
+} from './reading.repository.js';
 import {
   normalizeIntegerList,
   parsePositiveInteger,
@@ -37,4 +41,10 @@ export async function saveReadingPaint(body = {}) {
   };
 
   return upsertReadingPaint(document);
+}
+
+export async function clearReadingPaints(params = {}) {
+  const query = parseReadingQuery(params);
+
+  return deleteReadingPaints(query);
 }
