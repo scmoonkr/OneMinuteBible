@@ -1552,7 +1552,8 @@ input {
 }
 
 .home-preview-list--shares {
-  width: min(100%, 520px);
+  width: min(100%, 1180px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
@@ -1689,6 +1690,7 @@ input {
 
   .home-preview-list--shares {
     width: 100%;
+    grid-template-columns: 1fr;
   }
 
   .home-share-card-message {
