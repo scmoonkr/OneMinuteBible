@@ -44,9 +44,11 @@ export function convertToBibleChapter(rows = []) {
     }
 
     const normalizedVerses = (row.verses || []).map((verse) => ({
-      ...verse,
-      verseNo: row.verseNo,
+      category: verse.category || '',
       categoryOriginal: verse.category || '',
+      verse: verse.verse || '',
+      godSay: verse.godSay === true || verse.say === true,
+      verseNo: row.verseNo,
     }));
 
     currentParagraph.verses.push(...normalizedVerses);
@@ -78,3 +80,4 @@ export async function getBibleChapter(params = {}) {
     chapter: convertToBibleChapter(rows),
   };
 }
+

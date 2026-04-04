@@ -1,13 +1,11 @@
-import { insertReflection, listReflections } from './reflection.repository.js';
+﻿import { insertReflection, listReflections } from './reflection.repository.js';
 import {
-  normalizeIntegerList,
-  parseOptionalBoolean,
+  normalizeSelectedVerseItems,
   parsePositiveInteger,
   requireTrimmedString,
 } from '../../utils/validation.js';
 
 function parseReflectionQuery(params = {}) {
-  const userId = String(params.userId ?? '').trim();
   const query = {
     bookNo: parsePositiveInteger(params.bookNo, 'bookNo'),
     chapterNo: parsePositiveInteger(params.chapterNo, 'chapterNo'),
@@ -16,17 +14,9 @@ function parseReflectionQuery(params = {}) {
   const paragraphNo = parsePositiveInteger(params.paragraphNo, 'paragraphNo', {
     required: false,
   });
-  const mine = parseOptionalBoolean(params.mine);
 
   if (paragraphNo !== undefined) {
     query.paragraphNo = paragraphNo;
-  }
-
-  if (mine === true) {
-    query.userId = userId || requireTrimmedString(params.userId, 'userId');
-    query.mine = true;
-  } else if (mine !== undefined) {
-    query.mine = mine;
   }
 
   return query;
@@ -47,9 +37,8 @@ export async function saveReflection(body = {}) {
     chapterNo: parsePositiveInteger(body.chapterNo, 'chapterNo'),
     paragraphNo: parsePositiveInteger(body.paragraphNo, 'paragraphNo'),
     verseRange: requireTrimmedString(body.verseRange, 'verseRange'),
-    verseIDs: normalizeIntegerList(body.verseIDs),
+    verseIDs: normalizeSelectedVerseItems(body.verseIDs),
     text: requireTrimmedString(body.text, 'text'),
-    mine: body.mine === false ? false : true,
     updatedAt: now,
     createdAt: now,
   };

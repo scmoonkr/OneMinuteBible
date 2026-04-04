@@ -19,6 +19,12 @@
           content: '읽고, 색칠하고, 한 줄 묵상으로 연결되는 모줄성 MVP',
         },
       ],
+      link: [
+        {
+          rel: 'stylesheet',
+          href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+        },
+      ],
     },
   },
   compatibilityDate: '2026-04-03',

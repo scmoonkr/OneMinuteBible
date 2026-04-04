@@ -20,8 +20,6 @@ export async function upsertReadingPaint(document) {
     userId: document.userId,
     bookNo: document.bookNo,
     chapterNo: document.chapterNo,
-    paragraphNo: document.paragraphNo,
-    verseRange: document.verseRange,
   };
 
   await database.collection(COLLECTION_NAME).updateOne(

@@ -66,6 +66,24 @@ export function normalizeIntegerList(value) {
   return [...new Set(normalized)].sort((left, right) => left - right);
 }
 
+export function normalizeSelectedVerseItems(value) {
+  if (!Array.isArray(value)) {
+    throw createAppError('verseIDs must be an array.', 400);
+  }
+
+  return value
+    .map((item) => ({
+      verseNo: parsePositiveInteger(item?.verseNo, 'verseIDs.verseNo'),
+      category: requireTrimmedString(item?.category, 'verseIDs.category'),
+      verse: requireTrimmedString(item?.verse, 'verseIDs.verse'),
+      godSay: item?.godSay === true,
+    }))
+    .filter((item, index, array) => {
+      const key = `${item.verseNo}|${item.category}|${item.verse}|${item.godSay ? '1' : '0'}`;
+      return array.findIndex((candidate) => `${candidate.verseNo}|${candidate.category}|${candidate.verse}|${candidate.godSay ? '1' : '0'}` === key) === index;
+    });
+}
+
 export function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

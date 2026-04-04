@@ -34,14 +34,19 @@ export type BibleReadResponse = {
   data: BibleChapter;
 };
 
+export type SelectedVerseItem = {
+  verseNo: number;
+  category: string;
+  verse: string;
+  godSay?: boolean;
+};
+
 export type ReadingPaint = {
   userId: string;
   bookNo: number;
   chapterNo: number;
-  paragraphNo: number;
   verseRange: string;
-  verseIDs: number[];
-  category: string;
+  verseIDs: SelectedVerseItem[];
   updatedAt: string;
 };
 
@@ -51,9 +56,9 @@ export type ReflectionItem = {
   chapterNo: number;
   paragraphNo: number;
   verseRange: string;
-  verseIDs: number[];
+  verseIDs: SelectedVerseItem[];
   text: string;
-  mine: boolean;
+  mine?: boolean;
   updatedAt: string;
   createdAt: string;
 };

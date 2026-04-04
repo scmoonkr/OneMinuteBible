@@ -1,34 +1,30 @@
 ﻿<script setup lang="ts">
-import type { BibleChapter, BibleVerse, ReadingPaint, ReflectionItem } from '~/composables/useBible';
+import type { BibleChapter, BibleVerse, ReadingPaint, ReflectionItem, SelectedVerseItem } from '~/composables/useBible';
 import { bibleBooks } from '~/data/bibleTable';
 
 type PaletteItem = {
   category: string;
-  category2: string;
   categories: string[];
-  categoryEng: string;
   color: string;
   soft: string;
-  eng: string;
 };
 
 const categoryPalette: PaletteItem[] = [
-  { category: '가족', category2: '가족•우정', categories: ['가족', '우정'], categoryEng: 'family', color: '#CCCC00', soft: '#ffffba', eng: 'Family' },
-  { category: '거짓', category2: '거짓•악행', categories: ['거짓', '악행'], categoryEng: 'evil', color: '#C0504D', soft: '#cab6a6', eng: 'Evil' },
-  { category: '구원', category2: '구원•축복', categories: ['구원', '축복'], categoryEng: 'salvation', color: '#4F81BD', soft: '#cde3f7', eng: 'Salvation' },
-  { category: '계명', category2: '계명•순종', categories: ['계명', '순종'], categoryEng: 'command', color: '#9BBB59', soft: '#f5fcd1', eng: 'Commandments' },
-  { category: '모범', category2: '모범•증거', categories: ['모범', '증거'], categoryEng: 'outrech', color: '#FF99CC', soft: '#FF99CC', eng: 'Outreach' },
-  { category: '범죄', category2: '범죄•위선', categories: ['범죄', '위선'], categoryEng: 'sin', color: '#3333FF', soft: '#babfc0', eng: 'Sin' },
-  { category: '사랑', category2: '사랑•친절', categories: ['사랑', '친절'], categoryEng: 'love', color: '#008000', soft: '#d2e4bc', eng: 'Love' },
-  { category: '삼위', category2: '삼위•임재', categories: ['삼위', '임재'], categoryEng: 'god', color: '#8064A2', soft: '#B6A6CA', eng: 'God' },
-  { category: '서술', category2: '서술•역사', categories: ['서술', '역사'], categoryEng: 'history', color: '#8C8C8C', soft: '#EEEEEE', eng: 'History' },
-  { category: '섬김', category2: '섬김•제자', categories: ['섬김', '제자'], categoryEng: 'disciple', color: '#FF5050', soft: '#f5c0ab', eng: 'Discipleship' },
-  { category: '예언', category2: '성약•예언', categories: ['성약', '예언'], categoryEng: 'prophesy', color: '#CC9900', soft: '#cfad71', eng: 'Prophesy' },
-  { category: '신앙', category2: '신앙•회개', categories: ['신앙', '회개'], categoryEng: 'faith', color: '#FF9966', soft: '#ffeac0', eng: 'Faith' },
+  { category: '가족', categories: ['가족', '우정'], color: '#CCCC00', soft: '#ffffba' },
+  { category: '거짓', categories: ['거짓', '악행'], color: '#C0504D', soft: '#cab6a6' },
+  { category: '구원', categories: ['구원', '축복'], color: '#4F81BD', soft: '#cde3f7' },
+  { category: '계명', categories: ['계명', '순종'], color: '#9BBB59', soft: '#f5fcd1' },
+  { category: '모범', categories: ['모범', '증거'], color: '#FF99CC', soft: '#ffd8eb' },
+  { category: '범죄', categories: ['범죄', '위선'], color: '#3333FF', soft: '#babfc0' },
+  { category: '사랑', categories: ['사랑', '친절'], color: '#008000', soft: '#d2e4bc' },
+  { category: '삼위', categories: ['삼위', '임재'], color: '#8064A2', soft: '#B6A6CA' },
+  { category: '서술', categories: ['서술', '역사'], color: '#8C8C8C', soft: '#EEEEEE' },
+  { category: '섬김', categories: ['섬김', '제자'], color: '#FF5050', soft: '#f5c0ab' },
+  { category: '예언', categories: ['성약', '예언'], color: '#CC9900', soft: '#cfad71' },
+  { category: '신앙', categories: ['신앙', '회개'], color: '#FF9966', soft: '#ffeac0' },
 ];
 
 const route = useRoute();
-const router = useRouter();
 const bible = useBible();
 const auth = useAuth();
 const identity = useReaderIdentity();
@@ -37,6 +33,8 @@ const bookNo = computed(() => Number(route.params.bookNo) || 1);
 const chapterNo = computed(() => Number(route.params.chapterNo) || 1);
 const readerId = computed(() => identity.readerId.value);
 const currentBookMeta = computed(() => bibleBooks.find((item) => item.bookNo === bookNo.value) || bibleBooks[0]);
+const currentTestament = computed<'old' | 'new'>(() => currentBookMeta.value?.testament || 'old');
+const testamentBooks = computed(() => bibleBooks.filter((item) => item.testament === currentTestament.value));
 const bookLabel = computed(() => currentBookMeta.value?.church || chapter.value?.book || '창세기');
 const chapterBookShort = computed(() => currentBookMeta.value?.churchKor || bookLabel.value.charAt(0) || '창');
 const maxChapterNo = computed(() => currentBookMeta.value?.chapter || 1);
@@ -48,11 +46,12 @@ const showAllSharing = ref(false);
 const reflectionText = ref('');
 const toast = ref('');
 const copyingMessage = ref(false);
-const savingReflection = ref(false);
 const savingPaintKey = ref('');
+const savingReflection = ref(false);
 const clearingPaints = ref(false);
 const paints = ref<ReadingPaint[]>([]);
 const reflections = ref<ReflectionItem[]>([]);
+const localSelectedVerseItems = ref<SelectedVerseItem[]>([]);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { data, pending, error } = await useAsyncData(
@@ -65,104 +64,81 @@ const { data, pending, error } = await useAsyncData(
 );
 
 const chapter = computed(() => data.value?.data ?? null);
-
 const visibleChapterNumbers = computed(() => {
   const max = maxChapterNo.value;
   const current = Math.min(Math.max(chapterNo.value, 1), max);
   let start = Math.max(1, current - 2);
   let end = Math.min(max, current + 2);
 
-  while (end - start < 4 && start > 1) {
-    start -= 1;
-  }
-
-  while (end - start < 4 && end < max) {
-    end += 1;
-  }
+  while (end - start < 4 && start > 1) start -= 1;
+  while (end - start < 4 && end < max) end += 1;
 
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 });
-
 const showLeadingEllipsis = computed(() => visibleChapterNumbers.value[0] > 1);
 const showTrailingEllipsis = computed(() => visibleChapterNumbers.value[visibleChapterNumbers.value.length - 1] < maxChapterNo.value);
 
-const paintMap = computed(() => {
-  const map = new Map<number, ReadingPaint>();
+function normalizeSelectedVerseItems(items: unknown): SelectedVerseItem[] {
+  if (!Array.isArray(items)) return [];
 
-  paints.value.forEach((paint) => {
-    paint.verseIDs.forEach((verseId) => {
-      map.set(verseId, paint);
-    });
+  const normalized: SelectedVerseItem[] = [];
+
+  items.forEach((item: any) => {
+      const verseNo = Number(item?.verseNo);
+      const category = String(item?.category || '').trim();
+      const verse = String(item?.verse || '').trim();
+
+      if (!Number.isInteger(verseNo) || verseNo < 1 || !category || !verse) {
+        return;
+      }
+
+      normalized.push({
+        verseNo,
+        category,
+        verse,
+        godSay: item?.godSay === true,
+      });
   });
 
-  return map;
-});
+  return normalized.filter((item, index, array) => {
+    const key = `${item.verseNo}|${item.category}|${item.verse}|${item.godSay ? '1' : '0'}`;
+    return array.findIndex((candidate) => `${candidate.verseNo}|${candidate.category}|${candidate.verse}|${candidate.godSay ? '1' : '0'}` === key) === index;
+  });
+}
 
-const selectedVerseIds = computed(() => {
-  const verseIds = paints.value.flatMap((paint) => paint.verseIDs);
-  return [...new Set(verseIds)].sort((left, right) => left - right);
-});
-
+const selectedVerseItems = computed(() => localSelectedVerseItems.value);
+const selectedVerseIds = computed(() => [...new Set(selectedVerseItems.value.map((item) => item.verseNo))].sort((a, b) => a - b));
 const myReflections = computed(() => reflections.value.filter((item) => item.userId === readerId.value));
 const sharingList = computed(() => (showAllSharing.value ? reflections.value : myReflections.value));
 const latestMyReflection = computed(() => myReflections.value[0] || null);
-const selectedVerseRange = computed(() => formatVerseRange(selectedVerseIds.value));
 
-const chapterStats = computed(() => {
-  const paragraphs = chapter.value?.paragraphs || [];
-  const allVerses = paragraphs.flatMap((paragraph) => paragraph.verses);
-  const sayCount = allVerses.filter((verse) => verse.say).length;
+function getVerseItemKey(item: Pick<SelectedVerseItem, 'verseNo' | 'verse'> | Pick<BibleVerse, 'verseNo' | 'verse'>) {
+  return `${item.verseNo}|${item.verse}`;
+}
 
-  return [
-    { label: '장 주제', value: chapter.value?.subject || '미정' },
-    { label: '전체 장 수', value: `${maxChapterNo.value}장` },
-    { label: '블록 수', value: `${paragraphs.length}개` },
-    { label: '직접 말씀', value: `${sayCount}개` },
-    { label: '내가 칠한 절', value: `${selectedVerseIds.value.length}개` },
-  ];
-});
-
-const shareMessage = computed(() => {
-  const tags = [...new Set(
-    selectedVerseIds.value
-      .map((verseId) => paintMap.value.get(verseId)?.category)
-      .filter(Boolean)
-      .map((category) => `#${category}`),
-  )];
-  const reflection = latestMyReflection.value?.text || '오늘 붙든 말씀을 한 줄로 적어 보세요.';
-
-  return [
-    `${chapter.value?.subject || chapterLabel.value}에서 붙든 한 줄`,
-    selectedVerseRange.value ? `선택 범위: ${selectedVerseRange.value}` : '선택한 절이 아직 없습니다.',
-    `나눔: ${reflection}`,
-    ['#모줄성', `#${chapterBookShort.value}${chapterNo.value}`, ...tags].join(' '),
-  ].join('\n');
+const paintMap = computed(() => {
+  const map = new Map<string, SelectedVerseItem>();
+  selectedVerseItems.value.forEach((item) => {
+    map.set(getVerseItemKey(item), item);
+  });
+  return map;
 });
 
 function setToast(message: string) {
   toast.value = message;
-
-  if (toastTimer) {
-    clearTimeout(toastTimer);
-  }
-
+  if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
-    if (toast.value === message) {
-      toast.value = '';
-    }
+    if (toast.value === message) toast.value = '';
   }, 2400);
 }
 
 function getPaletteMetaBySourceCategory(sourceCategory?: string | null) {
-  if (!sourceCategory) {
-    return null;
-  }
-
+  if (!sourceCategory) return null;
   return categoryPalette.find((item) => item.category === sourceCategory || item.categories.includes(sourceCategory)) || null;
 }
 
-function getSavedPaint(verseNo: number) {
-  return paintMap.value.get(verseNo) || null;
+function getSavedPaint(verse: BibleVerse) {
+  return paintMap.value.get(getVerseItemKey(verse)) || null;
 }
 
 function getSourceCategory(verse: BibleVerse) {
@@ -174,8 +150,7 @@ function getDisplayBackground(verse: BibleVerse) {
     const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
     return sourceMeta?.soft || '#ffffff';
   }
-
-  const savedPaint = getSavedPaint(verse.verseNo);
+  const savedPaint = getSavedPaint(verse);
   return savedPaint ? getPaletteMetaBySourceCategory(savedPaint.category)?.soft || '#fffdf8' : '#ffffff';
 }
 
@@ -184,84 +159,63 @@ function getDisplayMarker(verse: BibleVerse) {
     const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
     return sourceMeta?.color || '#d7cabc';
   }
-
-  const savedPaint = getSavedPaint(verse.verseNo);
+  const savedPaint = getSavedPaint(verse);
   return savedPaint ? getPaletteMetaBySourceCategory(savedPaint.category)?.color || '#d7cabc' : '#d7cabc';
 }
 
 function getDisplayCategoryLabel(verse: BibleVerse) {
-  if (!showSourceCategories.value) {
-    return '';
-  }
-
+  if (!showSourceCategories.value) return '';
   const sourceMeta = getPaletteMetaBySourceCategory(getSourceCategory(verse));
-  return sourceMeta?.category2 || getSourceCategory(verse);
+  return sourceMeta?.category || getSourceCategory(verse);
 }
 
 function getVerseTextColor(verse: BibleVerse) {
-  return verse.say ? '#bf2d2d' : '#2f261d';
+  return verse.godSay || verse.say ? '#bf2d2d' : '#2f261d';
 }
 
-function navigateTo(targetBookNo: number, targetChapterNo: number) {
+function moveToChapter(targetBookNo: number, targetChapterNo: number) {
   const targetBook = bibleBooks.find((item) => item.bookNo === targetBookNo) || currentBookMeta.value;
   const nextChapter = Math.min(Math.max(targetChapterNo, 1), targetBook.chapter);
-  router.push(`/read/${targetBook.bookNo}/${nextChapter}`);
+  return navigateTo(`/read/${targetBook.bookNo}/${nextChapter}`);
+}
+
+function moveToTestament(testament: 'old' | 'new') {
+  const nextBook = bibleBooks.find((item) => item.testament === testament) || bibleBooks[0];
+  return moveToChapter(nextBook.bookNo, 1);
 }
 
 function handleBookChange(event: Event) {
   const nextBookNo = Number((event.target as HTMLSelectElement).value);
-  if (!nextBookNo) {
-    return;
-  }
-
-  const nextBook = bibleBooks.find((item) => item.bookNo === nextBookNo);
-  if (!nextBook) {
-    return;
-  }
-
-  navigateTo(nextBookNo, Math.min(chapterNo.value, nextBook.chapter));
+  if (!Number.isInteger(nextBookNo)) return;
+  moveToChapter(nextBookNo, 1);
 }
 
-function moveToFirstChapter() {
-  navigateTo(bookNo.value, 1);
+function getParagraphNoForVerse(verseNo: number) {
+  return chapter.value?.paragraphs.find((paragraph) => paragraph.verses.some((verse) => verse.verseNo === verseNo))?.paragraphNo || 1;
 }
 
-function moveToPreviousChapter() {
-  navigateTo(bookNo.value, chapterNo.value - 1);
-}
-
-function moveToNextChapter() {
-  navigateTo(bookNo.value, chapterNo.value + 1);
-}
-
-function moveToLastChapter() {
-  navigateTo(bookNo.value, maxChapterNo.value);
-}
+function moveToFirstChapter() { moveToChapter(bookNo.value, 1); }
+function moveToPreviousChapter() { moveToChapter(bookNo.value, chapterNo.value - 1); }
+function moveToNextChapter() { moveToChapter(bookNo.value, chapterNo.value + 1); }
+function moveToLastChapter() { moveToChapter(bookNo.value, maxChapterNo.value); }
 
 function submitChapterInput() {
   const nextChapterNo = Number(chapterInput.value);
-
   if (!Number.isInteger(nextChapterNo)) {
     setToast('장 번호를 숫자로 입력해 주세요.');
     chapterInput.value = String(chapterNo.value);
     return;
   }
-
-  navigateTo(bookNo.value, nextChapterNo);
+  moveToChapter(bookNo.value, nextChapterNo);
 }
 
 function handlePickCategory(category: string) {
   selectedCategory.value = category;
-  if (showSourceCategories.value) {
-    showSourceCategories.value = false;
-  }
+  if (showSourceCategories.value) showSourceCategories.value = false;
 }
 
 function formatVerseRange(verseIds: number[]) {
-  if (!verseIds.length) {
-    return '';
-  }
-
+  if (!verseIds.length) return '';
   const sorted = [...new Set(verseIds)].sort((a, b) => a - b);
   const ranges: string[] = [];
   let start = sorted[0];
@@ -282,13 +236,16 @@ function formatVerseRange(verseIds: number[]) {
   return `${chapterBookShort.value}${chapterNo.value}:${ranges.join(',')}`;
 }
 
-function formatSingleVerseRange(verseNo: number) {
-  return `${chapterBookShort.value}${chapterNo.value}:${verseNo}`;
-}
+const selectedVerseRange = computed(() => formatVerseRange(selectedVerseIds.value));
 
-function getParagraphNoForVerse(verseNo: number) {
-  return chapter.value?.paragraphs.find((paragraph) => paragraph.verses.some((verse) => verse.verseNo === verseNo))?.paragraphNo || 1;
-}
+const shareMessage = computed(() => {
+  const reflection = latestMyReflection.value?.text || reflectionText.value.trim() || '오늘 붙든 말씀을 한 줄로 적어 보세요.';
+  return [
+    selectedVerseRange.value || `${chapterBookShort.value}${chapterNo.value}`,
+    reflection,
+    `#모줄성 #${bookLabel.value}`,
+  ].join('\n');
+});
 
 async function loadChapterState() {
   auth.syncSession();
@@ -314,25 +271,76 @@ async function loadChapterState() {
 
   paints.value = paintResponse.data;
   reflections.value = reflectionResponse.data;
+  localSelectedVerseItems.value = normalizeSelectedVerseItems(paintResponse.data[0]?.verseIDs);
 }
 
-async function handleVerseClick(paragraphNo: number, verseNo: number) {
-  savingPaintKey.value = `${paragraphNo}:${verseNo}`;
+function buildNextSelectedItems(verse: BibleVerse) {
+  const key = getVerseItemKey(verse);
+  const existingItem = paintMap.value.get(key);
+
+  if (existingItem) {
+    if (existingItem.category === selectedCategory.value) {
+      return selectedVerseItems.value.filter((item) => getVerseItemKey(item) !== key);
+    }
+
+    return selectedVerseItems.value.map((item) => {
+      if (getVerseItemKey(item) !== key) {
+        return item;
+      }
+
+      return {
+        ...item,
+        category: selectedCategory.value,
+        godSay: verse.godSay === true || verse.say === true,
+      };
+    });
+  }
+
+  return [
+    ...selectedVerseItems.value,
+    {
+      verseNo: verse.verseNo,
+      category: selectedCategory.value,
+      verse: verse.verse,
+      godSay: verse.godSay === true || verse.say === true,
+    },
+  ];
+}
+
+async function handleVerseClick(verse: BibleVerse) {
+  savingPaintKey.value = getVerseItemKey(verse);
+  const previousSelectedItems = [...selectedVerseItems.value];
 
   try {
-    await bible.saveReadingPaint({
+    const nextSelectedItems = buildNextSelectedItems(verse);
+    localSelectedVerseItems.value = nextSelectedItems;
+
+    if (!nextSelectedItems.length) {
+      await bible.clearReadingPaints({
+        userId: readerId.value,
+        bookNo: bookNo.value,
+        chapterNo: chapterNo.value,
+      });
+      paints.value = [];
+      localSelectedVerseItems.value = [];
+      setToast('선택한 성경을 비웠습니다.');
+      return;
+    }
+
+    const response = await bible.saveReadingPaint({
       userId: readerId.value,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
-      paragraphNo,
-      verseRange: formatSingleVerseRange(verseNo),
-      verseIDs: [verseNo],
-      category: selectedCategory.value,
+      verseRange: formatVerseRange(nextSelectedItems.map((item) => item.verseNo)),
+      verseIDs: nextSelectedItems,
       updatedAt: new Date().toISOString(),
     });
-    await loadChapterState();
-    setToast(`${verseNo}절을 ${selectedCategory.value}로 저장했습니다.`);
+
+    paints.value = [response.data];
+    localSelectedVerseItems.value = normalizeSelectedVerseItems(response.data?.verseIDs);
+    setToast(`${verse.verseNo}절 선택을 저장했습니다.`);
   } catch (error: any) {
+    localSelectedVerseItems.value = previousSelectedItems;
     setToast(error?.data?.message || error?.message || '색칠 저장 중 오류가 발생했습니다.');
   } finally {
     savingPaintKey.value = '';
@@ -341,15 +349,15 @@ async function handleVerseClick(paragraphNo: number, verseNo: number) {
 
 async function resetCurrentChapter() {
   clearingPaints.value = true;
-
   try {
     await bible.clearReadingPaints({
       userId: readerId.value,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
     });
+    paints.value = [];
+    localSelectedVerseItems.value = [];
     reflectionText.value = '';
-    await loadChapterState();
     setToast('현재 창에서 내가 선택한 색칠을 지웠습니다.');
   } catch (error: any) {
     setToast(error?.data?.message || error?.message || '현재 창 초기화 중 오류가 발생했습니다.');
@@ -359,31 +367,36 @@ async function resetCurrentChapter() {
 }
 
 async function submitReflection() {
-  if (!selectedVerseIds.value.length || !selectedVerseRange.value || !reflectionText.value.trim()) {
-    setToast('선택한 절과 한 줄 나눔을 입력해 주세요.');
+  if (!selectedVerseItems.value.length) {
+    setToast('선택한 성경절이 없습니다.');
+    return;
+  }
+
+  if (!reflectionText.value.trim()) {
+    setToast('한 줄 나눔을 입력해 주세요.');
     return;
   }
 
   savingReflection.value = true;
 
   try {
-    await bible.saveReflection({
+    const response = await bible.saveReflection({
       userId: readerId.value,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
-      paragraphNo: getParagraphNoForVerse(selectedVerseIds.value[0]),
+      paragraphNo: getParagraphNoForVerse(selectedVerseItems.value[0]?.verseNo || 1),
       verseRange: selectedVerseRange.value,
-      verseIDs: selectedVerseIds.value,
+      verseIDs: selectedVerseItems.value,
       text: reflectionText.value.trim(),
-      mine: true,
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     });
+
+    reflections.value = [response.data, ...reflections.value];
     reflectionText.value = '';
-    await loadChapterState();
-    setToast(`한 줄 나눔을 저장했습니다. ${selectedVerseRange.value}`);
+    setToast('한줄나누기를 저장했습니다.');
   } catch (error: any) {
-    setToast(error?.data?.message || error?.message || '한 줄 나눔 저장 중 오류가 발생했습니다.');
+    setToast(error?.data?.message || error?.message || '한줄나누기 저장 중 오류가 발생했습니다.');
   } finally {
     savingReflection.value = false;
   }
@@ -425,40 +438,39 @@ watch(
       <section class="mvp-hero">
         <div class="mvp-reading-nav">
           <div class="mvp-reading-nav-row">
-            <label class="mvp-nav-field">
-              <span>성경선택</span>
-              <select class="mvp-nav-select" :value="bookNo" @change="handleBookChange">
-                <option v-for="book in bibleBooks" :key="book.bookNo" :value="book.bookNo">
+            <div class="mvp-testament-tabs">
+              <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'old' }]" @click="moveToTestament('old')">구약</button>
+              <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'new' }]" @click="moveToTestament('new')">신약</button>
+            </div>
+
+            <label class="mvp-nav-field mvp-nav-field--select">
+              <span>성경 선택</span>
+              <select class="mvp-nav-select mvp-nav-select--short" :value="bookNo" @change="handleBookChange">
+                <option v-for="book in testamentBooks" :key="book.bookNo" :value="book.bookNo">
                   {{ book.church }}
                 </option>
               </select>
             </label>
-
-            <div class="mvp-nav-book-meta">
-              <span class="mvp-meta-pill">{{ currentBookMeta.churchKor }}</span>
-              <span class="mvp-meta-pill">전체 {{ maxChapterNo }}장</span>
-              <span class="mvp-meta-pill">DB: Bible</span>
-            </div>
           </div>
 
           <div class="mvp-reading-nav-row mvp-reading-nav-row--chapter">
             <span class="mvp-nav-label">장선택</span>
             <div class="mvp-chapter-pager">
-              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo <= 1" @click="moveToFirstChapter()">&lt;&lt;</button>
-              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo <= 1" @click="moveToPreviousChapter()">&lt;</button>
+              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToFirstChapter()"><i class="fa-solid fa-angles-left" /></button>
+              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo <= 1" @click="moveToPreviousChapter()"><i class="fa-solid fa-angle-left" /></button>
               <span v-if="showLeadingEllipsis" class="mvp-nav-ellipsis">...</span>
               <button
                 v-for="chapterItem in visibleChapterNumbers"
                 :key="chapterItem"
                 type="button"
                 :class="['mvp-chip-button', { active: chapterItem === chapterNo }]"
-                @click="navigateTo(bookNo, chapterItem)"
+                @click="moveToChapter(bookNo, chapterItem)"
               >
                 {{ chapterItem }}
               </button>
               <span v-if="showTrailingEllipsis" class="mvp-nav-ellipsis">...</span>
-              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo >= maxChapterNo" @click="moveToNextChapter()">&gt;</button>
-              <button type="button" class="mvp-toolbar-button" :disabled="chapterNo >= maxChapterNo" @click="moveToLastChapter()">&gt;&gt;</button>
+              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToNextChapter()"><i class="fa-solid fa-angle-right" /></button>
+              <button type="button" class="mvp-toolbar-button mvp-icon-button" :disabled="chapterNo >= maxChapterNo" @click="moveToLastChapter()"><i class="fa-solid fa-angles-right" /></button>
             </div>
 
             <div class="mvp-nav-input-wrap">
@@ -473,15 +485,7 @@ watch(
 
         <div class="mvp-hero-grid">
           <div>
-            <p class="mvp-eyebrow">One Minute Bible Reading MVP</p>
-            <p class="mvp-deck">원본 `bible_edit` 블록은 유지하고, 내가 고른 카테고리와 한 줄 나눔은 따로 저장합니다.</p>
             <h1 class="mvp-title">{{ chapterLabel }}</h1>
-            <div class="mvp-meta-list">
-              <span class="mvp-meta-pill">책 {{ currentBookMeta.bookNo }}</span>
-              <span class="mvp-meta-pill">장 {{ chapterNo }}</span>
-              <span class="mvp-meta-pill">블록 {{ chapter?.paragraphs?.length || 0 }}개</span>
-              <span class="mvp-meta-pill">내가 칠한 절 {{ selectedVerseIds.length }}개</span>
-            </div>
           </div>
 
           <div class="mvp-hero-summary">
@@ -494,7 +498,6 @@ watch(
       <section class="mvp-section">
         <div class="mvp-section-header">
           <h2>12 Color Table</h2>
-          <p>위에서 주제를 고르고 아래 성경 절을 누르면 해당 배경색으로 저장됩니다.</p>
         </div>
 
         <div class="mvp-toolbar">
@@ -513,14 +516,15 @@ watch(
               :key="item.category"
               type="button"
               :class="['mvp-palette-item', { active: selectedCategory === item.category }]"
-              :style="selectedCategory === item.category ? { background: '#4a3426', color: '#fff7ef', borderColor: '#4a3426' } : undefined"
+              :style="{
+                background: item.soft,
+                borderColor: item.color,
+                color: selectedCategory === item.category ? '#1f1711' : '#4b3c30',
+                boxShadow: selectedCategory === item.category ? `inset 0 0 0 2px ${item.color}` : 'none',
+              }"
               @click="handlePickCategory(item.category)"
             >
-              <span class="mvp-palette-dot" :style="{ background: item.soft }" />
-              <span>
-                <strong>{{ item.category2 }}</strong>
-                <small>{{ item.eng }}</small>
-              </span>
+              <strong>{{ item.category }}</strong>
             </button>
           </div>
         </div>
@@ -529,7 +533,6 @@ watch(
       <section class="mvp-section">
         <div class="mvp-section-header">
           <h2>블록 읽기</h2>
-          <p>블록은 `paragraph` 기준입니다. 직접 말씀(`say: true`)은 빨간 글자만 적용됩니다.</p>
         </div>
 
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
@@ -539,18 +542,16 @@ watch(
           <article v-for="paragraph in chapter.paragraphs" :key="paragraph.paragraphNo" class="mvp-paragraph-card">
             <p class="mvp-block-index">블록 {{ paragraph.paragraphNo }}</p>
             <h3 class="mvp-block-title">{{ paragraph.subject || '블록 주제 없음' }}</h3>
-            <div class="mvp-block-summary">
-              {{ paragraph.excerpt || paragraph.summary || '문단 요약이 아직 없습니다.' }}
-            </div>
+            <div class="mvp-block-summary">{{ paragraph.summary || paragraph.excerpt || '문단 요약이 아직 없습니다.' }}</div>
 
             <div class="mvp-segments">
               <button
                 v-for="verse in paragraph.verses"
                 :key="`${paragraph.paragraphNo}-${verse.verseNo}-${verse.verse}`"
                 type="button"
-                :class="['segment', { painted: Boolean(getSavedPaint(verse.verseNo)), say: verse.say }]"
+                :class="['segment', { painted: Boolean(getSavedPaint(verse)), say: verse.godSay || verse.say }]"
                 :style="{ background: getDisplayBackground(verse) }"
-                @click="handleVerseClick(paragraph.paragraphNo, verse.verseNo)"
+                @click="handleVerseClick(verse)"
               >
                 <span class="mvp-segment-mark" :style="{ background: getDisplayMarker(verse) }" />
                 <span class="mvp-segment-text" :style="{ color: getVerseTextColor(verse) }">{{ verse.verse }}</span>
@@ -559,8 +560,8 @@ watch(
                     {{ getDisplayCategoryLabel(verse) }} ·
                   </template>
                   {{ chapterBookShort }}{{ chapterNo }}:{{ verse.verseNo }}
-                  <template v-if="verse.say"> · 직접 말씀</template>
-                  <template v-if="savingPaintKey === `${paragraph.paragraphNo}:${verse.verseNo}`"> · 저장 중</template>
+                  <template v-if="verse.godSay || verse.say"> · 직접 말씀</template>
+                  <template v-if="savingPaintKey === getVerseItemKey(verse)"> · 저장 중</template>
                 </span>
               </button>
             </div>
@@ -571,44 +572,21 @@ watch(
 
     <aside class="mvp-card mvp-sidebar">
       <section class="mvp-sidebar-block">
-        <p class="mvp-eyebrow">Legend</p>
-        <h2>카테고리 색</h2>
-        <p class="mvp-muted">`카테고리 보기`를 눌렀을 때만 서버에서 받은 원래 category가 드러납니다.</p>
-        <div class="mvp-legend">
-          <div v-for="item in categoryPalette" :key="item.category" class="mvp-legend-item">
-            <span class="mvp-legend-dot" :style="{ background: item.soft }" />
-            <span>{{ item.category2 }}</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="mvp-sidebar-block">
-        <p class="mvp-eyebrow">Chapter View</p>
-        <div class="mvp-stats">
-          <div v-for="stat in chapterStats" :key="stat.label" class="mvp-stat">
-            <span>{{ stat.label }}</span>
-            <strong>{{ stat.value }}</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="mvp-sidebar-block">
-        <p class="mvp-eyebrow">Sharing</p>
         <h2>한줄나누기</h2>
         <textarea
           v-model="reflectionText"
           class="mvp-textarea"
           placeholder="내가 선택한 성경절을 붙들고 한 줄 나눔을 적어 주세요."
         />
+        <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div>
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
-            {{ savingReflection ? '저장 중' : '한줄나누기' }}
+            {{ savingReflection ? '저장 중' : '한줄나누기저장' }}
           </button>
           <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
-            {{ showAllSharing ? '내 것만 보기' : '나눔' }}
+            {{ showAllSharing ? '나눔감추기' : '나눔보기' }}
           </button>
         </div>
-        <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 절이 아직 없습니다.' }}</div>
         <p v-if="toast" class="mvp-muted">{{ toast }}</p>
         <div class="mvp-sharing-list">
           <article v-for="item in sharingList" :key="`${item.userId}-${item.verseRange}-${item.updatedAt}`" class="mvp-sharing-item">
@@ -621,9 +599,7 @@ watch(
       </section>
 
       <section class="mvp-sidebar-block">
-        <p class="mvp-eyebrow">Share</p>
         <h2>SNS 공유 준비</h2>
-        <p class="mvp-muted">내가 선택한 절 범위와 최근 나눔 내용을 함께 복사합니다.</p>
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage" @click="copyShareMessage()">
             {{ copyingMessage ? '복사 중' : 'SNS 공유 문구 복사' }}
