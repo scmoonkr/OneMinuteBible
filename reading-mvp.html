@@ -1,0 +1,1015 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>모줄성 읽기 화면 MVP</title>
+  <style>
+    :root {
+      --bg: #f6f0e4;
+      --surface: rgba(255, 252, 246, 0.92);
+      --surface-strong: #fffaf0;
+      --text: #2f261d;
+      --muted: #7d6a58;
+      --line: rgba(90, 64, 38, 0.14);
+      --accent: #39291f;
+      --red: #d24b43;
+      --red-soft: #fde5e1;
+      --shadow: 0 18px 60px rgba(62, 37, 13, 0.12);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Noto Serif KR", Georgia, serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 245, 196, 0.8), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(210, 228, 188, 0.75), transparent 28%),
+        linear-gradient(180deg, #f8f2e8 0%, #f1e7d6 100%);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 32px auto 48px;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr);
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .main { padding: 28px; }
+    .sidebar { padding: 24px; position: sticky; top: 24px; height: fit-content; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 44px); line-height: 1.08; }
+    .deck { margin-top: 8px; color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+    .hero {
+      padding: 28px;
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.72), rgba(255,248,235,0.9)),
+        linear-gradient(120deg, #f8ecc9, #efd9c1);
+      border: 1px solid rgba(120, 86, 54, 0.12);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .hero-summary {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.66);
+      border: 1px solid rgba(120, 86, 54, 0.12);
+      color: #4e4031;
+      line-height: 1.7;
+    }
+
+    .section { margin-top: 28px; }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-title, .sidebar h2 { margin: 0; font-size: 20px; }
+    .section-note, .sidebar-copy { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+    .meta-list, .chapters, .paragraph-tags, .toolbar-actions, .share-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .meta-list { margin-top: 16px; }
+
+    .meta-pill,
+    .tag,
+    .legend-chip,
+    .chapter-chip,
+    .toolbar-button,
+    .share-button,
+    .palette-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      color: #4b3c30;
+      font: inherit;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    button { cursor: pointer; }
+
+    .chapter-chip.active,
+    .toolbar-button.active,
+    .share-button.primary,
+    .palette-button.active {
+      background: var(--accent);
+      color: #fff7f1;
+      border-color: var(--accent);
+    }
+
+    .toolbar {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid var(--line);
+    }
+
+    .palette {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .palette-button {
+      justify-content: flex-start;
+      border-radius: 18px;
+      padding: 12px;
+      width: 100%;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      flex: none;
+    }
+
+    .palette-meta {
+      display: grid;
+      gap: 3px;
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    .palette-meta small {
+      color: inherit;
+      opacity: 0.74;
+      font-size: 11px;
+    }
+
+    .paragraphs { display: grid; gap: 18px; }
+
+    .paragraph-card {
+      padding: 20px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .paragraph-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(62, 37, 13, 0.08);
+    }
+
+    .paragraph-index { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .paragraph-subject { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 10px; }
+
+    .paragraph-summary {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(159, 123, 85, 0.08);
+      color: #5b4a39;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .segments { display: grid; gap: 10px; }
+
+    .segment {
+      display: grid;
+      grid-template-columns: 14px 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(80, 54, 29, 0.08);
+      background: #fff;
+      font-size: 15px;
+      line-height: 1.7;
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .segment:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(62, 37, 13, 0.06);
+      border-color: rgba(62, 37, 13, 0.18);
+    }
+
+    .segment.say {
+      border-color: rgba(210, 75, 67, 0.25);
+      color: #7e241f;
+    }
+
+    .segment.say .segment-mark {
+      background: var(--red) !important;
+      border-color: rgba(126, 36, 31, 0.25);
+    }
+
+    .segment.say .segment-text,
+    .segment.say .segment-meta {
+      color: #9c3a34;
+    }
+
+    .segment.painted {
+      box-shadow: inset 0 0 0 2px rgba(57, 41, 31, 0.1);
+    }
+
+    .segment.selected-target {
+      box-shadow: inset 0 0 0 2px rgba(57, 41, 31, 0.16);
+    }
+
+    .segment-mark, .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      flex: none;
+      margin-top: 4px;
+    }
+
+    .segment-text { min-width: 0; }
+
+    .segment-meta {
+      color: #6a5647;
+      font-size: 12px;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .legend-chip { justify-content: flex-start; line-height: 1.3; }
+
+    .sidebar-block + .sidebar-block {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .stats { display: grid; gap: 10px; margin-top: 12px; }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .stat-value { color: #5a4533; font-weight: 700; }
+
+    .reflection,
+    .share-panel {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      margin-top: 10px;
+      padding: 14px 16px;
+      border: 1px solid rgba(90, 64, 38, 0.16);
+      border-radius: 16px;
+      resize: vertical;
+      font: inherit;
+      color: var(--text);
+      background: #fffdfa;
+    }
+
+    .reflection-output,
+    .share-message {
+      margin-top: 12px;
+      color: #5f4b39;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 22px;
+      white-space: pre-wrap;
+    }
+
+    .sharing-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .other-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .other-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #433325;
+    }
+
+    .share-canvas {
+      width: 100%;
+      margin-top: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    @media (max-width: 920px) {
+      .page { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .page { width: min(100% - 20px, 1180px); margin-top: 20px; }
+      .main, .sidebar { padding: 18px; }
+      .legend, .palette { grid-template-columns: 1fr; }
+      .segment { grid-template-columns: 14px 1fr; }
+      .segment-meta { grid-column: 2; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main class="card main">
+      <section class="hero">
+        <p class="eyebrow">One Minute Bible Reading MVP</p>
+        <div class="section-note" style="margin-bottom:14px;">Bottom-up: 구절에서 시작해 블록과 장으로 올라갑니다. Top-down: 장과 블록을 먼저 보고 구절로 내려갑니다.</div>
+        <div class="hero-grid">
+          <div>
+            <h1 id="hero-title"></h1>
+            <p class="deck" id="hero-subject"></p>
+            <div class="meta-list" id="hero-meta"></div>
+          </div>
+          <div class="hero-summary" id="hero-summary"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">장 선택</h2>
+          <div class="section-note">`excerpt`는 장 요약, `subject`는 장 주제 기준으로 노출</div>
+        </div>
+        <div class="chapters" id="chapter-list"></div>
+      </section>
+
+      <section class="section">
+        <div class="toolbar">
+          <div class="section-header" style="margin-bottom:10px;">
+            <h2 class="section-title">12 Color Table</h2>
+            <div class="section-note">색을 먼저 고르고, 아래 절을 누르면 그 category로 칠해집니다.</div>
+          </div>
+          <div class="toolbar-actions">
+            <button type="button" class="toolbar-button" id="toggle-category">카테고리 보기</button>
+            <button type="button" class="toolbar-button" id="reset-current">현재 장 색칠 초기화</button>
+          </div>
+          <div class="palette" id="palette"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">블록 읽기</h2>
+          <div class="section-note">기본 상태에서는 카테고리와 배경색을 숨기고, 직접 말씀은 red로만 강조합니다.</div>
+        </div>
+        <div class="paragraphs" id="paragraph-list"></div>
+      </section>
+    </main>
+
+    <aside class="card sidebar">
+      <div class="sidebar-block">
+        <p class="eyebrow">Legend</p>
+        <h2>카테고리 색</h2>
+        <p class="sidebar-copy">`카테고리 보기`를 눌렀을 때만 선택 category와 내가 칠한 색이 드러납니다.</p>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="sidebar-block">
+        <p class="eyebrow">Chapter View</p>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div class="sidebar-block reflection">
+        <p class="eyebrow">Sharing</p>
+        <strong>한 줄 나누기</strong>
+        <textarea id="reflection-input" placeholder="이 장에서 지금 무엇이 보였나요?"></textarea>
+        <div class="toolbar-actions" style="margin-top:12px;">
+          <button type="button" class="toolbar-button active" id="save-reflection">한 줄 나누기</button>
+          <button type="button" class="toolbar-button" id="toggle-sharing">나눔</button>
+        </div>
+        <div class="reflection-output" id="reflection-output"></div>
+        <div class="sharing-list" id="sharing-list"></div>
+      </div>
+
+      <div class="sidebar-block share-panel">
+        <p class="eyebrow">Share</p>
+        <strong>SNS 공유 준비</strong>
+        <p class="sidebar-copy">내가 칠한 절을 기준으로 이미지와 메시지를 준비합니다. 메시지에는 나눔 내용과 태그가 포함됩니다.</p>
+        <div class="share-actions" style="margin-top:12px;">
+          <button type="button" class="share-button primary" id="prepare-share">SNS 공유 버튼</button>
+          <button type="button" class="share-button" id="download-image">이미지 저장</button>
+        </div>
+        <canvas id="share-canvas" class="share-canvas" width="900" height="900"></canvas>
+        <div class="share-message" id="share-message"></div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="./docs/content/color.js"></script>
+  <script src="./docs/content/bibles.js"></script>
+  <script>
+    const chapterListEl = document.getElementById('chapter-list');
+    const paragraphListEl = document.getElementById('paragraph-list');
+    const legendEl = document.getElementById('legend');
+    const statsEl = document.getElementById('stats');
+    const heroTitleEl = document.getElementById('hero-title');
+    const heroSubjectEl = document.getElementById('hero-subject');
+    const heroSummaryEl = document.getElementById('hero-summary');
+    const heroMetaEl = document.getElementById('hero-meta');
+    const reflectionInputEl = document.getElementById('reflection-input');
+    const reflectionOutputEl = document.getElementById('reflection-output');
+    const saveReflectionButtonEl = document.getElementById('save-reflection');
+    const toggleSharingButtonEl = document.getElementById('toggle-sharing');
+    const sharingListEl = document.getElementById('sharing-list');
+    const toggleCategoryButtonEl = document.getElementById('toggle-category');
+    const resetCurrentButtonEl = document.getElementById('reset-current');
+    const paletteEl = document.getElementById('palette');
+    const shareMessageEl = document.getElementById('share-message');
+    const prepareShareButtonEl = document.getElementById('prepare-share');
+    const downloadImageButtonEl = document.getElementById('download-image');
+    const shareCanvasEl = document.getElementById('share-canvas');
+    const shareContext = shareCanvasEl.getContext('2d');
+
+    const bibleEntries = Array.isArray(window.bibles) ? window.bibles : [];
+    const paragraphEntries = Array.isArray(window.bibleParagraphs) ? window.bibleParagraphs : [];
+    const colorTable = Array.isArray(window.categoryColorTableBible) ? window.categoryColorTableBible : [];
+    const colorMap = colorTable.reduce((acc, item) => { acc[item.category] = item; return acc; }, {});
+    const chapters = [...new Set(paragraphEntries.map((entry) => entry.chapterNo))].sort((a, b) => a - b);
+    const currentUserId = 'user_1';
+
+    const otherReflections = {
+      1: [
+        { name: '소은', verse: '창세기 1:3', text: '빛은 상황보다 먼저 온 말씀이었다고 느꼈어요.' },
+        { name: '민호', verse: '창세기 1:27', text: '형상대로 지음 받았다는 말이 오늘 제 정체성을 붙들어 줬어요.' },
+      ],
+      2: [
+        { name: '유진', verse: '창세기 2:3', text: '안식은 멈춤이 아니라 하나님이 기뻐하신 질서에 머무는 것 같아요.' },
+        { name: '하준', verse: '창세기 2:24', text: '한 몸을 이룬다는 표현이 관계의 무게를 다시 생각하게 했어요.' },
+      ],
+      3: [
+        { name: '지안', verse: '창세기 3:9', text: '네가 어디 있느냐는 정죄보다 찾으시는 질문처럼 다가왔어요.' },
+        { name: '도윤', verse: '창세기 3:21', text: '가죽옷을 입히시는 장면에서 심판 안의 자비를 봤어요.' },
+      ],
+    };
+
+    const myReflections = {};
+    let activeChapter = chapters[0] || 1;
+    let selectedCategory = colorTable[0]?.category || null;
+    let showCategory = false;
+    let showOthers = false;
+    const paintedCategories = {};
+    const touchedSegments = new Set();
+
+    function getCategoryMeta(category) {
+      return colorMap[category] || { category, category2: category, colorRainbow: '#f1ebe4', color: '#a58b73', eng: category };
+    }
+
+    function getChapterSummary(chapterNo) {
+      return bibleEntries.find((entry) => entry.chapterNo === chapterNo && entry.verseNo === 0);
+    }
+
+    function getChapterParagraph(chapterNo) {
+      return paragraphEntries.find((entry) => entry.chapterNo === chapterNo);
+    }
+
+    function getSegmentKey(paragraphIndex, segmentIndex) {
+      return `${activeChapter}:${paragraphIndex}:${segmentIndex}`;
+    }
+
+    function getOriginalCategory(segment) {
+      return segment.category;
+    }
+
+    function getSelectedCategory(paragraphIndex, segmentIndex) {
+      return paintedCategories[getSegmentKey(paragraphIndex, segmentIndex)] || null;
+    }
+
+    function getDisplayCategory(segment, paragraphIndex, segmentIndex) {
+      return showCategory
+        ? getOriginalCategory(segment)
+        : (getSelectedCategory(paragraphIndex, segmentIndex) || getOriginalCategory(segment));
+    }
+
+    function chapterKeys(chapterNo) {
+      return Object.keys(paintedCategories).filter((key) => key.startsWith(`${chapterNo}:`));
+    }
+
+    function buildChapterButtons() {
+      chapterListEl.innerHTML = '';
+      chapters.forEach((chapterNo) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'chapter-chip' + (chapterNo === activeChapter ? ' active' : '');
+        button.textContent = `창세기 ${chapterNo}장`;
+        button.addEventListener('click', () => {
+          activeChapter = chapterNo;
+          buildChapterButtons();
+          renderChapter();
+        });
+        chapterListEl.appendChild(button);
+      });
+    }
+
+    function buildPalette() {
+      paletteEl.innerHTML = '';
+      colorTable.forEach((item) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'palette-button' + (selectedCategory === item.category ? ' active' : '');
+        button.innerHTML = `
+          <span class="swatch" style="background:${item.colorRainbow};"></span>
+          <span class="palette-meta">
+            <strong>${item.category}</strong>
+            <small>${item.category2}</small>
+          </span>
+        `;
+        button.addEventListener('click', () => {
+          selectedCategory = item.category;
+          if (showCategory) {
+            showCategory = false;
+          }
+          buildPalette();
+          renderChapter();
+        });
+        paletteEl.appendChild(button);
+      });
+    }
+
+    function renderHero(chapterMeta, chapterParagraph) {
+      const paragraphs = chapterParagraph?.paragraphs || [];
+      const segmentCount = paragraphs.reduce((count, paragraph) => count + (paragraph.verses?.length || 0), 0);
+      const sayCount = paragraphs.reduce((count, paragraph) => count + (paragraph.verses || []).filter((segment) => segment.say).length, 0);
+      const paintedCount = chapterKeys(activeChapter).length;
+      heroTitleEl.textContent = `창세기 ${activeChapter}장`;
+      heroSubjectEl.textContent = chapterMeta?.subject || '장 주제';
+      heroSummaryEl.textContent = chapterMeta?.excerpt || chapterParagraph?.excerpt || '장 요약 데이터가 아직 없습니다.';
+      heroMetaEl.innerHTML = '';
+      [`블록 ${paragraphs.length}개`, `구절 단위 ${segmentCount}개`, `직접 말씀 ${sayCount}개`, `내가 칠한 절 ${paintedCount}개`].forEach((text) => {
+        const pill = document.createElement('div');
+        pill.className = 'meta-pill';
+        pill.innerHTML = `<strong>${text}</strong>`;
+        heroMetaEl.appendChild(pill);
+      });
+    }
+
+    function renderParagraphs(chapterParagraph) {
+      const paragraphs = chapterParagraph?.paragraphs || [];
+      paragraphListEl.innerHTML = '';
+
+      paragraphs.forEach((paragraph, paragraphIndex) => {
+        const card = document.createElement('article');
+        card.className = 'paragraph-card';
+
+        const categories = [...new Set((paragraph.verses || []).map((segment, segmentIndex) => getDisplayCategory(segment, paragraphIndex, segmentIndex)).filter(Boolean))];
+
+        const segments = (paragraph.verses || []).map((segment, segmentIndex) => {
+          const category = getDisplayCategory(segment, paragraphIndex, segmentIndex);
+          const meta = getCategoryMeta(category);
+          const segmentKey = getSegmentKey(paragraphIndex, segmentIndex);
+          const isTouched = touchedSegments.has(segmentKey);
+          const isPainted = Boolean(getSelectedCategory(paragraphIndex, segmentIndex));
+          const categoryLabel = showCategory ? `${meta.category2}` : '';
+          const verseNo = segment.verseNo ? `창세기 ${activeChapter}:${segment.verseNo}` : '';
+          const background = showCategory
+            ? getCategoryMeta(getOriginalCategory(segment)).colorRainbow
+            : (isPainted ? getCategoryMeta(getSelectedCategory(paragraphIndex, segmentIndex)).colorRainbow : '#fff');
+          const marker = showCategory
+            ? getCategoryMeta(getOriginalCategory(segment)).color
+            : (isPainted ? getCategoryMeta(getSelectedCategory(paragraphIndex, segmentIndex)).color : '#d7cabc');
+          const classes = ['segment'];
+          if (segment.say) classes.push('say');
+          if (isTouched) classes.push('selected-target');
+          if (isPainted) classes.push('painted');
+          return `
+            <button type="button" class="${classes.join(' ')}" style="background:${background};" data-paragraph-index="${paragraphIndex}" data-segment-index="${segmentIndex}">
+              <span class="segment-mark" style="background:${marker};"></span>
+              <span class="segment-text">${segment.verse}</span>
+              <span class="segment-meta">${categoryLabel ? `${categoryLabel}${verseNo ? ` · ${verseNo}` : ''}` : verseNo}</span>
+            </button>
+          `;
+        }).join('');
+
+        const tags = categories.map((category) => {
+          const meta = getCategoryMeta(category);
+          return `<span class="tag"><span class="legend-swatch" style="background:${meta.colorRainbow};"></span><strong>${meta.category2}</strong></span>`;
+        }).join('');
+
+        card.innerHTML = `
+          <div class="paragraph-index">블록 ${paragraphIndex + 1}</div>
+          <div class="paragraph-subject">${paragraph.subject || '블록 주제 없음'}</div>
+          <div class="paragraph-summary">${(paragraph.summary || '블록 요약 없음').split('|').join('<br>')}</div>
+          <div class="segments">${segments}</div>
+          <div class="paragraph-tags" style="margin-top:14px;">${showCategory ? tags : ''}</div>
+        `;
+
+        paragraphListEl.appendChild(card);
+      });
+
+      paragraphListEl.querySelectorAll('.segment').forEach((button) => {
+        button.addEventListener('click', () => {
+          const paragraphIndex = Number(button.dataset.paragraphIndex);
+          const segmentIndex = Number(button.dataset.segmentIndex);
+          const chapterParagraph = getChapterParagraph(activeChapter);
+          const segment = chapterParagraph.paragraphs[paragraphIndex].verses[segmentIndex];
+          const key = getSegmentKey(paragraphIndex, segmentIndex);
+          touchedSegments.add(key);
+          if (selectedCategory) {
+            paintedCategories[key] = selectedCategory;
+          }
+          renderChapter();
+        });
+      });
+    }
+
+    function renderLegend(chapterParagraph) {
+      const categories = [...new Set((chapterParagraph?.paragraphs || []).flatMap((paragraph, paragraphIndex) =>
+        (paragraph.verses || []).map((segment, segmentIndex) => getDisplayCategory(segment, paragraphIndex, segmentIndex)).filter(Boolean)
+      ))];
+      legendEl.innerHTML = '';
+      categories.forEach((category) => {
+        const meta = getCategoryMeta(category);
+        const chip = document.createElement('div');
+        chip.className = 'legend-chip';
+        chip.innerHTML = `<span class="legend-swatch" style="background:${meta.colorRainbow};"></span><span>${meta.category2}</span>`;
+        legendEl.appendChild(chip);
+      });
+    }
+
+    function renderStats(chapterMeta, chapterParagraph) {
+      const paragraphs = chapterParagraph?.paragraphs || [];
+      const allSegments = paragraphs.flatMap((paragraph) => paragraph.verses || []);
+      const saySegments = allSegments.filter((segment) => segment.say).length;
+      const summaryStats = [
+        ['장 주제', chapterMeta?.subject || chapterParagraph?.subject || '미정'],
+        ['블록 수', `${paragraphs.length}개`],
+        ['첫 블록 주제', paragraphs[0]?.subject || '주제 없음'],
+        ['직접 말씀', `${saySegments}개`],
+      ];
+      statsEl.innerHTML = '';
+      summaryStats.forEach(([label, value]) => {
+        const item = document.createElement('div');
+        item.className = 'stat';
+        item.innerHTML = `<span>${label}</span><span class="stat-value">${value}</span>`;
+        statsEl.appendChild(item);
+      });
+    }
+
+    function getSharingItems() {
+      const mine = (myReflections[activeChapter] || []).map((item) => ({
+        ...item,
+        내것: true,
+        name: '나',
+      }));
+      const others = (otherReflections[activeChapter] || []).map((item) => ({
+        ...item,
+        내것: false,
+      }));
+      return showOthers ? [...mine, ...others] : [...mine].filter((el) => el.내것);
+    }
+
+    function renderSharingList() {
+      const items = getSharingItems();
+      toggleSharingButtonEl.classList.toggle('active', showOthers);
+      toggleSharingButtonEl.textContent = showOthers ? '나눔 숨기기' : '나눔';
+      sharingListEl.innerHTML = '';
+
+      if (!items.length) {
+        sharingListEl.innerHTML = '<div class="other-item"><strong>나의 나눔</strong><span>아직 남긴 나눔이 없어요.</span></div>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'other-item';
+        const title = item.내것
+          ? `나 · ${item.createdAt}`
+          : `${item.name} · ${item.verse}`;
+        div.innerHTML = `<strong>${title}</strong><span>${item.verses ? `선택한 절: ${item.verses}<br>` : ''}${item.text}</span>`;
+        sharingListEl.appendChild(div);
+      });
+    }
+
+    function saveReflection() {
+      const value = reflectionInputEl.value.trim();
+      const paintedSegments = getPaintedSegmentsForChapter();
+      const verses = formatSelectedVerses(paintedSegments);
+      const verseIDs = getSelectedVerseIDs(paintedSegments);
+      const paintedRecord = buildPaintedCategoryRecord(paintedSegments);
+      if (!value) {
+        reflectionOutputEl.textContent = '한 줄을 적으면 바로 나의 나눔에 추가됩니다.';
+        return;
+      }
+      if (!verses) {
+        reflectionOutputEl.textContent = '먼저 절을 선택하거나 색칠한 뒤 한 줄 나누기를 해주세요.';
+        return;
+      }
+      if (!myReflections[activeChapter]) {
+        myReflections[activeChapter] = [];
+      }
+      myReflections[activeChapter].unshift({
+        userId: currentUserId,
+        text: value,
+        createdAt: new Date().toLocaleDateString('ko-KR'),
+        verses,
+        verseIDs,
+        verse: verses,
+        name: '나',
+        내것: true,
+        paintedRecord,
+      });
+      reflectionOutputEl.textContent = `선택한 절 표시: ${verses}`;
+      reflectionInputEl.value = '';
+      renderSharingList();
+    }
+
+    function getPaintedSegmentsForChapter() {
+      const chapterParagraph = getChapterParagraph(activeChapter);
+      const collected = [];
+      (chapterParagraph?.paragraphs || []).forEach((paragraph, paragraphIndex) => {
+        (paragraph.verses || []).forEach((segment, segmentIndex) => {
+          const key = getSegmentKey(paragraphIndex, segmentIndex);
+          if (paintedCategories[key]) {
+            collected.push({
+              ...segment,
+              blockSubject: paragraph.subject,
+              category: paintedCategories[key],
+            });
+          }
+        });
+      });
+      return collected;
+    }
+
+    function formatSelectedVerses(segments) {
+      const verseNumbers = [...new Set(
+        (segments || [])
+          .map((segment) => Number(segment.verseNo))
+          .filter((verseNo) => Number.isFinite(verseNo))
+      )].sort((a, b) => a - b);
+
+      if (!verseNumbers.length) {
+        return '';
+      }
+
+      const ranges = [];
+      let start = verseNumbers[0];
+      let end = verseNumbers[0];
+
+      for (let i = 1; i < verseNumbers.length; i += 1) {
+        const current = verseNumbers[i];
+        if (current === end + 1) {
+          end = current;
+        } else {
+          ranges.push(start === end ? `${start}` : `${start}-${end}`);
+          start = current;
+          end = current;
+        }
+      }
+
+      ranges.push(start === end ? `${start}` : `${start}-${end}`);
+      return `창${activeChapter}:${ranges.join(',')}`;
+    }
+
+    function getSelectedVerseIDs(segments) {
+      return [...new Set(
+        (segments || [])
+          .map((segment) => Number(segment.verseNo))
+          .filter((verseNo) => Number.isFinite(verseNo))
+      )].sort((a, b) => a - b);
+    }
+
+    function buildPaintedCategoryRecord(segments) {
+      const verseRange = formatSelectedVerses(segments);
+      const verseIDs = getSelectedVerseIDs(segments);
+      if (!verseRange || !verseIDs.length) {
+        return null;
+      }
+      return {
+        userId: currentUserId,
+        verseRange,
+        verseIDs,
+        updatedAt: new Date().toISOString(),
+        index: verseRange,
+      };
+    }
+
+    function buildShareMessage(paintedSegments, chapterMeta) {
+      const latestMine = (myReflections[activeChapter] || [])[0];
+      const reflection = latestMine?.text || '';
+      const tags = [...new Set(paintedSegments.map((segment) => `#${getCategoryMeta(segment.category).category}`))];
+      const baseTags = ['#모줄성', `#창세기${activeChapter}장`];
+      const verseRefs = formatSelectedVerses(paintedSegments);
+      return [
+        `${chapterMeta?.subject || `창세기 ${activeChapter}장`}에서 내가 칠한 말씀`,
+        verseRefs ? `선택한 절: ${verseRefs}` : '선택한 절이 아직 없습니다.',
+        reflection ? `나눔: ${reflection}` : '나눔: 오늘은 아직 한 줄 묵상을 적지 않았어요.',
+        [...baseTags, ...tags].join(' '),
+      ].join('\n');
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight, maxLines) {
+      const words = text.split(' ');
+      let line = '';
+      let lineCount = 0;
+      for (let i = 0; i < words.length; i += 1) {
+        const testLine = line ? `${line} ${words[i]}` : words[i];
+        if (context.measureText(testLine).width > maxWidth && line) {
+          context.fillText(line, x, y + (lineHeight * lineCount));
+          line = words[i];
+          lineCount += 1;
+          if (maxLines && lineCount >= maxLines - 1) break;
+        } else {
+          line = testLine;
+        }
+      }
+      context.fillText(line, x, y + (lineHeight * lineCount));
+      return y + (lineHeight * (lineCount + 1));
+    }
+
+    function drawShareCard(message, paintedSegments, chapterMeta) {
+      shareContext.clearRect(0, 0, shareCanvasEl.width, shareCanvasEl.height);
+      shareContext.fillStyle = '#f7efe2';
+      shareContext.fillRect(0, 0, shareCanvasEl.width, shareCanvasEl.height);
+      shareContext.fillStyle = '#fffaf1';
+      shareContext.fillRect(40, 40, 820, 820);
+      shareContext.strokeStyle = 'rgba(90, 64, 38, 0.12)';
+      shareContext.strokeRect(40, 40, 820, 820);
+
+      shareContext.fillStyle = '#7d6a58';
+      shareContext.font = '24px serif';
+      shareContext.fillText('MODULSEONG SHARE', 78, 108);
+
+      shareContext.fillStyle = '#2f261d';
+      shareContext.font = 'bold 52px serif';
+      shareContext.fillText(`창세기 ${activeChapter}장`, 78, 176);
+
+      shareContext.font = '28px serif';
+      shareContext.fillStyle = '#5a4533';
+      shareContext.fillText(chapterMeta?.subject || '장 주제', 78, 222);
+
+      let currentY = 280;
+      paintedSegments.slice(0, 4).forEach((segment) => {
+        const meta = getCategoryMeta(segment.category);
+        shareContext.fillStyle = meta.colorRainbow;
+        shareContext.fillRect(78, currentY - 24, 744, 74);
+        shareContext.fillStyle = meta.color;
+        shareContext.fillRect(78, currentY - 24, 18, 74);
+        shareContext.fillStyle = '#2f261d';
+        shareContext.font = '24px serif';
+        const verseLine = `창세기 ${activeChapter}:${segment.verseNo} · ${segment.verse}`;
+        currentY = wrapText(shareContext, verseLine, 116, currentY + 8, 680, 28, 2) + 28;
+      });
+
+      shareContext.fillStyle = '#fff4ec';
+      shareContext.fillRect(78, 610, 744, 160);
+      shareContext.fillStyle = '#7d6a58';
+      shareContext.font = '22px serif';
+      shareContext.fillText('나눔', 104, 652);
+      shareContext.fillStyle = '#2f261d';
+      shareContext.font = '28px serif';
+      const latestMine = (myReflections[activeChapter] || [])[0];
+      const reflection = latestMine?.text || '오늘 읽은 말씀을 한 줄로 남겨보세요.';
+      wrapText(shareContext, reflection, 104, 696, 680, 34, 3);
+
+      shareContext.fillStyle = '#7d6a58';
+      shareContext.font = '20px serif';
+      shareContext.fillText('#모줄성', 78, 820);
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return copied;
+      }
+    }
+
+    async function prepareShare() {
+      const chapterMeta = getChapterSummary(activeChapter);
+      const paintedSegments = getPaintedSegmentsForChapter();
+      if (!paintedSegments.length) {
+        shareMessageEl.textContent = '먼저 색을 고르고 절을 눌러 한 구절 이상 칠해 주세요.';
+        return;
+      }
+      const message = buildShareMessage(paintedSegments, chapterMeta);
+      drawShareCard(message, paintedSegments, chapterMeta);
+      const copied = await copyText(message);
+      shareMessageEl.textContent = `${copied ? 'SNS 메시지를 복사했습니다.' : '메시지를 복사하지 못했습니다.'}\n\n${message}`;
+    }
+
+    function downloadShareImage() {
+      const link = document.createElement('a');
+      link.href = shareCanvasEl.toDataURL('image/png');
+      link.download = `modulseong-genesis-${activeChapter}.png`;
+      link.click();
+    }
+
+    function renderChapter() {
+      const chapterMeta = getChapterSummary(activeChapter);
+      const chapterParagraph = getChapterParagraph(activeChapter);
+      toggleCategoryButtonEl.classList.toggle('active', showCategory);
+      toggleCategoryButtonEl.textContent = showCategory ? '카테고리 숨기기' : '카테고리 보기';
+      renderHero(chapterMeta, chapterParagraph);
+      renderParagraphs(chapterParagraph);
+      renderLegend(chapterParagraph);
+      renderStats(chapterMeta, chapterParagraph);
+      renderSharingList();
+      shareMessageEl.textContent = '';
+    }
+
+    toggleCategoryButtonEl.addEventListener('click', () => {
+      showCategory = !showCategory;
+      renderChapter();
+    });
+
+    resetCurrentButtonEl.addEventListener('click', () => {
+      chapterKeys(activeChapter).forEach((key) => delete paintedCategories[key]);
+      [...touchedSegments].filter((key) => key.startsWith(`${activeChapter}:`)).forEach((key) => touchedSegments.delete(key));
+      renderChapter();
+    });
+
+    saveReflectionButtonEl.addEventListener('click', saveReflection);
+    toggleSharingButtonEl.addEventListener('click', () => {
+      showOthers = !showOthers;
+      renderSharingList();
+    });
+    prepareShareButtonEl.addEventListener('click', prepareShare);
+    downloadImageButtonEl.addEventListener('click', downloadShareImage);
+
+    buildChapterButtons();
+    buildPalette();
+    renderChapter();
+    drawShareCard('', [], getChapterSummary(activeChapter));
+  </script>
+</body>
+</html>
+
+

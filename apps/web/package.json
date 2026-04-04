@@ -1,0 +1,18 @@
+{
+  "name": "one-minute-bible-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "nuxt": "^3.17.4",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2"
+  }
+}

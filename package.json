@@ -1,0 +1,9 @@
+{
+  "name": "one-minute-bible",
+  "private": true,
+  "scripts": {
+    "dev:server": "pnpm --dir server run dev",
+    "dev:web": "pnpm --dir apps/web run dev",
+    "install:all": "pnpm --dir server install && pnpm --dir apps/web install"
+  }
+}
