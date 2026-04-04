@@ -3,6 +3,8 @@ import heroImage from '~/assets/images/main.png';
 import genesisImageA from '~/assets/images/genesis_1_1_2.png';
 import genesisImageB from '~/assets/images/genesis_1_20_23.png';
 import genesisImageC from '~/assets/images/genesis_1_26_28.png';
+import cardImage1 from '~/assets/images/card1.png';
+import cardImage2 from '~/assets/images/card2.png';
 
 const shareCards = [
   {
@@ -87,8 +89,8 @@ const storySlides = [
   },
 ];
 
-const leftStorySlides = storySlides.filter((_, index) => index % 2 === 0);
-const rightStorySlides = storySlides.filter((_, index) => index % 2 === 1);
+const leftStorySlides = storySlides;
+const rightStorySlides = storySlides;
 
 function goRead() {
   return navigateTo('/read');
@@ -184,9 +186,11 @@ function goToVerse(reference: string) {
     </section>
 
     <section class="home-story">
+      <h2 class="home-story-heading">한 구절 묵상</h2>
+
       <div class="home-story-grid">
-        <HomeStorySlider :slides="leftStorySlides" :interval-ms="5000" />
-        <HomeStorySlider :slides="rightStorySlides" :interval-ms="5000" />
+        <HomeStorySlider :image="cardImage1" :slides="leftStorySlides" :interval-ms="5000" />
+        <HomeStorySlider :image="cardImage2" :slides="rightStorySlides" :interval-ms="5000" />
       </div>
     </section>
   </div>

@@ -1669,6 +1669,15 @@ input {
   background: linear-gradient(180deg, #f8f3ea 0%, #efe7db 100%);
 }
 
+.home-story-heading {
+  width: min(100%, 1180px);
+  margin: 0 auto 1.1rem;
+  color: #2b211a;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: left;
+}
+
 .home-story-grid {
   width: min(100%, 1180px);
   margin: 0 auto;
