@@ -617,6 +617,14 @@ function applyReflectionSelection(item: ReflectionItem) {
 async function submitReflection() {
   auth.syncSession();
 
+  if (auth.currentUser.value?.userNo && !auth.currentUser.value.nickname) {
+    try {
+      await auth.fetchMe();
+    } catch {
+      // Keep save flow going; server also backfills nickname by userNo.
+    }
+  }
+
   if (!auth.currentUser.value?.userNo || !auth.token.value) {
     const redirect = encodeURIComponent(route.fullPath);
     await router.push(`/login?redirect=${redirect}`);
