@@ -1,12 +1,56 @@
 <script setup lang="ts">
 import heroImage from '~/assets/images/main.png';
+import genesisImageA from '~/assets/images/genesis_1_1_2.png';
+import genesisImageB from '~/assets/images/genesis_1_20_23.png';
+import genesisImageC from '~/assets/images/genesis_1_26_28.png';
+
+const shareCards = [
+  {
+    id: 'genesis-1-1-2',
+    image: genesisImageA,
+    nickname: 'rit**',
+    reference: '창1:1-2',
+    message: [
+      '시작은 이미 하나님 안에서',
+      '준비되어 있었습니다.',
+      '내가 보지 못한 시간에도',
+      '하나님은 일하고 계셨습니다.',
+    ],
+  },
+  {
+    id: 'genesis-1-20-23',
+    image: genesisImageB,
+    nickname: 'rit**',
+    reference: '창1:20-23',
+    message: [
+      '하나님은 생명을 풍성히 채우시고',
+      '번성하라 하셨습니다.',
+      '내 삶도 채워진 은혜로',
+      '흘려보내는 삶이 되어야 합니다.',
+    ],
+  },
+  {
+    id: 'genesis-1-26-28',
+    image: genesisImageC,
+    nickname: 'rit**',
+    reference: '창1:26-28',
+    message: [
+      '하나님 형상대로 지음 받은 삶은',
+      '존재 자체로 소중합니다.',
+      '오늘도 맡기신 자리에서',
+      '선한 다스림을 배웁니다.',
+    ],
+  },
+];
 
 function goRead() {
   return navigateTo('/read');
 }
 
-function goToVerse(verseId: string) {
-  return navigateTo(`/read?verse=${verseId}`);
+function goToVerse(reference: string) {
+  const match = reference.match(/^창(\d+):/);
+  const chapterNo = match?.[1] ?? '1';
+  return navigateTo(`/read/1/${chapterNo}`);
 }
 </script>
 
@@ -57,27 +101,33 @@ function goToVerse(verseId: string) {
     </section>
 
     <section class="home-preview">
-      <div class="home-preview-list">
+      <div class="home-preview-list home-preview-list--shares">
         <button
+          v-for="card in shareCards"
+          :key="card.id"
           type="button"
-          class="home-preview-card"
-          @click="goToVerse('JHN_3_16')"
+          class="home-share-card"
+          @click="goToVerse(card.reference)"
         >
-          <p class="home-preview-ref">요한복음 3:16</p>
-          <p class="home-preview-text">
-            “나는 아직 조건을 붙이고 있다”
-          </p>
-        </button>
+          <img
+            :src="card.image"
+            :alt="card.reference"
+            class="home-share-card-image"
+          >
 
-        <button
-          type="button"
-          class="home-preview-card"
-          @click="goToVerse('GEN_1_1')"
-        >
-          <p class="home-preview-ref">창세기 1:1</p>
-          <p class="home-preview-text">
-            “시작은 이미 시작되어 있었다”
-          </p>
+          <div class="home-share-card-meta">
+            <strong>{{ card.nickname }}</strong>
+            <span>{{ card.reference }}</span>
+          </div>
+
+          <div class="home-share-card-message">
+            <p
+              v-for="line in card.message"
+              :key="`${card.id}-${line}`"
+            >
+              {{ line }}
+            </p>
+          </div>
         </button>
       </div>
     </section>

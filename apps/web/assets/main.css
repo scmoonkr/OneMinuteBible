@@ -1503,7 +1503,7 @@ input {
 }
 
 .home-flow-step {
-  padding: 1rem 0.75rem;
+  padding: 3rem 0.75rem;
   font-size: 1.05rem;
   font-weight: 600;
   color: #3f3127;
@@ -1527,7 +1527,7 @@ input {
 
 .home-flow-body {
   width: 100%;
-  padding: 0.95rem 1.5rem 1.05rem;
+  padding: 2rem 1.5rem 2rem;
   background: rgba(255, 252, 246, 0.88);
 }
 
@@ -1551,6 +1551,11 @@ input {
   gap: 2rem;
 }
 
+.home-preview-list--shares {
+  width: min(100%, 520px);
+  gap: 1.25rem;
+}
+
 .home-preview-card {
   width: 100%;
   text-align: left;
@@ -1566,6 +1571,75 @@ input {
 .home-preview-card:hover {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   transform: translateY(-1px);
+}
+
+.home-share-card {
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.home-share-card:hover {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.home-share-card-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.home-share-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.9rem;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.92rem;
+}
+
+.home-share-card-meta strong,
+.home-share-card-meta span {
+  display: block;
+  min-width: 0;
+}
+
+.home-share-card-meta strong {
+  font-weight: 700;
+  color: #2b211a;
+}
+
+.home-share-card-meta span {
+  color: #2b211a;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.home-share-card-message {
+  height: 118px;
+  padding: 0.8rem 0.9rem 0.9rem;
+  overflow: hidden;
+  background: #fffdf8;
+}
+
+.home-share-card-message p {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  color: #2b211a;
 }
 
 .home-preview-ref {
@@ -1611,5 +1685,14 @@ input {
 
   .home-preview {
     padding: 3rem 1.25rem;
+  }
+
+  .home-preview-list--shares {
+    width: 100%;
+  }
+
+  .home-share-card-message {
+    height: auto;
+    min-height: 118px;
   }
 }
