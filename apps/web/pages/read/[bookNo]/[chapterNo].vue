@@ -337,6 +337,20 @@ function wrapCanvasText(
   return lines.length ? lines : [''];
 }
 
+function getCanvasSharePrefixWidth(
+  context: CanvasRenderingContext2D,
+  item: { category: string; verseNo: number },
+  titleFont: string,
+  titleSize: number,
+) {
+  const categoryText = `[${item.category}]`;
+  context.font = titleFont;
+  const categoryWidth = context.measureText(categoryText).width;
+  context.font = `700 ${Math.max(18, titleSize - 8)}px "Noto Sans KR", sans-serif`;
+  const numberWidth = context.measureText(String(item.verseNo)).width;
+  return categoryWidth + 14 + numberWidth + 14;
+}
+
 function drawRoundedRect(
   context: CanvasRenderingContext2D,
   x: number,
@@ -385,14 +399,13 @@ function getShareLayout(items: typeof sharedVerseDetails.value) {
       const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
       const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
 
-      measure.font = bodyFont;
-
       const cardLayouts = items.map((item) => {
-        const verseLines = wrapCanvasText(measure, item.verse, contentWidth);
-        const headerHeight = preset.titleSize + 10;
-        const verseHeight = Math.max(preset.lineHeight, verseLines.length * preset.lineHeight);
-        const cardHeight = preset.cardPaddingY * 2 + headerHeight + 18 + verseHeight;
-        return { item, verseLines, cardHeight };
+        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, preset.titleSize);
+        measure.font = bodyFont;
+        const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
+        const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
+        const cardHeight = preset.cardPaddingY * 2 + contentHeight;
+        return { item, verseLines, cardHeight, prefixWidth };
       });
 
       const totalHeight = preset.outerPadding * 2
@@ -413,13 +426,13 @@ function getShareLayout(items: typeof sharedVerseDetails.value) {
       const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
       const titleFont = `700 ${preset.titleSize}px "Noto Sans KR", sans-serif`;
       const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
-      measure.font = bodyFont;
       const cardLayouts = items.map((item) => {
-        const verseLines = wrapCanvasText(measure, item.verse, contentWidth);
-        const headerHeight = preset.titleSize + 10;
-        const verseHeight = Math.max(preset.lineHeight, verseLines.length * preset.lineHeight);
-        const cardHeight = preset.cardPaddingY * 2 + headerHeight + 18 + verseHeight;
-        return { item, verseLines, cardHeight };
+        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, preset.titleSize);
+        measure.font = bodyFont;
+        const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
+        const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
+        const cardHeight = preset.cardPaddingY * 2 + contentHeight;
+        return { item, verseLines, cardHeight, prefixWidth };
       });
       const totalHeight = preset.outerPadding * 2
         + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
@@ -478,27 +491,27 @@ async function createShareImageBlobForItems(items: typeof sharedVerseDetails.val
 
   const canvas = document.createElement('canvas');
   canvas.width = layout.width;
-  canvas.height = layout.height;
+  canvas.height = Math.min(layout.height, layout.totalHeight);
 
   const context = canvas.getContext('2d');
   if (!context) return null;
 
   const {
     width,
-    height,
     preset,
     titleFont,
     bodyFont,
     cardLayouts,
     totalHeight,
   } = layout;
+  const actualHeight = Math.min(layout.height, totalHeight);
 
   context.fillStyle = '#f7f0e5';
-  context.fillRect(0, 0, width, height);
+  context.fillRect(0, 0, width, actualHeight);
 
-  let currentY = Math.max(preset.outerPadding, Math.floor((height - Math.min(totalHeight, height)) / 2));
+  let currentY = preset.outerPadding;
 
-  cardLayouts.forEach(({ item, verseLines, cardHeight }) => {
+  cardLayouts.forEach(({ item, verseLines, cardHeight, prefixWidth }) => {
     const x = preset.outerPadding;
     const y = currentY;
     const cardWidth = width - preset.outerPadding * 2;
@@ -510,16 +523,28 @@ async function createShareImageBlobForItems(items: typeof sharedVerseDetails.val
     context.strokeStyle = item.palette?.color || '#d7cabc';
     context.stroke();
 
-    context.fillStyle = '#2f261d';
-    context.font = titleFont;
-    context.textBaseline = 'top';
-    context.fillText(`${item.label} ${item.category}`, x + preset.cardPaddingX, y + preset.cardPaddingY);
+    const startX = x + preset.cardPaddingX;
+    const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
+    const startY = y + Math.max(preset.cardPaddingY, Math.floor((cardHeight - contentHeight) / 2));
 
+    context.textBaseline = 'top';
+    context.fillStyle = '#4a3426';
+    context.font = titleFont;
+    const categoryText = `[${item.category}]`;
+    context.fillText(categoryText, startX, startY);
+
+    const categoryWidth = context.measureText(categoryText).width;
+    const noX = startX + categoryWidth + 14;
+    context.fillStyle = '#bf2d2d';
+    context.font = `700 ${Math.max(18, preset.titleSize - 8)}px "Noto Sans KR", sans-serif`;
+    context.fillText(String(item.verseNo), noX, startY - 2);
+
+    const verseX = startX + prefixWidth;
     context.font = bodyFont;
-    let lineY = y + preset.cardPaddingY + preset.titleSize + 24;
+    let lineY = startY + 2;
     verseLines.forEach((line) => {
       context.fillStyle = item.godSay ? '#bf2d2d' : '#2f261d';
-      context.fillText(line, x + preset.cardPaddingX, lineY);
+      context.fillText(line, verseX, lineY);
       lineY += preset.lineHeight;
     });
 
