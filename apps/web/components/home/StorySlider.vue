@@ -13,19 +13,10 @@ const props = withDefaults(defineProps<{
   intervalMs: 5000,
 });
 
-const currentPage = ref(0);
+const currentIndex = ref(0);
 let timer: ReturnType<typeof setInterval> | null = null;
 
-const pageCount = computed(() => Math.ceil(props.slides.length / 2));
-const pagedSlides = computed(() => {
-  const pages: StorySlide[][] = [];
-
-  for (let index = 0; index < props.slides.length; index += 2) {
-    pages.push(props.slides.slice(index, index + 2));
-  }
-
-  return pages;
-});
+const slideCount = computed(() => props.slides.length);
 
 function stopAutoSlide() {
   if (timer) {
@@ -37,36 +28,36 @@ function stopAutoSlide() {
 function startAutoSlide() {
   stopAutoSlide();
 
-  if (pageCount.value <= 1) {
+  if (slideCount.value <= 1) {
     return;
   }
 
   timer = setInterval(() => {
-    goToPage(currentPage.value + 1);
+    goToSlide(currentIndex.value + 1);
   }, props.intervalMs);
 }
 
-function goToPage(index: number) {
-  if (pageCount.value === 0) {
+function goToSlide(index: number) {
+  if (slideCount.value === 0) {
     return;
   }
 
-  currentPage.value = (index + pageCount.value) % pageCount.value;
+  currentIndex.value = (index + slideCount.value) % slideCount.value;
 }
 
 function goPrev() {
-  goToPage(currentPage.value - 1);
+  goToSlide(currentIndex.value - 1);
   startAutoSlide();
 }
 
 function goNext() {
-  goToPage(currentPage.value + 1);
+  goToSlide(currentIndex.value + 1);
   startAutoSlide();
 }
 
-watch(pageCount, () => {
-  if (currentPage.value >= pageCount.value) {
-    currentPage.value = 0;
+watch(slideCount, () => {
+  if (currentIndex.value >= slideCount.value) {
+    currentIndex.value = 0;
   }
 
   startAutoSlide();
@@ -95,52 +86,46 @@ onBeforeUnmount(() => {
     <div class="story-slider-viewport">
       <div
         class="story-slider-track"
-        :style="{ transform: `translateX(-${currentPage * 100}%)` }"
+        :style="{ transform: `translateX(-${currentIndex * 100}%)` }"
       >
-        <div
-          v-for="(page, pageIndex) in pagedSlides"
-          :key="`story-page-${pageIndex}`"
-          class="story-slider-page"
+        <article
+          v-for="slide in slides"
+          :key="slide.id"
+          class="story-slider-card"
         >
-          <article
-            v-for="slide in page"
-            :key="slide.id"
-            class="story-slider-card"
+          <img
+            src="/Images/card1.png"
+            alt=""
+            class="story-slider-card-bg"
           >
-            <img
-              src="/Images/card1.png"
-              alt=""
-              class="story-slider-card-bg"
-            >
 
-            <div class="story-slider-card-overlay">
-              <span class="story-slider-card-chapter">
-                [{{ slide.chapter }}]
-              </span>
+          <div class="story-slider-card-overlay">
+            <span class="story-slider-card-chapter">
+              [{{ slide.chapter }}]
+            </span>
 
-              <h2 class="story-slider-card-title">
-                <span
-                  v-for="line in slide.title"
-                  :key="`${slide.id}-${line}`"
-                >
-                  {{ line }}
-                </span>
-              </h2>
-
-              <p
-                v-if="slide.footer"
-                class="story-slider-card-footer"
+            <h2 class="story-slider-card-title">
+              <span
+                v-for="line in slide.title"
+                :key="`${slide.id}-${line}`"
               >
-                <span
-                  v-for="line in slide.footer"
-                  :key="`${slide.id}-${line}`"
-                >
-                  {{ line }}
-                </span>
-              </p>
-            </div>
-          </article>
-        </div>
+                {{ line }}
+              </span>
+            </h2>
+
+            <p
+              v-if="slide.footer"
+              class="story-slider-card-footer"
+            >
+              <span
+                v-for="line in slide.footer"
+                :key="`${slide.id}-${line}`"
+              >
+                {{ line }}
+              </span>
+            </p>
+          </div>
+        </article>
       </div>
     </div>
 
@@ -155,13 +140,13 @@ onBeforeUnmount(() => {
 
     <div class="story-slider-dots">
       <button
-        v-for="pageIndex in pageCount"
-        :key="`story-dot-${pageIndex}`"
+        v-for="slideIndex in slideCount"
+        :key="`story-dot-${slideIndex}`"
         type="button"
         class="story-slider-dot"
-        :class="{ 'is-active': currentPage === pageIndex - 1 }"
-        :aria-label="`${pageIndex}번째 슬라이드로 이동`"
-        @click="goToPage(pageIndex - 1)"
+        :class="{ 'is-active': currentIndex === slideIndex - 1 }"
+        :aria-label="`${slideIndex}번째 슬라이드로 이동`"
+        @click="goToSlide(slideIndex - 1)"
       />
     </div>
   </div>

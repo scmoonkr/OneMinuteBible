@@ -87,6 +87,9 @@ const storySlides = [
   },
 ];
 
+const leftStorySlides = storySlides.filter((_, index) => index % 2 === 0);
+const rightStorySlides = storySlides.filter((_, index) => index % 2 === 1);
+
 function goRead() {
   return navigateTo('/read');
 }
@@ -181,7 +184,10 @@ function goToVerse(reference: string) {
     </section>
 
     <section class="home-story">
-      <HomeStorySlider :slides="storySlides" :interval-ms="5000" />
+      <div class="home-story-grid">
+        <HomeStorySlider :slides="leftStorySlides" :interval-ms="5000" />
+        <HomeStorySlider :slides="rightStorySlides" :interval-ms="5000" />
+      </div>
     </section>
   </div>
 </template>
