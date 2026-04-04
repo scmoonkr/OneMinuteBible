@@ -12,6 +12,8 @@ coverage/
 out/
 .vite/
 .turbo/
+.nuxt/
+**/.nuxt/
 
 *.tsbuildinfo
 

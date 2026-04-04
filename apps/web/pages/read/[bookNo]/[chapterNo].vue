@@ -73,6 +73,7 @@ const { data, pending, error, refresh } = await useAsyncData(
 );
 
 const chapter = computed(() => data.value?.data ?? null);
+const chapterLabel = computed(() => `${chapter.value?.book || '창세기'} ${chapterNo.value}장`);
 const chapterRangeLabel = computed(() => `창세기 ${chapterNo.value}`);
 
 const paintMap = computed(() => {
@@ -278,6 +279,12 @@ async function loadChapterState() {
 
   paints.value = paintResponse.data;
   reflections.value = reflectionResponse.data;
+}
+
+async function refreshChapter() {
+  await refresh();
+  await loadChapterState();
+  setToast('본문과 저장 상태를 다시 불러왔습니다.');
 }
 
 async function handleVerseClick(paragraphNo: number, verseNo: number) {
