@@ -1,126 +1,99 @@
 <script setup lang="ts">
-import { mvpGenesisChapters } from '~/composables/useMvpContent';
+import heroImage from '~/assets/images/main.png';
 
-const flowWords = ['읽고', '멈추고', '표시하고', '돌아보기'];
+function goRead() {
+  return navigateTo('/read');
+}
 
-const themeDots = [
-  { color: '#ff6b6b', label: '사랑' },
-  { color: '#4d96ff', label: '믿음' },
-  { color: '#6bcb77', label: '질서' },
-  { color: '#ffd93d', label: '빛' },
-  { color: '#b983ff', label: '언약' },
-  { color: '#ff9f45', label: '부르심' },
-];
+function goToVerse(verseId: string) {
+  return navigateTo(`/read?verse=${verseId}`);
+}
 </script>
 
 <template>
-  <div class="landing-page">
-    <section class="landing-hero">
-      <p class="landing-kicker">Modul Reading</p>
-      <h1 class="landing-title">
-        한 구절에서 시작해,<br>
-        전체 흐름으로 이어집니다.
-      </h1>
-      <p class="landing-copy">
-        홈 화면은 레퍼런스의 미니멀한 톤을 따르되, 실제로 구현된 기능 흐름에 맞춰 읽기, 색칠, 묵상 저장, 돌아보기로
-        바로 이어지도록 구성했습니다.
+  <div class="home-page">
+    <section class="home-hero">
+      <img
+        :src="heroImage"
+        alt="Bible reading"
+        class="home-hero-image"
+      >
+      <div class="home-hero-overlay" />
+
+      <div class="home-hero-content">
+        <h1 class="home-hero-title">
+          읽고, 멈추고, 남겨보세요
+        </h1>
+
+        <p class="home-hero-copy">
+          성경을 색으로 읽어보세요
+        </p>
+
+        <button
+          type="button"
+          class="home-hero-button"
+          @click="goRead"
+        >
+          말씀 시작하기
+        </button>
+      </div>
+    </section>
+
+    <section class="home-flow">
+      <div class="home-flow-board">
+        <div class="home-flow-steps">
+          <span class="home-flow-step home-flow-step--read">읽기</span>
+          <span class="home-flow-step home-flow-step--pause">멈춤</span>
+          <span class="home-flow-step home-flow-step--share">나눔</span>
+        </div>
+
+        <div class="home-flow-body">
+          <p class="home-flow-copy">
+            한 구절에서 멈추고<br>
+            지금 떠오른 것을 남겨보세요
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-preview">
+      <div class="home-preview-list">
+        <button
+          type="button"
+          class="home-preview-card"
+          @click="goToVerse('JHN_3_16')"
+        >
+          <p class="home-preview-ref">요한복음 3:16</p>
+          <p class="home-preview-text">
+            “나는 아직 조건을 붙이고 있다”
+          </p>
+        </button>
+
+        <button
+          type="button"
+          class="home-preview-card"
+          @click="goToVerse('GEN_1_1')"
+        >
+          <p class="home-preview-ref">창세기 1:1</p>
+          <p class="home-preview-text">
+            “시작은 이미 시작되어 있었다”
+          </p>
+        </button>
+      </div>
+    </section>
+
+    <section class="home-cta">
+      <p class="home-cta-copy">
+        이미 많은 사람들이 말씀 위에 나눔을 남기고 있습니다
       </p>
-      <div class="landing-actions">
-        <NuxtLink class="landing-button primary" to="/read">읽기 시작</NuxtLink>
-        <NuxtLink class="landing-button" to="/about">모줄성 소개</NuxtLink>
-      </div>
-    </section>
 
-    <section class="landing-flow">
-      <div class="landing-flow-grid">
-        <div v-for="word in flowWords" :key="word" class="landing-flow-word">{{ word }}</div>
-      </div>
-    </section>
-
-    <section class="landing-preview">
-      <div class="landing-preview-card">
-        <p class="landing-section-label">창세기 1장</p>
-        <p class="landing-preview-title">
-          빛이 불릴 때,<br>
-          읽기의 질서도 시작됩니다
-        </p>
-        <div class="landing-divider" />
-        <p class="landing-highlight">빛이 있으라.</p>
-        <div class="landing-dot-row">
-          <span
-            v-for="dot in themeDots"
-            :key="dot.label"
-            class="landing-dot"
-            :style="{ background: dot.color }"
-            :aria-label="dot.label"
-          />
-        </div>
-      </div>
-    </section>
-
-    <section class="landing-reflection">
-      <h2 class="landing-subtitle">한 구절이면 충분합니다.</h2>
-      <div class="landing-input-wrap">
-        <input type="text" placeholder="오늘 무엇이 가장 남았나요?" class="landing-input">
-      </div>
-      <p class="landing-quote">
-        읽기는 설명보다 먼저 시작되고,<br>
-        묵상은 한 줄에서 다시 붙잡힙니다.
-      </p>
-    </section>
-
-    <section class="landing-note">
-      <div class="landing-note-card">
-        <p class="landing-note-copy">
-          나눔과 리뷰 화면에서
-          지금 저장한 묵상을 다시 확인할 수 있습니다.
-        </p>
-        <div class="landing-actions">
-          <NuxtLink class="landing-button" to="/review">돌아보기</NuxtLink>
-          <NuxtLink class="landing-button" to="/sharing">나눔 보기</NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <section class="landing-workbook">
-      <div class="landing-preview-card">
-        <h2 class="landing-subtitle">손으로도 따라가 보세요.</h2>
-        <p class="landing-copy compact">
-          주제 테이블, 워크북, 계정 화면까지 연결되어 있어서 읽기 이후의 흐름도 바로 이어서 확인할 수 있습니다.
-        </p>
-        <div class="landing-actions">
-          <NuxtLink class="landing-button primary" to="/workbook">워크북 열기</NuxtLink>
-          <NuxtLink class="landing-button" to="/themes">주제 보기</NuxtLink>
-          <NuxtLink class="landing-button" to="/account">계정 허브</NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <section class="landing-flow">
-      <div class="landing-preview-card">
-        <p class="landing-section-label">현재 구현된 동선</p>
-        <div class="step-list">
-          <div v-for="chapter in mvpGenesisChapters" :key="chapter.chapterNo" class="step-item">
-            <strong>창세기 {{ chapter.chapterNo }}장 · {{ chapter.title }}</strong>
-            <span>{{ chapter.focus }}</span>
-          </div>
-        </div>
-        <div class="landing-actions">
-          <NuxtLink class="landing-button" to="/read">읽기 선택</NuxtLink>
-          <NuxtLink class="landing-button" to="/login">로그인</NuxtLink>
-          <NuxtLink class="landing-button" to="/signup">회원가입</NuxtLink>
-        </div>
-      </div>
-    </section>
-
-    <section class="landing-final">
-      <h2 class="landing-title small">
-        한 구절에서 시작해,<br>
-        다시 전체로 돌아가세요.
-      </h2>
-      <div class="landing-actions centered">
-        <NuxtLink class="landing-button primary" to="/read">지금 시작</NuxtLink>
-      </div>
+      <button
+        type="button"
+        class="home-cta-button"
+        @click="goRead"
+      >
+        말씀 시작하기
+      </button>
     </section>
   </div>
 </template>
