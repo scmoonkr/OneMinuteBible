@@ -147,8 +147,6 @@ export async function incrementVerseTopicScore({
         verseNo: Number(verseNo),
         mainCategory: String(mainCategory),
         baseWeight: 0,
-        score: 0,
-        recentScore: 0,
         isAnchor: false,
         subCategories: [],
       },
@@ -160,3 +158,4 @@ export async function incrementVerseTopicScore({
     { upsert: true },
   );
 }
+

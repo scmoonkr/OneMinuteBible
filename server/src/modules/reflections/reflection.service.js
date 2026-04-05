@@ -112,8 +112,6 @@ async function applyWriteReflectionScores(document) {
           verseNo: item.verseNo,
           mainCategory: item.category,
           baseWeight: 0,
-          score: 0,
-          recentScore: 0,
           isAnchor: false,
           subCategories: [],
         },
@@ -162,6 +160,7 @@ export async function saveReflection(body = {}) {
   await applyWriteReflectionScores(document);
   return saved;
 }
+
 
 
 
