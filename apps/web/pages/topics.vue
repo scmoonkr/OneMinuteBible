@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { categoryPalette, type PaletteItem } from '~/data/categoryPalette';
 import { type TopicVerseItem, useBible } from '~/composables/useBible';
+import { bibleBooks } from '~/data/bibleTable';
 
 const { listTopicVerses } = useBible();
 
@@ -59,6 +60,14 @@ watch(selectedTopicId, async (category) => {
 
   try {
     const response = await listTopicVerses({ category });
+    response.data = response.data.map((data) => {
+      const book = bibleBooks.find((item) => item.bookNo === data.bookNo);
+      return {
+        ...data,
+        book: book?.church || data.book,
+      };
+    });
+
     topicVerseMap.value = {
       ...topicVerseMap.value,
       [category]: response.data ?? [],
@@ -171,7 +180,6 @@ function startWriting() {
           <div v-if="loading" class="topics-verse-list">
             <p class="topics-empty">불러오는 중입니다.</p>
           </div>
-
           <div v-else-if="displayedVerses.length" class="topics-verse-list">
             <button
               v-for="verse in displayedVerses"
@@ -220,4 +228,5 @@ function startWriting() {
     </div>
   </section>
 </template>
+
 
