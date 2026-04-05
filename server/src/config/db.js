@@ -30,6 +30,10 @@ async function ensureCoreIndexes(database) {
     database.collection(env.mongoCollectionBibleEdit).createIndexes([
       { key: { bookNo: 1, chapterNo: 1, verseNo: 1 }, name: 'bible_edit_lookup' },
     ]),
+    database.collection(env.mongoCollectionVerseTopics).createIndexes([
+      { key: { mainCategory: 1, baseWeight: -1, score: -1, recentScore: -1 }, name: 'verse_topics_mainCategory' },
+      { key: { verseId: 1 }, name: 'verse_topics_verseId' },
+    ]),
     database.collection('reflections').createIndexes([
       { key: { userNo: 1, bookNo: 1, chapterNo: 1, verseRange: 1 }, name: 'reflections_unique_userNo' },
       { key: { bookNo: 1, chapterNo: 1, updatedAt: -1 }, name: 'reflections_recent_userNo' },
@@ -64,3 +68,4 @@ export async function closeDatabase() {
     db = undefined;
   }
 }
+

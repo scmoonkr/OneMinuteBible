@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,6 +13,8 @@ const mongoHost = process.env.MONGODB_ADDR || '127.0.0.1:27017';
 const mongoDbName = process.env.MONGODB_DB || 'Bible';
 const mongoCollectionBibleEdit =
   process.env.MONGODB_COLLECTION_BIBLE_EDIT || 'bible_edit';
+const mongoCollectionVerseTopics =
+  process.env.MONGODB_COLLECTION_VERSE_TOPICS || 'verse_topics';
 
 const mongoUsername = process.env.MONGO_USERNAME || '';
 const mongoPassword = process.env.MONGO_PWD || '';
@@ -51,8 +53,10 @@ export const env = {
   mongoUri,
   mongoDbName,
   mongoCollectionBibleEdit,
+  mongoCollectionVerseTopics,
   jwtAccessSecret,
   jwtRefreshSecret,
   kakaoClientId,
   kakaoRedirectUri,
 };
+

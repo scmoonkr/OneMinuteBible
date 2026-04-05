@@ -1,28 +1,7 @@
 ﻿<script setup lang="ts">
 import type { BibleChapter, BibleVerse, ReflectionItem, SelectedVerseItem } from '~/composables/useBible';
+import { categoryPalette, findPaletteItem, type PaletteItem } from '~/data/categoryPalette';
 import { bibleBooks } from '~/data/bibleTable';
-
-type PaletteItem = {
-  category: string;
-  categories: string[];
-  color: string;
-  soft: string;
-};
-
-const categoryPalette: PaletteItem[] = [
-  { category: '가족', categories: ['가족', '우정'], color: '#CCCC00', soft: '#ffffba' },
-  { category: '거짓', categories: ['거짓', '악행'], color: '#C0504D', soft: '#cab6a6' },
-  { category: '구원', categories: ['구원', '축복'], color: '#4F81BD', soft: '#cde3f7' },
-  { category: '계명', categories: ['계명', '순종'], color: '#9BBB59', soft: '#f5fcd1' },
-  { category: '모범', categories: ['모범', '증거'], color: '#FF99CC', soft: '#ffd8eb' },
-  { category: '범죄', categories: ['범죄', '위선'], color: '#3333FF', soft: '#babfc0' },
-  { category: '사랑', categories: ['사랑', '친절'], color: '#008000', soft: '#d2e4bc' },
-  { category: '삼위', categories: ['삼위', '임재'], color: '#8064A2', soft: '#B6A6CA' },
-  { category: '서술', categories: ['서술', '역사'], color: '#8C8C8C', soft: '#EEEEEE' },
-  { category: '섬김', categories: ['섬김', '제자'], color: '#FF5050', soft: '#f5c0ab' },
-  { category: '예언', categories: ['성약', '예언'], color: '#CC9900', soft: '#cfad71' },
-  { category: '신앙', categories: ['신앙', '회개'], color: '#FF9966', soft: '#ffeac0' },
-];
 
 const route = useRoute();
 const router = useRouter();
@@ -136,8 +115,7 @@ function getReflectionDisplayName(item: ReflectionItem) {
 }
 
 function getPaletteMetaBySourceCategory(sourceCategory?: string | null) {
-  if (!sourceCategory) return null;
-  return categoryPalette.find((item) => item.category === sourceCategory || item.categories.includes(sourceCategory)) || null;
+  return findPaletteItem(sourceCategory);
 }
 
 function getSavedPaint(verse: BibleVerse) {
@@ -281,15 +259,15 @@ const sharedVerseDetails = computed(() => (
 ));
 const shareImageLabels = computed(() => (
   shareImagePageItems.value.length <= 1
-    ? ['이미지']
-    : shareImagePageItems.value.map((_, index) => `이미지${index + 1}`)
+    ? ['나눔카드 복사']
+    : shareImagePageItems.value.map((_, index) => `카드${index + 1} 복사`)
 ));
 
 const shareMessage = computed(() => {
   const reflection = shareReflection.value?.text || '';
   return [
     reflection,
-    `#모줄성 #${bookLabel.value}`,
+    `#모줄성 #${chapterLabel.value}`, // ${bookLabel.value}
   ].join('\n');
 });
 
@@ -660,9 +638,9 @@ async function submitReflection() {
 
     reflections.value = [response.data, ...reflections.value.filter((item) => !(item.userNo === response.data.userNo && item.verseRange === response.data.verseRange))];
     selectedShareReflection.value = response.data;
-    setToast('한줄나누기를 저장했습니다.');
+    setToast('한 구절 나눔을 저장했습니다.');
   } catch (error: any) {
-    setToast(error?.data?.message || error?.message || '한줄나누기 저장 중 오류가 발생했습니다.');
+    setToast(error?.data?.message || error?.message || '한 구절 나눔 저장 중 오류가 발생했습니다.');
   } finally {
     savingReflection.value = false;
   }
@@ -672,13 +650,13 @@ async function copyShareMessage() {
   copyingMessage.value = true;
   try {
     if (!shareReflection.value) {
-      setToast('한줄나누기를 저장한 뒤 공유할 수 있습니다.');
+      setToast('한 구절 나눔을 저장한 뒤 공유할 수 있습니다.');
       return;
     }
     await navigator.clipboard.writeText(shareMessage.value);
-    setToast('메시지·태그를 복사했습니다.');
+    setToast('한 구절 나눔을 복사했습니다.');
   } catch {
-    setToast('메시지·태그를 복사하지 못했습니다.');
+    setToast('한 구절 나눔을 복사하지 못했습니다.');
   } finally {
     copyingMessage.value = false;
   }
@@ -743,7 +721,7 @@ watch(
 <template>
   <div class="reading-page">
     <section class="mvp-card mvp-main">
-      <section class="mvp-hero">
+      <section class="mvp-section mvp-sticky-controls">
         <div class="mvp-reading-nav">
           <div class="mvp-reading-nav-row mvp-reading-nav-row--top">
             <div class="mvp-reading-nav-left">
@@ -790,8 +768,37 @@ watch(
               </div>
             </div>
           </div>
-        </div>
 
+          <!-- <div class="mvp-toolbar mvp-toolbar--hero"> -->
+            <div class="mvp-palette">
+              <button
+                v-for="item in categoryPalette"
+                :key="item.category"
+                type="button"
+                :class="['mvp-palette-item', { active: selectedCategory === item.category }]"
+                :style="{
+                  background: item.soft,
+                  borderColor: item.color,
+                  color: selectedCategory === item.category ? '#1f1711' : '#4b3c30',
+                  boxShadow: selectedCategory === item.category ? `inset 0 0 0 2px ${item.color}` : 'none',
+                }"
+                @click="handlePickCategory(item.category)"
+              >
+                <strong>{{ item.category }}</strong>
+              </button>
+            </div>
+
+            <div class="mvp-toolbar-actions mvp-toolbar-actions--hero">
+              <button type="button" :class="['mvp-toolbar-button', { active: showSourceCategories }]" @click="showSourceCategories = !showSourceCategories">
+                {{ showSourceCategories ? '내 선택 보기' : '카테고리 보기' }}
+              </button>
+              <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">선택 초기화</button>
+            </div>
+          <!-- </div> -->
+        </div>
+      </section>
+
+      <section class="mvp-hero">
         <div class="mvp-hero-grid">
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
             <h2 class="mvp-title">{{ chapterLabel }}</h2>
@@ -806,37 +813,6 @@ watch(
       </section>
 
       <section class="mvp-section">
-
-        <div class="mvp-toolbar">
-          <div class="mvp-toolbar-actions">
-            <button type="button" :class="['mvp-toolbar-button', { active: showSourceCategories }]" @click="showSourceCategories = !showSourceCategories">
-              {{ showSourceCategories ? '내 선택 보기' : '카테고리 보기' }}
-            </button>
-            <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">현재창초기화</button>
-          </div>
-
-          <div class="mvp-palette">
-            <button
-              v-for="item in categoryPalette"
-              :key="item.category"
-              type="button"
-              :class="['mvp-palette-item', { active: selectedCategory === item.category }]"
-              :style="{
-                background: item.soft,
-                borderColor: item.color,
-                color: selectedCategory === item.category ? '#1f1711' : '#4b3c30',
-                boxShadow: selectedCategory === item.category ? `inset 0 0 0 2px ${item.color}` : 'none',
-              }"
-              @click="handlePickCategory(item.category)"
-            >
-              <strong>{{ item.category }}</strong>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section class="mvp-section">
-
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
         <p v-else-if="error" class="mvp-muted">{{ error.message }}</p>
 
@@ -871,7 +847,7 @@ watch(
 
     <aside class="mvp-card mvp-sidebar">
       <section class="mvp-sidebar-block">
-        <h3>한줄나누기</h3>
+        <h3>한 구절 나눔</h3>
         <textarea
           v-model="reflectionText"
           class="mvp-textarea"
@@ -880,13 +856,16 @@ watch(
         <!-- <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div> -->
         <div class="mvp-toolbar-actions">
           <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
-            {{ savingReflection ? '저장 중' : '한줄나눔 저장' }}
+            {{ savingReflection ? '저장 중' : '한 구절 나눔 저장' }}
           </button>
           <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
             {{ showAllSharing ? '나눔감추기' : '나눔전체 보기' }}
           </button>
         </div>
         <p v-if="toast" class="mvp-muted">{{ toast }}</p>
+      </section>
+
+      <section class="mvp-sidebar-block">
         <div class="mvp-sharing-list">
           <article
             v-for="item in sharingList"
@@ -896,16 +875,16 @@ watch(
           >
             <div class="mvp-sharing-head">
               <span><strong>{{ getReflectionDisplayName(item) }}</strong> {{ formatRelativeTime(item.updatedAt) }}</span>
-            </div>
               <span>{{ item.verseRange }}</span>
-            <p>{{ item.text }}</p>
+            </div>
+            <p class="mvp-sharing-message">{{ item.text }}</p>
           </article>
           <p v-if="!sharingList.length" class="mvp-muted">아직 저장된 나눔이 없습니다.</p>
         </div>
       </section>
 
       <section class="mvp-sidebar-block">
-        <h3>SNS 공유 준비</h3>
+        <h3>지금 말씀 나눠보기</h3>
         <div class="mvp-toolbar-actions">
           <button
             v-for="(label, index) in shareImageLabels"
@@ -918,7 +897,7 @@ watch(
             {{ copyingImageKey === (shareImageLabels.length === 1 ? 'single' : `page-${index}`) ? '복사 중' : label }}
           </button>
           <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage || !shareReflection" @click="copyShareMessage()">
-            {{ copyingMessage ? '복사 중' : '메시지' }}
+            {{ copyingMessage ? '복사 중' : '나눔문장 복사' }}
           </button>
         </div>
         <div class="mvp-share-card">

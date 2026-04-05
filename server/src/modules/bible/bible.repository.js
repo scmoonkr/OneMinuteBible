@@ -61,3 +61,40 @@ export async function findBibleChaptersByBookNo(bookNo) {
 
   return rows;
 }
+
+export async function findVerseTopicsByCategory(categoryNames = []) {
+  const database = getDatabase();
+  const names = Array.from(new Set(categoryNames.filter(Boolean).map((item) => String(item).trim())));
+
+  if (!names.length) {
+    return [];
+  }
+
+  const rows = await database
+    .collection(env.mongoCollectionVerseTopics)
+    .find(
+      {
+        mainCategory: { $in: names },
+      },
+      {
+        projection: {
+          _id: 0,
+          verseId: 1,
+          bookNo: 1,
+          chapterNo: 1,
+          verseNo: 1,
+          mainCategory: 1,
+          subCategories: 1,
+          baseWeight: 1,
+          score: 1,
+          recentScore: 1,
+          isAnchor: 1,
+        },
+        sort: { isAnchor: -1, baseWeight: -1, score: -1, recentScore: -1, bookNo: 1, chapterNo: 1, verseNo: 1 },
+        limit: MAX_LIMIT,
+      },
+    )
+    .toArray();
+
+  return rows;
+}

@@ -7,6 +7,8 @@ type StorySlide = {
 }
 
 const props = withDefaults(defineProps<{
+  book: string
+  image: string
   slides: StorySlide[]
   intervalMs?: number
 }>(), {
@@ -94,14 +96,14 @@ onBeforeUnmount(() => {
           class="story-slider-card"
         >
           <img
-            src="/Images/card1.png"
+            :src="image"
             alt=""
             class="story-slider-card-bg"
           >
 
           <div class="story-slider-card-overlay">
             <span class="story-slider-card-chapter">
-              [{{ slide.chapter }}]
+              {{ book }}. {{ slide.chapter }}
             </span>
 
             <h2 class="story-slider-card-title">

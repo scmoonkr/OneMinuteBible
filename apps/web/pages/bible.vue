@@ -51,22 +51,22 @@ const { data: chapterData } = await useAsyncData(
 );
 
 const breadcrumb = computed(() => [
-  { label: '?? ????', step: 'root' as const, active: !selectedTestament.value },
+  { label: '말씀 펼쳐보기', step: 'root' as const, active: !selectedTestament.value },
   ...(selectedTestament.value ? [{ label: selectedTestament.value.label, step: 'testament' as const, active: !selectedGroup.value }] : []),
   ...(selectedGroup.value ? [{ label: selectedGroup.value.label, step: 'group' as const, active: !selectedBook.value }] : []),
   ...(selectedBook.value ? [{ label: selectedBook.value.book, step: 'book' as const, active: true }] : []),
 ]);
 
 const sectionTitle = computed(() => {
-  if (!selectedTestament.value) return '??? ?? ? ???? ???? ?????';
-  if (!selectedGroup.value) return `${selectedTestament.value.label}? ??? ?????`;
-  if (!selectedBook.value) return `${selectedGroup.value.label}?? ?? ?? ?? ?????`;
-  return `${selectedBook.value.book}?? ?? ?? ?? ?????`;
+  if (!selectedTestament.value) return '구약과 신약 중 어디에서 시작할지 골라보세요';
+  if (!selectedGroup.value) return `${selectedTestament.value.label}의 흐름을 펼쳐봅니다`;
+  if (!selectedBook.value) return `${selectedGroup.value.label}에서 읽고 싶은 책을 골라보세요`;
+  return `${selectedBook.value.book}에서 읽고 싶은 장을 골라보세요`;
 });
 
 const sectionCopy = computed(() => {
   if (!selectedTestament.value) {
-    return '??? ???? ???? ?? ?? ? ??? ? ???? ?, ??? ??? ????? ????? ??????.';
+    return '성경을 목차보다 흐름으로 펼쳐 읽을 수 있도록 큰 묶음부터 책, 그리고 장까지 자연스럽게 따라가도록 구성했습니다.';
   }
 
   if (!selectedGroup.value) return selectedTestament.value.description;
@@ -104,8 +104,8 @@ const currentItems = computed(() => {
 
   return chapterData.value.map((item) => ({
     key: `${item.bookNo}-${item.chapterNo}`,
-    title: `${item.chapterNo}?`,
-    description: item.subject || '? ??? ?? ????.',
+    title: `${item.chapterNo}장`,
+    description: item.subject || '장 주제가 아직 없습니다.',
     chapterNo: item.chapterNo,
     level: 'chapter' as const,
   }));
@@ -160,10 +160,11 @@ function moveTo(step: 'root' | 'testament' | 'group' | 'book') {
 <template>
   <section class="bible-explorer page-stack">
     <div class="bible-explorer-hero">
-      <p class="bible-explorer-kicker">?? ????</p>
-      <h1 class="bible-explorer-title">??? ???? ???? ?? ????</h1>
+      <p class="bible-explorer-kicker">말씀 펼쳐보기</p>
+      <h1 class="bible-explorer-title">성경읽으려는데, 어디에서 시작할지 고민되나요</h1>
       <p class="bible-explorer-copy">
-        ??? ??, ??? ??, ???? ??? ?? ??? ?? ???, ?? ??? ?? ?? ??? ?????.
+        책을 고르고<br />
+        지금 멈출 장을 선택해 보세요.
       </p>
     </div>
 
@@ -188,7 +189,7 @@ function moveTo(step: 'root' | 'testament' | 'group' | 'book') {
         </div>
 
         <NuxtLink class="bible-explorer-read-link" to="/read/1/1">
-          ?? ??
+          바로 읽기
         </NuxtLink>
       </div>
 

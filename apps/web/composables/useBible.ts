@@ -40,6 +40,25 @@ export type BibleChapterSummary = {
   subject: string;
 };
 
+export type TopicVerseItem = {
+  verseId: string;
+  bookNo: number;
+  chapterNo: number;
+  verseNo: number;
+  book: string;
+  text: string;
+  mainCategory: string;
+  subCategories: string[];
+  baseWeight: number;
+  score: number;
+  recentScore: number;
+  isAnchor: boolean;
+  readTarget?: {
+    bookNo: number;
+    chapterNo: number;
+  };
+};
+
 export type SelectedVerseItem = {
   verseNo: number;
   category: string;
@@ -94,6 +113,13 @@ export function useBible() {
     );
   }
 
+  async function listTopicVerses(query: { category: string }) {
+    return await $fetch<{ ok: boolean; data: TopicVerseItem[] }>(
+      `${config.public.apiBase}/api/bible/topics`,
+      { query },
+    );
+  }
+
   async function listReflections(query: {
     userNo?: number;
     bookNo: number;
@@ -120,6 +146,7 @@ export function useBible() {
   return {
     readChapter,
     listBookChapters,
+    listTopicVerses,
     listReflections,
     saveReflection,
   };

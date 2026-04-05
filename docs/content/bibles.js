@@ -1310,10 +1310,6 @@
   }
 ]
 
-if (typeof window !== 'undefined') {
-  window.bibles = bibles;
-}
-
 const bibleParagraphs = [
 	{
 		"book": "창세기",

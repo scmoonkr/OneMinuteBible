@@ -1,4 +1,4 @@
-import { findBibleChaptersByBookNo, findBibleRows } from './bible.repository.js';
+﻿import { findBibleChaptersByBookNo, findBibleRows, findVerseTopicsByCategory } from './bible.repository.js';
 import { parsePositiveInteger } from '../../utils/validation.js';
 
 export function convertToBibleChapter(rows = []) {
@@ -92,4 +92,68 @@ export async function listBibleChapters(params = {}) {
     chapterNo: row.chapterNo,
     subject: row.subject || '',
   }));
+}
+
+export async function listTopicVerses(params = {}) {
+  const category = String(params.category || '').trim();
+
+  if (!category) {
+    throw new Error('category is required.');
+  }
+
+  const rows = await findVerseTopicsByCategory([category]);
+
+  if (!rows.length) {
+    return [];
+  }
+
+  const verseKeys = rows.map((row) => ({
+    bookNo: Number(row.bookNo),
+    chapterNo: Number(row.chapterNo),
+    verseNo: Number(row.verseNo),
+  }));
+
+  const queryRows = await Promise.all(
+    verseKeys.map(({ bookNo, chapterNo, verseNo }) =>
+      findBibleRows({ bookNo, chapterNo, verseNo }),
+    ),
+  );
+
+  const verseLookup = new Map();
+
+  queryRows.flat().forEach((row) => {
+    const key = `${row.bookNo}:${row.chapterNo}:${row.verseNo}`;
+    const verseText = Array.isArray(row.verses) && row.verses.length
+      ? row.verses.map((item) => item.verse || '').filter(Boolean).join(' ')
+      : (row.verse || row.content || '');
+
+    verseLookup.set(key, {
+      book: row.book || '',
+      text: verseText,
+    });
+  });
+
+  return rows.map((row) => {
+    const lookupKey = `${row.bookNo}:${row.chapterNo}:${row.verseNo}`;
+    const matched = verseLookup.get(lookupKey) || { book: '', text: '' };
+
+    return {
+      verseId: row.verseId || `${row.bookNo}:${row.chapterNo}:${row.verseNo}`,
+      bookNo: Number(row.bookNo),
+      chapterNo: Number(row.chapterNo),
+      verseNo: Number(row.verseNo),
+      book: matched.book,
+      text: matched.text,
+      mainCategory: row.mainCategory || category,
+      subCategories: Array.isArray(row.subCategories) ? row.subCategories : [],
+      baseWeight: Number(row.baseWeight || 0),
+      score: Number(row.score || 0),
+      recentScore: Number(row.recentScore || 0),
+      isAnchor: row.isAnchor === true,
+      readTarget: {
+        bookNo: Number(row.bookNo),
+        chapterNo: Number(row.chapterNo),
+      },
+    };
+  });
 }
