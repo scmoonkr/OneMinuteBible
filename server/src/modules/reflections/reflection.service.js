@@ -6,6 +6,7 @@ import {
   parsePositiveInteger,
   requireTrimmedString,
 } from '../../utils/validation.js';
+import { formatChurchKorVerseId } from '../../utils/bible-book-meta.js';
 
 function parseReflectionQuery(params = {}) {
   const query = {
@@ -50,9 +51,39 @@ async function resolveNickname(userNo, fallbackNickname = '') {
 }
 
 
-const TOPIC_ACTION_COLLECTION = 'verse_topic_actions';
+const ACTION_LOG_COLLECTION = 'action_log';
 const WRITE_REFLECTION_SCORE = 3;
 const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
+function formatVerseId(row, fallback) {
+  if (row?.index) return String(row.index);
+
+  const abbr = String(row?.abbr || '').trim();
+  if (abbr) return `${abbr}${row.chapterNo}:${row.verseNo}`;
+
+  return formatChurchKorVerseId({
+    bookNo: row?.bookNo,
+    book: row?.book,
+    chapterNo: row?.chapterNo,
+    verseNo: row?.verseNo,
+  }) || fallback;
+}
+
+async function canUpdate(userNo, verseId, actionType) {
+  const database = getDatabase();
+  const cutoffIso = new Date(Date.now() - DUPLICATE_WINDOW_MS).toISOString();
+  const recent = await database.collection(ACTION_LOG_COLLECTION).findOne(
+    {
+      userNo,
+      verseId,
+      actionType,
+      createdAt: { $gte: cutoffIso },
+    },
+    { projection: { _id: 1 } },
+  );
+
+  return !recent;
+}
 
 async function applyWriteReflectionScores(document) {
   if (!document.verseIDs.length) {
@@ -61,7 +92,6 @@ async function applyWriteReflectionScores(document) {
 
   const database = getDatabase();
   const now = new Date();
-  const cutoffIso = new Date(now.getTime() - DUPLICATE_WINDOW_MS).toISOString();
   const perScore = WRITE_REFLECTION_SCORE / document.verseIDs.length;
   const actionType = 'write_reflection';
   const verseRows = await database.collection(env.mongoCollectionBibleEdit)
@@ -72,7 +102,7 @@ async function applyWriteReflectionScores(document) {
         verseNo: { $in: [...new Set(document.verseIDs.map((item) => item.verseNo))] },
       },
       {
-        projection: { _id: 0, verseNo: 1, index: 1 },
+        projection: { _id: 0, bookNo: 1, book: 1, verseNo: 1, chapterNo: 1, abbr: 1, index: 1 },
       },
     )
     .toArray();
@@ -80,33 +110,29 @@ async function applyWriteReflectionScores(document) {
   const verseIdMap = new Map(
     verseRows.map((row) => [
       Number(row.verseNo),
-      row.index || `${document.bookNo}:${document.chapterNo}:${row.verseNo}`,
+      formatVerseId(row, `${document.bookNo}:${document.chapterNo}:${row.verseNo}`),
     ]),
   );
 
   for (const item of document.verseIDs) {
-    const verseId = verseIdMap.get(item.verseNo) || `${document.bookNo}:${document.chapterNo}:${item.verseNo}`;
-    const recentAction = await database.collection(TOPIC_ACTION_COLLECTION).findOne(
-      {
-        userNo: document.userNo,
-        verseId,
-        actionType,
-        createdAt: { $gte: cutoffIso },
-      },
-      { projection: { _id: 1 } },
-    );
-
-    if (recentAction) {
+    const verseId = verseIdMap.get(item.verseNo) || formatChurchKorVerseId({ bookNo: document.bookNo, chapterNo: document.chapterNo, verseNo: item.verseNo });
+    if (!(await canUpdate(document.userNo, verseId, actionType))) {
       continue;
     }
 
     await database.collection(env.mongoCollectionVerseTopics).updateOne(
       {
-        verseId,
+        bookNo: document.bookNo,
+        chapterNo: document.chapterNo,
+        verseNo: item.verseNo,
+        mainCategory: item.category,
       },
       {
-        $setOnInsert: {
+        $set: {
           verseId,
+          updatedAt: now.toISOString(),
+        },
+        $setOnInsert: {
           bookNo: document.bookNo,
           chapterNo: document.chapterNo,
           verseNo: item.verseNo,
@@ -123,7 +149,7 @@ async function applyWriteReflectionScores(document) {
       { upsert: true },
     );
 
-    await database.collection(TOPIC_ACTION_COLLECTION).insertOne({
+    await database.collection(ACTION_LOG_COLLECTION).insertOne({
       userNo: document.userNo,
       verseId,
       actionType,
@@ -150,6 +176,7 @@ export async function saveReflection(body = {}) {
     bookNo: parsePositiveInteger(body.bookNo, 'bookNo'),
     chapterNo: parsePositiveInteger(body.chapterNo, 'chapterNo'),
     paragraphNo: parsePositiveInteger(body.paragraphNo, 'paragraphNo'),
+    mainVerseNo: parsePositiveInteger(body.mainVerseNo, 'mainVerseNo'),
     verseRange: requireTrimmedString(body.verseRange, 'verseRange'),
     verseIDs: normalizeSelectedVerseItems(body.verseIDs),
     text: requireTrimmedString(body.text, 'text'),
@@ -161,6 +188,7 @@ export async function saveReflection(body = {}) {
   await applyWriteReflectionScores(document);
   return saved;
 }
+
 
 
 

@@ -189,6 +189,7 @@ export async function recordTopicVerseAction(body = {}) {
   const recentAction = await findRecentVerseTopicAction({
     userNo,
     verseId,
+    mainCategory,
     actionType,
     cutoffIso,
   });

@@ -31,6 +31,11 @@ const reflections = ref<ReflectionItem[]>([]);
 const selectedShareReflection = ref<ReflectionItem | null>(null);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
 
+type ShareVerseDetail = SelectedVerseItem & {
+  label: string;
+  palette: PaletteItem | null;
+};
+
 const { data, pending, error } = await useAsyncData(
   () => `bible-read-${bookNo.value}-${chapterNo.value}`,
   () => bible.readChapter({ bookNo: bookNo.value, chapterNo: chapterNo.value }),
@@ -60,6 +65,7 @@ const currentUserNo = computed(() => auth.currentUser.value?.userNo || 0);
 const myReflections = computed(() => reflections.value.filter((item) => item.userNo === currentUserNo.value));
 const sharingList = computed(() => (showAllSharing.value ? reflections.value : myReflections.value));
 const latestMyReflection = computed(() => myReflections.value[0] || null);
+const representativeVerseNo = ref<number | null>(null);
 
 function getVerseItemKey(item: Pick<SelectedVerseItem, 'verseNo' | 'verse'> | Pick<BibleVerse, 'verseNo' | 'verse'>) {
   return `${item.verseNo}|${item.verse}`;
@@ -245,8 +251,12 @@ const selectedVerseDetails = computed(() => (
     })
 ));
 const shareReflection = computed(() => selectedShareReflection.value);
-const sharedVerseDetails = computed(() => (
-  (shareReflection.value?.verseIDs || [])
+const previewVerseDetails = computed<ShareVerseDetail[]>(() => {
+  const sourceItems = selectedVerseItems.value.length
+    ? selectedVerseItems.value
+    : (shareReflection.value?.verseIDs || []);
+
+  return sourceItems
     .map((item) => ({
       ...item,
       label: `${chapterBookShort.value}${chapterNo.value}:${item.verseNo}`,
@@ -255,8 +265,8 @@ const sharedVerseDetails = computed(() => (
     .sort((left, right) => {
       if (left.verseNo !== right.verseNo) return left.verseNo - right.verseNo;
       return left.verse.localeCompare(right.verse, 'ko');
-    })
-));
+    });
+});
 const shareImageLabels = computed(() => (
   shareImagePageItems.value.length <= 1
     ? ['나눔카드 복사']
@@ -351,12 +361,12 @@ function drawRoundedRect(
 }
 
 async function createShareImageBlob() {
-  const items = sharedVerseDetails.value;
+  const items = previewVerseDetails.value;
   if (!items.length) return null;
   return createShareImageBlobForItems(items);
 }
 
-function getShareLayout(items: typeof sharedVerseDetails.value) {
+function getShareLayout(items: ShareVerseDetail[]) {
   const width = 1080;
   const height = 1350;
   const layoutPresets = [
@@ -429,7 +439,7 @@ function getShareLayout(items: typeof sharedVerseDetails.value) {
 }
 
 const shareImagePageItems = computed(() => {
-  const items = sharedVerseDetails.value;
+  const items = previewVerseDetails.value;
   if (!items.length) return [];
 
   const layout = getShareLayout(items);
@@ -465,7 +475,7 @@ const shareImagePageItems = computed(() => {
   return pages;
 });
 
-async function createShareImageBlobForItems(items: typeof sharedVerseDetails.value) {
+async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
   const layout = getShareLayout(items);
   if (!layout) return null;
 
@@ -579,15 +589,32 @@ function handleVerseClick(verse: BibleVerse) {
   localSelectedVerseItems.value = buildNextSelectedItems(verse);
 }
 
+watch(selectedVerseIds, (ids) => {
+  if (!ids.length) {
+    representativeVerseNo.value = null;
+    return;
+  }
+
+  if (!representativeVerseNo.value || !ids.includes(representativeVerseNo.value)) {
+    representativeVerseNo.value = ids[0];
+  }
+}, { immediate: true });
+
+function selectRepresentativeVerse(verseNo: number) {
+  representativeVerseNo.value = verseNo;
+}
+
 function resetCurrentChapter() {
   localSelectedVerseItems.value = [];
   reflectionText.value = '';
+  representativeVerseNo.value = null;
   setToast('현재 창에서 선택한 내용을 지웠습니다.');
 }
 
 function applyReflectionSelection(item: ReflectionItem) {
   localSelectedVerseItems.value = item.verseIDs || [];
   reflectionText.value = item.text || '';
+  representativeVerseNo.value = item.mainVerseNo || item.verseIDs?.[0]?.verseNo || null;
   selectedShareReflection.value = item;
   if (showSourceCategories.value) showSourceCategories.value = false;
 }
@@ -628,7 +655,8 @@ async function submitReflection() {
       nickname: auth.currentUser.value.nickname,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
-      paragraphNo: getParagraphNoForVerse(selectedVerseItems.value[0]?.verseNo || 1),
+      paragraphNo: getParagraphNoForVerse(representativeVerseNo.value || selectedVerseItems.value[0]?.verseNo || 1),
+      mainVerseNo: representativeVerseNo.value || selectedVerseItems.value[0]?.verseNo || 1,
       verseRange: selectedVerseRange.value,
       verseIDs: selectedVerseItems.value,
       text: reflectionText.value.trim(),
@@ -671,7 +699,7 @@ async function copyShareImage(pageIndex?: number) {
       return;
     }
     const pageItems = pageIndex === undefined
-      ? sharedVerseDetails.value
+      ? previewVerseDetails.value
       : shareImagePageItems.value[pageIndex] || [];
     const imageBlob = await createShareImageBlobForItems(pageItems);
 
@@ -709,6 +737,7 @@ watch(
     showSourceCategories.value = false;
     showAllSharing.value = false;
     reflectionText.value = '';
+  representativeVerseNo.value = null;
     localSelectedVerseItems.value = [];
     selectedShareReflection.value = null;
     chapterInput.value = String(chapterNo.value);
@@ -848,6 +877,21 @@ watch(
     <aside class="mvp-card mvp-sidebar">
       <section class="mvp-sidebar-block">
         <h3>한 구절 나눔</h3>
+        <div class="mvp-selected-range mvp-selected-range--compact">
+          <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
+          <div class="mvp-selected-verse-chips">
+            <button
+              v-for="verseNo in selectedVerseIds"
+              :key="verseNo"
+              type="button"
+              :class="['mvp-selected-verse-chip', { active: representativeVerseNo === verseNo }]"
+              @click="selectRepresentativeVerse(verseNo)"
+            >
+              {{ verseNo }}절
+            </button>
+            <span v-if="!selectedVerseIds.length" class="mvp-muted">선택한 구절이 아직 없습니다.</span>
+          </div>
+        </div>
         <textarea
           v-model="reflectionText"
           class="mvp-textarea"
@@ -903,7 +947,7 @@ watch(
         <div class="mvp-share-card">
           <div class="mvp-share-card-verses">
             <div
-              v-for="item in sharedVerseDetails"
+              v-for="item in previewVerseDetails"
               :key="`${item.label}-${item.category}-${item.verse}`"
               class="mvp-share-card-verse"
               :style="{ background: item.palette?.soft || '#ffffff', borderColor: item.palette?.color || '#d7cabc' }"
@@ -912,7 +956,7 @@ watch(
               <span>{{ item.category }}</span>
               <p :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</p>
             </div>
-            <p v-if="!sharedVerseDetails.length" class="mvp-muted"></p>
+            <p v-if="!previewVerseDetails.length" class="mvp-muted"></p>
           </div>
         </div>
         <div class="mvp-share-copy-text">
@@ -923,3 +967,9 @@ watch(
     </aside>
   </div>
 </template>
+
+
+
+
+
+

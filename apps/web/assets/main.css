@@ -1047,6 +1047,44 @@ input {
   line-height: 1.7;
 }
 
+.mvp-selected-range--compact {
+  margin: 0 0 0.45rem 0;
+  padding: 0.7rem 0.8rem;
+}
+
+.mvp-selected-range-title {
+  margin: 0 0 0.45rem;
+  color: #6e6153;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mvp-selected-verse-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.mvp-selected-verse-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fffdfa;
+  color: #4b3c30;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.mvp-selected-verse-chip.active {
+  background: #4a3426;
+  border-color: #4a3426;
+  color: #fff7ef;
+}
+
 .mvp-sharing-item {
   min-width: 0;
   overflow: hidden;

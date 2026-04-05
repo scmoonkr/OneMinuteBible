@@ -38,10 +38,10 @@ async function ensureCoreIndexes(database) {
       { key: { userNo: 1, bookNo: 1, chapterNo: 1, verseRange: 1 }, name: 'reflections_unique_userNo' },
       { key: { bookNo: 1, chapterNo: 1, updatedAt: -1 }, name: 'reflections_recent_userNo' },
     ]),
-    database.collection('verse_topic_actions').createIndexes([
+    database.collection('action_log').createIndexes([
       {
         key: { userNo: 1, actionType: 1, bookNo: 1, chapterNo: 1, verseNo: 1, mainCategory: 1, createdAt: -1 },
-        name: 'verse_topic_actions_recent_lookup',
+        name: 'action_log_recent_lookup',
       },
     ]),
   ]);
@@ -74,3 +74,4 @@ export async function closeDatabase() {
     db = undefined;
   }
 }
+

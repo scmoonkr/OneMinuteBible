@@ -102,18 +102,24 @@ export async function findVerseTopicsByCategory(categoryNames = []) {
 export async function findRecentVerseTopicAction({
   userNo,
   verseId,
+  mainCategory,
   actionType,
   cutoffIso,
 }) {
   const database = getDatabase();
+  const query = {
+    userNo: Number(userNo),
+    verseId: String(verseId),
+    actionType: String(actionType),
+    createdAt: { $gte: cutoffIso },
+  };
+
+  if (mainCategory !== undefined && mainCategory !== null && String(mainCategory).trim()) {
+    query.mainCategory = String(mainCategory).trim();
+  }
 
   return database.collection('verse_topic_actions').findOne(
-    {
-      userNo: Number(userNo),
-      verseId: String(verseId),
-      actionType: String(actionType),
-      createdAt: { $gte: cutoffIso },
-    },
+    query,
     {
       projection: { _id: 1 },
     },
@@ -137,11 +143,16 @@ export async function incrementVerseTopicScore({
 
   await database.collection(env.mongoCollectionVerseTopics).updateOne(
     {
-      verseId: String(verseId),
+      bookNo: Number(bookNo),
+      chapterNo: Number(chapterNo),
+      verseNo: Number(verseNo),
+      mainCategory: String(mainCategory),
     },
     {
-      $setOnInsert: {
+      $set: {
         verseId: String(verseId),
+      },
+      $setOnInsert: {
         bookNo: Number(bookNo),
         chapterNo: Number(chapterNo),
         verseNo: Number(verseNo),

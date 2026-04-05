@@ -84,6 +84,7 @@ export type ReflectionItem = {
   bookNo: number;
   chapterNo: number;
   paragraphNo: number;
+  mainVerseNo?: number;
   verseRange: string;
   verseIDs: SelectedVerseItem[];
   text: string;
@@ -169,4 +170,6 @@ export function useBible() {
     saveReflection,
   };
 }
+
+
 
