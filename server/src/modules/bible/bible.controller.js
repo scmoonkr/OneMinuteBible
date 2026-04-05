@@ -1,4 +1,4 @@
-﻿import { getBibleChapter, listBibleChapters, listTopicVerses } from './bible.service.js';
+﻿import { getBibleChapter, listBibleChapters, listTopicVerses, recordTopicVerseAction } from './bible.service.js';
 
 export async function readChapter(req, res, next) {
   try {
@@ -44,6 +44,19 @@ export async function readTopicVerses(req, res, next) {
       ok: true,
       count: verses.length,
       data: verses,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateTopicVerseAction(req, res, next) {
+  try {
+    const result = await recordTopicVerseAction(req.body);
+
+    return res.json({
+      ok: true,
+      data: result,
     });
   } catch (error) {
     return next(error);

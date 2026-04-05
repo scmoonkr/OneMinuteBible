@@ -3,14 +3,14 @@ import { categoryPalette, type PaletteItem } from '~/data/categoryPalette';
 import { type TopicVerseItem, useBible } from '~/composables/useBible';
 import { bibleBooks } from '~/data/bibleTable';
 
-const { listTopicVerses } = useBible();
+const { listTopicVerses, recordTopicVerseAction } = useBible();
+const auth = useAuth();
 
 const selectedTopicId = ref(categoryPalette.find((item) => item.category === '사랑')?.category ?? categoryPalette[0]?.category ?? '');
 const selectedVerseId = ref('');
 const showAll = ref(false);
 const loading = ref(false);
 const topicVerseMap = ref<Record<string, TopicVerseItem[]>>({});
-const scoreMap = ref<Record<string, { score: number; recentScore: number }>>({});
 
 const topicSidebarItems = computed(() =>
   categoryPalette.map((item) => ({
@@ -27,16 +27,12 @@ const selectedTopicMeta = computed<PaletteItem | null>(() =>
 
 const activeTopicData = computed(() => topicVerseMap.value[selectedTopicId.value] ?? []);
 
-const rankedVerses = computed(() =>
-  [...activeTopicData.value].sort((a, b) => getFinalWeight(b) - getFinalWeight(a)),
-);
-
 const displayedVerses = computed(() => {
   if (showAll.value) {
-    return rankedVerses.value;
+    return activeTopicData.value;
   }
 
-  return rankedVerses.value.slice(0, 3);
+  return activeTopicData.value.slice(0, 3);
 });
 
 const selectedVerse = computed(() =>
@@ -78,54 +74,55 @@ watch(selectedTopicId, async (category) => {
   }
 }, { immediate: true });
 
-function getFinalWeight(verse: TopicVerseItem) {
-  const tracked = scoreMap.value[verse.verseId];
-  return verse.baseWeight + (tracked?.score ?? verse.score) + (tracked?.recentScore ?? verse.recentScore);
+async function recordAction(verse: TopicVerseItem | null, actionType: 'read' | 'view_reflection' | 'write_reflection') {
+  const userNo = auth.currentUser.value?.userNo;
+  if (!verse || !userNo) {
+    return;
+  }
+
+  try {
+    await recordTopicVerseAction({
+      userNo,
+      verseId: verse.verseId,
+      bookNo: verse.bookNo,
+      chapterNo: verse.chapterNo,
+      verseNo: verse.verseNo,
+      mainCategory: verse.mainCategory,
+      actionType,
+    });
+  } catch {
+    // Keep reading flow resilient even if score logging fails.
+  }
 }
 
 function selectTopic(topicId: string) {
   selectedTopicId.value = topicId;
 }
 
-function selectVerse(verseId: string) {
+async function selectVerse(verseId: string) {
   selectedVerseId.value = verseId;
-  updateVerseScore(verseId, 'read');
+  const verse = displayedVerses.value.find((item) => item.verseId === verseId) ?? null;
+  await recordAction(verse, 'read');
 }
 
 function handleMore() {
   showAll.value = true;
 }
 
-function updateVerseScore(verseId: string, actionType: 'read' | 'view_reflection' | 'write_reflection') {
-  const current = scoreMap.value[verseId] ?? { score: 0, recentScore: 0 };
-
-  if (actionType === 'read') {
-    scoreMap.value[verseId] = { score: current.score + 1, recentScore: current.recentScore + 1 };
-  }
-
-  if (actionType === 'view_reflection') {
-    scoreMap.value[verseId] = { score: current.score + 2, recentScore: current.recentScore + 2 };
-  }
-
-  if (actionType === 'write_reflection') {
-    scoreMap.value[verseId] = { score: current.score + 3, recentScore: current.recentScore + 3 };
-  }
-}
-
-function openReflection() {
+async function openReflection() {
   if (!selectedVerse.value) {
     return;
   }
 
-  updateVerseScore(selectedVerse.value.verseId, 'view_reflection');
+  await recordAction(selectedVerse.value, 'view_reflection');
 }
 
-function startWriting() {
+async function startWriting() {
   if (!selectedVerse.value) {
     return;
   }
 
-  updateVerseScore(selectedVerse.value.verseId, 'write_reflection');
+  await recordAction(selectedVerse.value, 'write_reflection');
 
   if (selectedVerse.value.readTarget) {
     navigateTo(`/read/${selectedVerse.value.readTarget.bookNo}/${selectedVerse.value.readTarget.chapterNo}`);
@@ -228,5 +225,3 @@ function startWriting() {
     </div>
   </section>
 </template>
-
-

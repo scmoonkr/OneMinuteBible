@@ -120,7 +120,24 @@ export function useBible() {
     );
   }
 
-  async function listReflections(query: {
+
+  async function recordTopicVerseAction(body: {
+    userNo: number;
+    verseId: string;
+    bookNo: number;
+    chapterNo: number;
+    verseNo: number;
+    mainCategory: string;
+    actionType: "read" | "view_reflection" | "write_reflection";
+  }) {
+    return await $fetch<{ ok: boolean; data: { ok: boolean; skipped?: boolean } }>(
+      `${config.public.apiBase}/api/bible/topics/action`,
+      {
+        method: 'POST',
+        body,
+      },
+    );
+  }  async function listReflections(query: {
     userNo?: number;
     bookNo: number;
     chapterNo: number;
@@ -147,7 +164,9 @@ export function useBible() {
     readChapter,
     listBookChapters,
     listTopicVerses,
+    recordTopicVerseAction,
     listReflections,
     saveReflection,
   };
 }
+

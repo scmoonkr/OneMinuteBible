@@ -98,3 +98,65 @@ export async function findVerseTopicsByCategory(categoryNames = []) {
 
   return rows;
 }
+
+export async function findRecentVerseTopicAction({
+  userNo,
+  verseId,
+  actionType,
+  cutoffIso,
+}) {
+  const database = getDatabase();
+
+  return database.collection('verse_topic_actions').findOne(
+    {
+      userNo: Number(userNo),
+      verseId: String(verseId),
+      actionType: String(actionType),
+      createdAt: { $gte: cutoffIso },
+    },
+    {
+      projection: { _id: 1 },
+    },
+  );
+}
+
+export async function saveVerseTopicAction(document) {
+  const database = getDatabase();
+  await database.collection('verse_topic_actions').insertOne(document);
+}
+
+export async function incrementVerseTopicScore({
+  verseId,
+  bookNo,
+  chapterNo,
+  verseNo,
+  mainCategory,
+  scoreDelta,
+}) {
+  const database = getDatabase();
+
+  await database.collection(env.mongoCollectionVerseTopics).updateOne(
+    {
+      verseId: String(verseId),
+    },
+    {
+      $setOnInsert: {
+        verseId: String(verseId),
+        bookNo: Number(bookNo),
+        chapterNo: Number(chapterNo),
+        verseNo: Number(verseNo),
+        mainCategory: String(mainCategory),
+        baseWeight: 0,
+        score: 0,
+        recentScore: 0,
+        isAnchor: false,
+        subCategories: [],
+      },
+      $inc: {
+        score: Number(scoreDelta),
+        recentScore: Number(scoreDelta),
+      },
+    },
+    { upsert: true },
+  );
+}
