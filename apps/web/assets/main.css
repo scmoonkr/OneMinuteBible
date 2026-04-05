@@ -1972,6 +1972,152 @@ input {
   line-height: 1.6;
 }
 
+.topics-page {
+  width: min(1180px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.topics-hero,
+.topics-sidebar,
+.topics-panel,
+.topics-detail {
+  padding: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(255, 250, 242, 0.92);
+  box-shadow: 0 18px 50px rgba(66, 42, 22, 0.08);
+}
+
+.topics-kicker {
+  margin: 0 0 0.45rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.topics-title {
+  margin: 0;
+  color: #2b211a;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.18;
+}
+
+.topics-copy {
+  max-width: 42rem;
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.topics-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.topics-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.topics-sidebar h2,
+.topics-panel-head h2,
+.topics-detail-head h3 {
+  margin: 0;
+  color: #2b211a;
+}
+
+.topics-topic-list,
+.topics-verse-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.topics-topic-button,
+.topics-verse-item,
+.topics-chip {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.topics-topic-button,
+.topics-verse-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem;
+  background: rgba(255, 255, 255, 0.86);
+  text-align: left;
+  cursor: pointer;
+}
+
+.topics-topic-button.active,
+.topics-verse-item.active {
+  border-color: #4a3426;
+  box-shadow: inset 0 0 0 1px rgba(74, 52, 38, 0.12);
+}
+
+.topics-topic-button span,
+.topics-verse-item span,
+.topics-panel-head p,
+.topics-detail-ref {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.topics-panel-head,
+.topics-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.topics-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.topics-chip {
+  padding: 0.65rem 0.9rem;
+  background: #fffdfa;
+  color: #4b3c30;
+  cursor: pointer;
+}
+
+.topics-chip--dark {
+  background: #4a3426;
+  border-color: #4a3426;
+  color: #fff7ef;
+}
+
+.topics-detail-text {
+  margin: 1rem 0 0;
+  color: #2b211a;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.topics-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.topics-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #f1e7d8;
+  color: #5a4737;
+  font-size: 0.84rem;
+}
+
 @media (max-width: 760px) {
   .home-hero {
     min-height: 0;
@@ -2021,6 +2167,15 @@ input {
   }
 
   .bible-explorer-panel-head {
+    flex-direction: column;
+  }
+
+  .topics-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topics-panel-head,
+  .topics-detail-head {
     flex-direction: column;
   }
 }
