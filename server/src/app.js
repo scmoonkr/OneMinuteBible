@@ -6,10 +6,19 @@ import reflectionRouter from './modules/reflections/reflection.routes.js';
 
 const app = express();
 
+// app.use(cors({
+//   origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
+//   credentials: true,
+// }));
 app.use(cors({
-  origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/],
+  origin: [
+    /^http:\/\/localhost:\d+$/,
+    /^http:\/\/127\.0\.0\.1:\d+$/,
+    /^http:\/\/221\.143\.48\.153:\d+$/,
+  ],
   credentials: true,
 }));
+
 app.use(express.json());
 
 app.get('/health', (req, res) => {
