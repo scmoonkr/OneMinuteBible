@@ -38,10 +38,10 @@ input {
 
 .site-header {
   display: grid;
-  grid-template-columns: 1.1fr 2fr 1fr;
-  gap: 1rem;
-  align-items: start;
-  padding: 1.25rem 1.5rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--line);
   background: rgba(255, 250, 242, 0.88);
   backdrop-filter: blur(18px);
@@ -69,12 +69,14 @@ input {
 .site-nav,
 .site-account {
   display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+  gap: 0.45rem;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .site-nav {
   justify-content: center;
+  min-width: 0;
 }
 
 .site-account {
@@ -124,11 +126,12 @@ input {
 .account-link,
 .ghost-button,
 .primary-button {
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
+  padding: 0.62rem 0.86rem;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: white;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .nav-link.active,
