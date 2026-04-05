@@ -27,3 +27,13 @@ export function formatChurchKorVerseId({ bookNo, book, chapterNo, verseNo }) {
 
   return `${bookNo}:${chapterNo}:${verseNo}`;
 }
+
+export function normalizeVerseId({ verseId, bookNo, book, chapterNo, verseNo }) {
+  const normalized = String(verseId || '').trim();
+
+  if (normalized && !/^\d+:\d+:\d+$/.test(normalized)) {
+    return normalized;
+  }
+
+  return formatChurchKorVerseId({ bookNo, book, chapterNo, verseNo });
+}

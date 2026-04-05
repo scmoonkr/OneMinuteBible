@@ -1,7 +1,8 @@
-﻿import { listReflections, upsertReflection } from './reflection.repository.js';
+﻿import { findReflectionByRid, listReflections, upsertReflection } from './reflection.repository.js';
 import { env } from '../../config/env.js';
 import { getDatabase } from '../../config/db.js';
 import {
+  createAppError,
   normalizeSelectedVerseItems,
   parsePositiveInteger,
   requireTrimmedString,
@@ -20,6 +21,9 @@ function parseReflectionQuery(params = {}) {
   const userNo = parsePositiveInteger(params.userNo, 'userNo', {
     required: false,
   });
+  const verseNo = parsePositiveInteger(params.verseNo, 'verseNo', {
+    required: false,
+  });
 
   if (paragraphNo !== undefined) {
     query.paragraphNo = paragraphNo;
@@ -27,6 +31,10 @@ function parseReflectionQuery(params = {}) {
 
   if (userNo !== undefined) {
     query.userNo = userNo;
+  }
+
+  if (verseNo !== undefined) {
+    query['verseIDs.verseNo'] = verseNo;
   }
 
   return query;
@@ -49,7 +57,6 @@ async function resolveNickname(userNo, fallbackNickname = '') {
 
   return String(user?.nickname || '').trim();
 }
-
 
 const ACTION_LOG_COLLECTION = 'action_log';
 const WRITE_REFLECTION_SCORE = 3;
@@ -115,7 +122,8 @@ async function applyWriteReflectionScores(document) {
   );
 
   for (const item of document.verseIDs) {
-    const verseId = verseIdMap.get(item.verseNo) || formatChurchKorVerseId({ bookNo: document.bookNo, chapterNo: document.chapterNo, verseNo: item.verseNo });
+    const verseId = verseIdMap.get(item.verseNo)
+      || formatChurchKorVerseId({ bookNo: document.bookNo, chapterNo: document.chapterNo, verseNo: item.verseNo });
     if (!(await canUpdate(document.userNo, verseId, actionType))) {
       continue;
     }
@@ -161,6 +169,7 @@ async function applyWriteReflectionScores(document) {
     });
   }
 }
+
 export async function saveReflection(body = {}) {
   const now = new Date().toISOString();
   const rid = typeof body.rid === 'string' && body.rid.trim()
@@ -189,12 +198,115 @@ export async function saveReflection(body = {}) {
   return saved;
 }
 
+export async function handleViewReflection(params = {}) {
+  const rid = requireTrimmedString(params.rid, 'rid');
+  const userNo = parsePositiveInteger(params.userNo, 'userNo', { required: false });
+  const reflection = await findReflectionByRid(rid);
 
+  if (!reflection) {
+    throw createAppError('Reflection not found.', 404);
+  }
 
+  if (!userNo) {
+    console.log('[view_reflection] skipped: missing userNo', { rid, userNo });
+    return {
+      skipped: true,
+      reflection,
+    };
+  }
 
+  const mainVerseNo = Number(reflection.mainVerseNo || reflection.verseIDs?.[0]?.verseNo || 1);
+  const verseId = formatChurchKorVerseId({
+    bookNo: reflection.bookNo,
+    chapterNo: reflection.chapterNo,
+    verseNo: mainVerseNo,
+  });
+  const actionType = 'view_reflection';
+  const can = await canUpdate(userNo, verseId, actionType);
 
+  if (!can) {
+    console.log('[view_reflection] skipped: duplicate window', { rid, userNo, verseId, actionType });
+    return {
+      skipped: true,
+      reflection,
+      verseId,
+    };
+  }
 
+  const database = getDatabase();
+  const mainVerse = (reflection.verseIDs || []).find((item) => Number(item.verseNo) === mainVerseNo);
+  const updatedAt = new Date().toISOString();
 
+  const updateResult = await database.collection(env.mongoCollectionVerseTopics).updateMany(
+    {
+      verseId,
+    },
+    {
+      $set: {
+        verseId,
+        updatedAt,
+      },
+      $inc: {
+        score: 2,
+        recentScore: 2,
+      },
+    },
+  );
+
+  if (!updateResult.matchedCount && mainVerse?.category) {
+    await database.collection(env.mongoCollectionVerseTopics).updateOne(
+      {
+        bookNo: Number(reflection.bookNo),
+        chapterNo: Number(reflection.chapterNo),
+        verseNo: mainVerseNo,
+        mainCategory: String(mainVerse.category),
+      },
+      {
+        $set: {
+          verseId,
+          updatedAt,
+        },
+        $setOnInsert: {
+          bookNo: Number(reflection.bookNo),
+          chapterNo: Number(reflection.chapterNo),
+          verseNo: mainVerseNo,
+          mainCategory: String(mainVerse.category),
+          baseWeight: 0,
+          isAnchor: false,
+          subCategories: [],
+        },
+        $inc: {
+          score: 2,
+          recentScore: 2,
+        },
+      },
+      { upsert: true },
+    );
+  }
+
+  await database.collection(ACTION_LOG_COLLECTION).insertOne({
+    userNo,
+    verseId,
+    actionType,
+    createdAt: new Date().toISOString(),
+  });
+
+  console.log('[view_reflection] updated', {
+    rid,
+    userNo,
+    verseId,
+    mainVerseNo,
+    matchedCount: updateResult.matchedCount,
+    modifiedCount: updateResult.modifiedCount,
+  });
+
+  return {
+    skipped: false,
+    updated: true,
+    verseId,
+    reflection,
+  };
+}
 
 
 

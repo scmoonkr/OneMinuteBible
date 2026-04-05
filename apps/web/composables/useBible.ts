@@ -53,6 +53,7 @@ export type TopicVerseItem = {
   score: number;
   recentScore: number;
   isAnchor: boolean;
+  finalWeight?: number;
   readTarget?: {
     bookNo: number;
     chapterNo: number;
@@ -114,13 +115,16 @@ export function useBible() {
     );
   }
 
-  async function listTopicVerses(query: { category: string }) {
+  async function listTopicVerses(query: {
+    category: string;
+    mode?: 'initial' | 'more' | 'all';
+    shownIds?: string[];
+  }) {
     return await $fetch<{ ok: boolean; data: TopicVerseItem[] }>(
       `${config.public.apiBase}/api/bible/topics`,
       { query },
     );
   }
-
 
   async function recordTopicVerseAction(body: {
     userNo: number;
@@ -129,7 +133,7 @@ export function useBible() {
     chapterNo: number;
     verseNo: number;
     mainCategory: string;
-    actionType: "read" | "view_reflection" | "write_reflection";
+    actionType: 'read' | 'view_reflection' | 'write_reflection';
   }) {
     return await $fetch<{ ok: boolean; data: { ok: boolean; skipped?: boolean } }>(
       `${config.public.apiBase}/api/bible/topics/action`,
@@ -138,16 +142,31 @@ export function useBible() {
         body,
       },
     );
-  }  async function listReflections(query: {
+  }
+
+  async function listReflections(query: {
     userNo?: number;
     bookNo: number;
     chapterNo: number;
+    verseNo?: number;
     paragraphNo?: number;
     mine?: boolean;
   }) {
     return await $fetch<{ ok: boolean; data: ReflectionItem[] }>(
       `${config.public.apiBase}/api/reflections`,
       { query },
+    );
+  }
+
+  async function viewReflection(body: { rid: string; userNo?: number }) {
+    return await $fetch<{ ok: boolean; data: { skipped?: boolean; updated?: boolean; verseId?: string; reflection?: ReflectionItem } }>(
+      `${config.public.apiBase}/api/reflections/${body.rid}/view`,
+      {
+        method: 'POST',
+        body: {
+          userNo: body.userNo,
+        },
+      },
     );
   }
 
@@ -167,9 +186,7 @@ export function useBible() {
     listTopicVerses,
     recordTopicVerseAction,
     listReflections,
+    viewReflection,
     saveReflection,
   };
 }
-
-
-

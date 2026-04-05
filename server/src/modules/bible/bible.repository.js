@@ -1,4 +1,4 @@
-﻿import { env } from '../../config/env.js';
+import { env } from '../../config/env.js';
 import { getDatabase } from '../../config/db.js';
 import { escapeRegExp } from '../../utils/validation.js';
 
@@ -41,7 +41,6 @@ export async function findBibleRows(params = {}) {
   return rows;
 }
 
-
 export async function findBibleChaptersByBookNo(bookNo) {
   const database = getDatabase();
 
@@ -62,7 +61,7 @@ export async function findBibleChaptersByBookNo(bookNo) {
   return rows;
 }
 
-export async function findVerseTopicsByCategory(categoryNames = []) {
+export async function findVerseTopicsByCategory(categoryNames = [], options = {}) {
   const database = getDatabase();
   const names = Array.from(new Set(categoryNames.filter(Boolean).map((item) => String(item).trim())));
 
@@ -70,7 +69,7 @@ export async function findVerseTopicsByCategory(categoryNames = []) {
     return [];
   }
 
-  const rows = await database
+  const cursor = database
     .collection(env.mongoCollectionVerseTopics)
     .find(
       {
@@ -90,13 +89,18 @@ export async function findVerseTopicsByCategory(categoryNames = []) {
           recentScore: 1,
           isAnchor: 1,
         },
-        sort: { isAnchor: -1, baseWeight: -1, score: -1, recentScore: -1, bookNo: 1, chapterNo: 1, verseNo: 1 },
-        limit: MAX_LIMIT,
       },
-    )
-    .toArray();
+    );
 
-  return rows;
+  if (options.sort) {
+    cursor.sort(options.sort);
+  }
+
+  if (Number.isInteger(options.limit) && options.limit > 0) {
+    cursor.limit(options.limit);
+  }
+
+  return cursor.toArray();
 }
 
 export async function findRecentVerseTopicAction({
@@ -118,7 +122,7 @@ export async function findRecentVerseTopicAction({
     query.mainCategory = String(mainCategory).trim();
   }
 
-  return database.collection('verse_topic_actions').findOne(
+  return database.collection('action_log').findOne(
     query,
     {
       projection: { _id: 1 },
@@ -128,7 +132,7 @@ export async function findRecentVerseTopicAction({
 
 export async function saveVerseTopicAction(document) {
   const database = getDatabase();
-  await database.collection('verse_topic_actions').insertOne(document);
+  await database.collection('action_log').insertOne(document);
 }
 
 export async function incrementVerseTopicScore({
@@ -169,4 +173,3 @@ export async function incrementVerseTopicScore({
     { upsert: true },
   );
 }
-

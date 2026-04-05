@@ -1,4 +1,4 @@
-import { getReflections, saveReflection } from './reflection.service.js';
+﻿import { getReflections, handleViewReflection, saveReflection } from './reflection.service.js';
 
 export async function listReflectionItems(req, res, next) {
   try {
@@ -20,6 +20,22 @@ export async function createReflection(req, res, next) {
     return res.status(201).json({
       ok: true,
       data: saved,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function viewReflection(req, res, next) {
+  try {
+    const result = await handleViewReflection({
+      rid: req.params.rid,
+      userNo: req.body?.userNo,
+    });
+
+    return res.json({
+      ok: true,
+      data: result,
     });
   } catch (error) {
     return next(error);

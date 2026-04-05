@@ -1,5 +1,17 @@
-﻿import { findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
+import { findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
+import { calcWeight, sortByWeight, weightedPick } from './verse-topics.util.js';
+import { normalizeVerseId } from '../../utils/bible-book-meta.js';
 import { createAppError, parsePositiveInteger, requireTrimmedString } from '../../utils/validation.js';
+
+const TOPIC_INITIAL_COUNT = 3;
+const TOPIC_MORE_COUNT = 5;
+const TOPIC_CANDIDATE_LIMIT = 120;
+const TOPIC_ACTION_SCORES = {
+  read: 1,
+  view_reflection: 2,
+  write_reflection: 3,
+};
+const TOPIC_DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
 
 export function convertToBibleChapter(rows = []) {
   if (!rows.length) {
@@ -62,61 +74,38 @@ export function convertToBibleChapter(rows = []) {
   return chapter;
 }
 
-export async function getBibleChapter(params = {}) {
-  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
-  const chapterNo = parsePositiveInteger(params.chapterNo, 'chapterNo');
-  const verseNo = parsePositiveInteger(params.verseNo, 'verseNo', { required: false });
-  const content = String(params.content || '').trim();
-
-  const rows = await findBibleRows({
-    bookNo,
-    chapterNo,
-    verseNo,
-    content,
-  });
-
-  return {
-    rows,
-    chapter: convertToBibleChapter(rows),
-  };
+function normalizeTopicMode(value) {
+  const mode = String(value || 'initial').trim().toLowerCase();
+  if (mode === 'more' || mode === 'all') {
+    return mode;
+  }
+  return 'initial';
 }
 
-
-
-export async function listBibleChapters(params = {}) {
-  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
-  const rows = await findBibleChaptersByBookNo(bookNo);
-
-  return rows.map((row) => ({
-    bookNo: row.bookNo,
-    chapterNo: row.chapterNo,
-    subject: row.subject || '',
-  }));
-}
-
-export async function listTopicVerses(params = {}) {
-  const category = String(params.category || '').trim();
-
-  if (!category) {
-    throw new Error('category is required.');
+function normalizeShownIds(value) {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.map((item) => String(item).trim()).filter(Boolean)));
   }
 
-  const rows = await findVerseTopicsByCategory([category]);
+  const source = String(value || '').trim();
+  if (!source) {
+    return [];
+  }
 
+  return Array.from(new Set(source.split(',').map((item) => item.trim()).filter(Boolean)));
+}
+
+async function attachTopicVerseContent(rows = [], category) {
   if (!rows.length) {
     return [];
   }
 
-  const verseKeys = rows.map((row) => ({
-    bookNo: Number(row.bookNo),
-    chapterNo: Number(row.chapterNo),
-    verseNo: Number(row.verseNo),
-  }));
-
   const queryRows = await Promise.all(
-    verseKeys.map(({ bookNo, chapterNo, verseNo }) =>
-      findBibleRows({ bookNo, chapterNo, verseNo }),
-    ),
+    rows.map((row) => findBibleRows({
+      bookNo: Number(row.bookNo),
+      chapterNo: Number(row.chapterNo),
+      verseNo: Number(row.verseNo),
+    })),
   );
 
   const verseLookup = new Map();
@@ -138,7 +127,13 @@ export async function listTopicVerses(params = {}) {
     const matched = verseLookup.get(lookupKey) || { book: '', text: '' };
 
     return {
-      verseId: row.verseId || `${row.bookNo}:${row.chapterNo}:${row.verseNo}`,
+      verseId: normalizeVerseId({
+        verseId: row.verseId,
+        bookNo: row.bookNo,
+        book: matched.book,
+        chapterNo: row.chapterNo,
+        verseNo: row.verseNo,
+      }),
       bookNo: Number(row.bookNo),
       chapterNo: Number(row.chapterNo),
       verseNo: Number(row.verseNo),
@@ -150,6 +145,7 @@ export async function listTopicVerses(params = {}) {
       score: Number(row.score || 0),
       recentScore: Number(row.recentScore || 0),
       isAnchor: row.isAnchor === true,
+      finalWeight: calcWeight(row, 'all'),
       readTarget: {
         bookNo: Number(row.bookNo),
         chapterNo: Number(row.chapterNo),
@@ -158,15 +154,90 @@ export async function listTopicVerses(params = {}) {
   });
 }
 
-const TOPIC_ACTION_SCORES = {
-  read: 1,
-  view_reflection: 2,
-  write_reflection: 3,
-};
-const TOPIC_DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+async function getTopicCandidates(category, mode) {
+  const limit = mode === 'all' ? undefined : TOPIC_CANDIDATE_LIMIT;
+  const rows = await findVerseTopicsByCategory([category], {
+    sort: { bookNo: 1, chapterNo: 1, verseNo: 1 },
+    limit,
+  });
 
-function getFinalWeight(item) {
-  return Number(item.baseWeight || 0) + Number(item.score || 0) + Number(item.recentScore || 0);
+  return attachTopicVerseContent(rows, category);
+}
+
+function buildInitialTopicVerses(candidates = []) {
+  if (!candidates.length) {
+    return [];
+  }
+
+  const rankedAnchors = sortByWeight(candidates.filter((item) => item.isAnchor), 'initial');
+  const rankedCandidates = sortByWeight(candidates, 'initial');
+  const first = rankedAnchors[0] || rankedCandidates[0];
+  const pool = candidates.filter((item) => item.verseId !== first.verseId);
+  const rest = weightedPick(pool, TOPIC_INITIAL_COUNT - 1, 'initial');
+
+  return [first, ...rest];
+}
+
+function buildMoreTopicVerses(candidates = [], shownIds = []) {
+  const shownIdSet = new Set(shownIds);
+  const pool = candidates.filter((item) => !shownIdSet.has(item.verseId));
+  return weightedPick(pool, TOPIC_MORE_COUNT, 'more');
+}
+
+function buildAllTopicVerses(candidates = []) {
+  return sortByWeight(candidates, 'all');
+}
+
+export async function getBibleChapter(params = {}) {
+  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
+  const chapterNo = parsePositiveInteger(params.chapterNo, 'chapterNo');
+  const verseNo = parsePositiveInteger(params.verseNo, 'verseNo', { required: false });
+  const content = String(params.content || '').trim();
+
+  const rows = await findBibleRows({
+    bookNo,
+    chapterNo,
+    verseNo,
+    content,
+  });
+
+  return {
+    rows,
+    chapter: convertToBibleChapter(rows),
+  };
+}
+
+export async function listBibleChapters(params = {}) {
+  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
+  const rows = await findBibleChaptersByBookNo(bookNo);
+
+  return rows.map((row) => ({
+    bookNo: row.bookNo,
+    chapterNo: row.chapterNo,
+    subject: row.subject || '',
+  }));
+}
+
+export async function listTopicVerses(params = {}) {
+  const category = String(params.category || '').trim();
+
+  if (!category) {
+    throw new Error('category is required.');
+  }
+
+  const mode = normalizeTopicMode(params.mode);
+  const shownIds = normalizeShownIds(params.shownIds);
+  const candidates = await getTopicCandidates(category, mode);
+
+  if (mode === 'all') {
+    return buildAllTopicVerses(candidates);
+  }
+
+  if (mode === 'more') {
+    return buildMoreTopicVerses(candidates, shownIds);
+  }
+
+  return buildInitialTopicVerses(candidates);
 }
 
 export async function recordTopicVerseAction(body = {}) {
@@ -178,10 +249,11 @@ export async function recordTopicVerseAction(body = {}) {
   }
 
   const userNo = parsePositiveInteger(body.userNo, 'userNo');
-  const verseId = requireTrimmedString(body.verseId, 'verseId');
+  const rawVerseId = requireTrimmedString(body.verseId, 'verseId');
   const bookNo = parsePositiveInteger(body.bookNo, 'bookNo');
   const chapterNo = parsePositiveInteger(body.chapterNo, 'chapterNo');
   const verseNo = parsePositiveInteger(body.verseNo, 'verseNo');
+  const verseId = normalizeVerseId({ verseId: rawVerseId, bookNo, chapterNo, verseNo });
   const mainCategory = requireTrimmedString(body.mainCategory, 'mainCategory');
   const now = new Date();
   const cutoffIso = new Date(now.getTime() - TOPIC_DUPLICATE_WINDOW_MS).toISOString();

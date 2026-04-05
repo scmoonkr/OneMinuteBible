@@ -1,16 +1,20 @@
 ﻿<script setup lang="ts">
 import { categoryPalette, type PaletteItem } from '~/data/categoryPalette';
-import { type TopicVerseItem, useBible } from '~/composables/useBible';
+import { type ReflectionItem, type TopicVerseItem, useBible } from '~/composables/useBible';
 import { bibleBooks } from '~/data/bibleTable';
 
-const { listTopicVerses, recordTopicVerseAction } = useBible();
+const { listTopicVerses, listReflections, viewReflection } = useBible();
 const auth = useAuth();
 
 const selectedTopicId = ref(categoryPalette.find((item) => item.category === '사랑')?.category ?? categoryPalette[0]?.category ?? '');
 const selectedVerseId = ref('');
-const showAll = ref(false);
+const selectedReflectionRid = ref('');
 const loading = ref(false);
+const loadingMore = ref(false);
+const reflectionLoading = ref(false);
 const topicVerseMap = ref<Record<string, TopicVerseItem[]>>({});
+const topicAllLoadedMap = ref<Record<string, boolean>>({});
+const reflectionItems = ref<ReflectionItem[]>([]);
 
 const topicSidebarItems = computed(() =>
   categoryPalette.map((item) => ({
@@ -26,107 +30,172 @@ const selectedTopicMeta = computed<PaletteItem | null>(() =>
 );
 
 const activeTopicData = computed(() => topicVerseMap.value[selectedTopicId.value] ?? []);
-
-const displayedVerses = computed(() => {
-  if (showAll.value) {
-    return activeTopicData.value;
-  }
-
-  return activeTopicData.value.slice(0, 3);
-});
-
-const selectedVerse = computed(() =>
-  displayedVerses.value.find((verse) => verse.verseId === selectedVerseId.value) ?? displayedVerses.value[0] ?? null,
+const isAllLoaded = computed(() => topicAllLoadedMap.value[selectedTopicId.value] === true);
+const selectedReflection = computed(() =>
+  reflectionItems.value.find((item) => item.rid === selectedReflectionRid.value) ?? null,
 );
 
-watch(selectedTopicId, async (category) => {
-  showAll.value = false;
-  selectedVerseId.value = '';
+const selectedReflectionMainVerseText = computed(() => {
+  if (!selectedReflection.value) {
+    return '';
+  }
 
+  const mainVerseNo = selectedReflection.value.mainVerseNo || selectedReflection.value.verseIDs[0]?.verseNo || 1;
+  const mainVerse = selectedReflection.value.verseIDs.find((item) => item.verseNo === mainVerseNo);
+
+  return formatVerseLine(
+    selectedReflection.value.bookNo,
+    selectedReflection.value.chapterNo,
+    mainVerseNo,
+    mainVerse?.verse || '',
+  );
+});
+
+
+function normalizeTopicVerses(items: TopicVerseItem[] = []) {
+  return items.map((data) => {
+    const book = bibleBooks.find((item) => item.bookNo === data.bookNo);
+    return {
+      ...data,
+      book: book?.church || data.book,
+    };
+  });
+}
+
+function getReflectionAuthor(item: ReflectionItem) {
+  const nickname = String(item.nickname || '').trim();
+  if (nickname) {
+    return nickname;
+  }
+
+  return `#${item.userNo}`;
+}
+
+function formatVerseLine(bookNo: number, chapterNo: number, verseNo: number, verse: string) {
+  const book = bibleBooks.find((item) => item.bookNo === bookNo);
+  const label = `${book?.churchKor || book?.church || bookNo}${chapterNo}:${verseNo}`;
+  return `${label} ${verse}`;
+}
+
+async function loadTopic(category: string, mode: 'initial' | 'more' | 'all') {
   if (!category) {
     return;
   }
 
-  if (topicVerseMap.value[category]) {
-    selectedVerseId.value = topicVerseMap.value[category]?.[0]?.verseId ?? '';
-    return;
+  const shownIds = mode === 'more' ? activeTopicData.value.map((item) => item.verseId) : [];
+  const isIncremental = mode === 'more';
+
+  if (isIncremental) {
+    loadingMore.value = true;
+  } else {
+    loading.value = true;
   }
 
-  loading.value = true;
-
   try {
-    const response = await listTopicVerses({ category });
-    response.data = response.data.map((data) => {
-      const book = bibleBooks.find((item) => item.bookNo === data.bookNo);
-      return {
-        ...data,
-        book: book?.church || data.book,
-      };
-    });
+    const response = await listTopicVerses({ category, mode, shownIds });
+    const verses = normalizeTopicVerses(response.data ?? []);
 
     topicVerseMap.value = {
       ...topicVerseMap.value,
-      [category]: response.data ?? [],
+      [category]: isIncremental ? [...activeTopicData.value, ...verses] : verses,
     };
-    selectedVerseId.value = response.data?.[0]?.verseId ?? '';
-  } finally {
-    loading.value = false;
-  }
-}, { immediate: true });
+    topicAllLoadedMap.value = {
+      ...topicAllLoadedMap.value,
+      [category]: mode === 'all',
+    };
 
-async function recordAction(verse: TopicVerseItem | null, actionType: 'read' | 'view_reflection' | 'write_reflection') {
-  const userNo = auth.currentUser.value?.userNo;
-  if (!verse || !userNo) {
+    if (selectedTopicId.value === category && selectedVerseId.value) {
+      const nextList = topicVerseMap.value[category] ?? [];
+      selectedVerseId.value = nextList.find((item) => item.verseId === selectedVerseId.value)?.verseId ?? '';
+    }
+  } finally {
+    if (isIncremental) {
+      loadingMore.value = false;
+    } else {
+      loading.value = false;
+    }
+  }
+}
+
+async function loadReflectionsForVerse(verse: TopicVerseItem | null) {
+  if (!verse) {
+    reflectionItems.value = [];
+    selectedReflectionRid.value = '';
     return;
   }
 
+  reflectionLoading.value = true;
+
   try {
-    await recordTopicVerseAction({
-      userNo,
-      verseId: verse.verseId,
+    const response = await listReflections({
       bookNo: verse.bookNo,
       chapterNo: verse.chapterNo,
       verseNo: verse.verseNo,
-      mainCategory: verse.mainCategory,
-      actionType,
     });
-  } catch {
-    // Keep reading flow resilient even if score logging fails.
+
+    reflectionItems.value = response.data ?? [];
+    selectedReflectionRid.value = '';
+  } finally {
+    reflectionLoading.value = false;
   }
 }
+
+watch(selectedTopicId, async (category) => {
+  selectedVerseId.value = '';
+  selectedReflectionRid.value = '';
+  reflectionItems.value = [];
+  await loadTopic(category, 'initial');
+}, { immediate: true });
+
+watch(selectedVerseId, async (verseId) => {
+  const verse = activeTopicData.value.find((item) => item.verseId === verseId) ?? null;
+  await loadReflectionsForVerse(verse);
+}, { immediate: true });
 
 function selectTopic(topicId: string) {
   selectedTopicId.value = topicId;
 }
 
-async function selectVerse(verseId: string) {
+function selectVerse(verseId: string) {
   selectedVerseId.value = verseId;
-  const verse = displayedVerses.value.find((item) => item.verseId === verseId) ?? null;
-  await recordAction(verse, 'read');
 }
 
-function handleMore() {
-  showAll.value = true;
-}
-
-async function openReflection() {
-  if (!selectedVerse.value) {
+async function handleMore() {
+  if (!selectedTopicId.value || loadingMore.value || isAllLoaded.value) {
     return;
   }
 
-  await recordAction(selectedVerse.value, 'view_reflection');
+  await loadTopic(selectedTopicId.value, 'more');
 }
 
-async function startWriting() {
-  if (!selectedVerse.value) {
+async function handleShowAll() {
+  if (!selectedTopicId.value || loadingMore.value || isAllLoaded.value) {
     return;
   }
 
-  await recordAction(selectedVerse.value, 'write_reflection');
+  await loadTopic(selectedTopicId.value, 'all');
+}
 
-  if (selectedVerse.value.readTarget) {
-    navigateTo(`/read/${selectedVerse.value.readTarget.bookNo}/${selectedVerse.value.readTarget.chapterNo}`);
+function startWriting() {
+  const verse = activeTopicData.value.find((item) => item.verseId === selectedVerseId.value);
+  if (!verse?.readTarget) {
+    return;
   }
+
+  navigateTo(`/read/${verse.readTarget.bookNo}/${verse.readTarget.chapterNo}`);
+}
+
+async function handleReflectionClick(item: ReflectionItem) {
+  selectedReflectionRid.value = item.rid || '';
+
+  if (!item.rid) {
+    return;
+  }
+
+  await viewReflection({
+    rid: item.rid,
+    userNo: auth.currentUser.value?.userNo,
+  });
 }
 </script>
 
@@ -162,7 +231,7 @@ async function startWriting() {
       </aside>
 
       <div class="topics-main">
-        <section class="topics-panel">
+        <section class="topics-panel topics-panel--compact">
           <div class="topics-panel-head">
             <div>
               <h2>{{ selectedTopicMeta?.category }}</h2>
@@ -170,20 +239,22 @@ async function startWriting() {
             </div>
 
             <div class="topics-actions">
-              <button type="button" class="topics-chip" :disabled="!activeTopicData.length || showAll" @click="handleMore">더 보기</button>
+              <button type="button" class="topics-chip" :disabled="!activeTopicData.length || loadingMore || isAllLoaded" @click="handleMore">더 보기</button>
+              <button type="button" class="topics-chip" :disabled="!activeTopicData.length || loadingMore || isAllLoaded" @click="handleShowAll">전체보기</button>
+              <button type="button" class="topics-chip topics-chip--dark" :disabled="!selectedVerseId" @click="startWriting">묵상 시작</button>
             </div>
           </div>
 
-          <div v-if="loading" class="topics-verse-list">
+          <div v-if="loading" class="topics-verse-list topics-verse-list--limited">
             <p class="topics-empty">불러오는 중입니다.</p>
           </div>
-          <div v-else-if="displayedVerses.length" class="topics-verse-list">
+          <div v-else-if="activeTopicData.length" class="topics-verse-list topics-verse-list--limited">
             <button
-              v-for="verse in displayedVerses"
+              v-for="verse in activeTopicData"
               :key="verse.verseId"
               type="button"
               class="topics-verse-item"
-              :class="{ active: selectedVerse?.verseId === verse.verseId }"
+              :class="{ active: selectedVerseId === verse.verseId }"
               @click="selectVerse(verse.verseId)"
             >
               <strong>{{ verse.book }} {{ verse.chapterNo }}:{{ verse.verseNo }}</strong>
@@ -191,37 +262,68 @@ async function startWriting() {
             </button>
           </div>
 
-          <div v-else class="topics-verse-list">
+          <div v-else class="topics-verse-list topics-verse-list--limited">
             <p class="topics-empty">이 주제의 본문은 아직 준비 중입니다.</p>
           </div>
         </section>
 
-        <section v-if="selectedVerse" class="topics-detail">
+        <section class="topics-detail topics-reflections">
           <div class="topics-detail-head">
             <div>
-              <p class="topics-detail-ref">{{ selectedVerse.book }} {{ selectedVerse.chapterNo }}:{{ selectedVerse.verseNo }}</p>
-              <h3>{{ selectedVerse.mainCategory }}</h3>
-            </div>
-
-            <div class="topics-actions">
-              <button type="button" class="topics-chip" @click="openReflection">나눔 보기</button>
-              <button type="button" class="topics-chip topics-chip--dark" @click="startWriting">묵상 시작</button>
+              <h3>한 구절 나눔</h3>
             </div>
           </div>
 
-          <p class="topics-detail-text">{{ selectedVerse.text }}</p>
-
-          <div class="topics-tags">
-            <span
-              v-for="tag in selectedVerse.subCategories"
-              :key="tag"
-              class="topics-tag"
+          <div v-if="reflectionLoading" class="topics-reflection-list">
+            <p class="topics-empty">묵상을 불러오는 중입니다.</p>
+          </div>
+          <div v-else-if="reflectionItems.length" class="topics-reflection-list">
+            <article
+              v-for="item in reflectionItems"
+              :key="item.rid || `${item.userNo}-${item.updatedAt}`"
+              class="topics-reflection-card"
+              :class="{ active: selectedReflectionRid === item.rid }"
+              @click="handleReflectionClick(item)"
             >
-              {{ tag }}
-            </span>
+              <div class="topics-reflection-head">
+                <strong>{{ getReflectionAuthor(item) }}</strong>
+                <span>{{ item.verseRange }}</span>
+              </div>
+              <p>{{ item.text }}</p>
+            </article>
+          </div>
+          <div v-else class="topics-reflection-list">
+            <p class="topics-empty">아직 이 구절에 남겨진 묵상이 없습니다.</p>
+          </div>
+
+          <div v-if="selectedReflection" class="topics-reflection-focus">
+            <div class="topics-reflection-block">
+              <strong>대표 구절</strong>
+              <span>{{ selectedReflectionMainVerseText }}</span>
+            </div>
+
+            <div class="topics-reflection-block">
+              <strong>함께 선택된 구절</strong>
+              <div class="topics-reflection-lines">
+                <span
+                  v-for="verse in selectedReflection.verseIDs"
+                  :key="`${selectedReflection.rid}-${verse.verseNo}-${verse.verse}`"
+                >
+                  {{ formatVerseLine(selectedReflection.bookNo, selectedReflection.chapterNo, verse.verseNo, verse.verse) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="topics-reflection-block">
+              <strong>묵상</strong>
+              <p>{{ selectedReflection.text }}</p>
+            </div>
           </div>
         </section>
       </div>
     </div>
   </section>
 </template>
+
+
+

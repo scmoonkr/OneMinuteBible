@@ -14,6 +14,15 @@ export async function listReflections(query = {}) {
     .toArray();
 }
 
+export async function findReflectionByRid(rid) {
+  const database = getDatabase();
+
+  return database.collection(COLLECTION_NAME).findOne(
+    { rid: String(rid) },
+    { projection: { _id: 0 } },
+  );
+}
+
 export async function upsertReflection(document) {
   const database = getDatabase();
   const filter = {
