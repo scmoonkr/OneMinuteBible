@@ -1,265 +1,154 @@
-export type BibleStory = {
-  id: string
-  title: string
+import { bibleBooks } from '~/data/bibleTable';
+
+export type BibleExplorerBook = {
+  book: string
+  description: string
 }
 
-export type BibleBook = {
-  id: string
-  title: string
-  subtitle: string
-  stories: BibleStory[]
-  readTarget?: {
-    bookNo: number
-    chapterNo: number
-  }
+export type BibleExplorerGroup = {
+  label: string
+  description: string
+  books: BibleExplorerBook[]
 }
 
-export type BibleGroup = {
-  id: string
-  title: string
-  subtitle: string
-  books: BibleBook[]
+export type BibleExplorerTestament = {
+  type: 'old' | 'new'
+  label: string
+  description: string
+  groups: BibleExplorerGroup[]
 }
 
-export type BibleTestament = {
-  id: 'ot' | 'nt'
-  title: string
-  subtitle: string
-  groups: BibleGroup[]
-}
-
-export const bibleExplorer: BibleTestament[] = [
+export const bibleExplorer: BibleExplorerTestament[] = [
   {
-    id: 'ot',
-    title: '구약',
-    subtitle: '시작과 약속, 역사와 기다림을 따라 읽습니다.',
+    type: 'old',
+    label: '구약',
+    description: '시작과 약속, 역사와 기다림',
     groups: [
       {
-        id: 'torah',
-        title: '모세오경',
-        subtitle: '하나님과 시작되는 이야기',
+        label: '모세오경',
+        description: '하나님과 시작되는 이야기',
         books: [
-          {
-            id: 'genesis',
-            title: '창세기',
-            subtitle: '시작의 이야기',
-            readTarget: { bookNo: 1, chapterNo: 1 },
-            stories: [
-              { id: 'creation-of-heaven-earth', title: '천지창조' },
-              { id: 'creation-of-humanity', title: '인간 창조' },
-              { id: 'fall', title: '타락' },
-              { id: 'noah', title: '노아와 방주' },
-              { id: 'babel', title: '바벨탑' },
-            ],
-          },
-          {
-            id: 'exodus',
-            title: '출애굽기',
-            subtitle: '구원의 시작',
-            readTarget: { bookNo: 2, chapterNo: 1 },
-            stories: [
-              { id: 'calling-of-moses', title: '모세의 부르심' },
-              { id: 'ten-plagues', title: '열 가지 재앙' },
-              { id: 'red-sea', title: '홍해' },
-              { id: 'law', title: '율법' },
-            ],
-          },
-          {
-            id: 'leviticus',
-            title: '레위기',
-            subtitle: '거룩의 기준',
-            readTarget: { bookNo: 3, chapterNo: 1 },
-            stories: [
-              { id: 'sacrifice', title: '제사' },
-              { id: 'holiness', title: '정결' },
-              { id: 'community', title: '거룩한 공동체' },
-            ],
-          },
-          {
-            id: 'numbers',
-            title: '민수기',
-            subtitle: '광야의 여정',
-            readTarget: { bookNo: 4, chapterNo: 1 },
-            stories: [
-              { id: 'complaint-and-disobedience', title: '불평과 불순종' },
-              { id: 'forty-years', title: '40년의 시간' },
-            ],
-          },
-          {
-            id: 'deuteronomy',
-            title: '신명기',
-            subtitle: '다시 들려주는 말씀',
-            readTarget: { bookNo: 5, chapterNo: 1 },
-            stories: [
-              { id: 'law-summary', title: '율법 정리' },
-              { id: 'before-the-promised-land', title: '약속의 땅을 앞두고' },
-            ],
-          },
+          { book: '창세기', description: '시작과 창조의 이야기' },
+          { book: '출애굽기', description: '구원과 해방의 이야기' },
+          { book: '레위기', description: '거룩함과 예배의 기준' },
+          { book: '민수기', description: '광야에서의 여정과 훈련' },
+          { book: '신명기', description: '약속을 향한 준비와 선택' },
         ],
       },
       {
-        id: 'history',
-        title: '역사서',
-        subtitle: '하나님의 백성 안에서 이어지는 이야기',
+        label: '역사서',
+        description: '약속의 땅과 반복되는 선택의 이야기',
         books: [
-          {
-            id: 'joshua',
-            title: '여호수아',
-            subtitle: '정복과 약속',
-            stories: [
-              { id: 'canaan', title: '가나안 정복' },
-              { id: 'jericho', title: '여리고' },
-            ],
-          },
-          {
-            id: 'judges',
-            title: '사사기',
-            subtitle: '반복되는 실패와 구원',
-            stories: [
-              { id: 'judges-cycle', title: '사사들의 이야기' },
-            ],
-          },
-          {
-            id: 'ruth',
-            title: '룻기',
-            subtitle: '작은 이야기 속 큰 은혜',
-            stories: [
-              { id: 'ruth-and-naomi', title: '룻과 나오미' },
-            ],
-          },
+          { book: '여호수아', description: '약속의 땅으로 들어감' },
+          { book: '사사기', description: '반복되는 실패와 회복' },
+          { book: '룻기', description: '작은 믿음의 큰 이야기' },
+          { book: '사무엘상', description: '왕이 시작되는 이야기' },
+          { book: '사무엘하', description: '다윗과 하나님 관계' },
+          { book: '열왕기상', description: '왕국의 번성과 분열' },
+          { book: '열왕기하', description: '무너지는 왕국의 이야기' },
+          { book: '역대상', description: '다시 보는 왕의 역사' },
+          { book: '역대하', description: '성전 중심의 역사' },
+          { book: '에스라', description: '돌아옴과 회복' },
+          { book: '느헤미야', description: '무너진 것을 다시 세움' },
+          { book: '에스더', description: '보이지 않는 섭리의 이야기' },
         ],
       },
       {
-        id: 'wisdom',
-        title: '시가서',
-        subtitle: '시와 감정, 지혜의 고백',
+        label: '시가서',
+        description: '삶 속에서 드러나는 감정과 지혜',
         books: [
-          {
-            id: 'psalms',
-            title: '시편',
-            subtitle: '기도와 찬양',
-            stories: [
-              { id: 'thanks', title: '감사' },
-              { id: 'rest', title: '안식' },
-              { id: 'praise', title: '찬양' },
-            ],
-          },
-          {
-            id: 'proverbs',
-            title: '잠언',
-            subtitle: '지혜의 말씀',
-            stories: [
-              { id: 'choice-of-the-heart', title: '마음의 선택' },
-              { id: 'way-of-wisdom', title: '지혜의 길' },
-            ],
-          },
+          { book: '욥기', description: '고난 속 질문' },
+          { book: '시편', description: '마음의 고백과 기도' },
+          { book: '잠언', description: '삶의 지혜' },
+          { book: '전도서', description: '삶의 의미를 묻다' },
+          { book: '아가', description: '사랑의 이야기' },
         ],
       },
       {
-        id: 'prophets',
-        title: '예언서',
-        subtitle: '경고와 약속, 회복의 시선',
+        label: '예언서',
+        description: '경고와 회복, 그리고 기다림',
         books: [
-          {
-            id: 'isaiah',
-            title: '이사야',
-            subtitle: '구원과 회복',
-            stories: [
-              { id: 'judgment', title: '심판' },
-              { id: 'messiah-promise', title: '메시야의 약속' },
-            ],
-          },
-          {
-            id: 'jeremiah',
-            title: '예레미야',
-            subtitle: '눈물의 예언자',
-            stories: [
-              { id: 'call-to-repentance', title: '회개 촉구' },
-            ],
-          },
+          { book: '이사야', description: '구원과 메시아의 약속' },
+          { book: '예레미야', description: '무너짐 속 경고' },
+          { book: '예레미야애가', description: '슬픔의 기록' },
+          { book: '에스겔', description: '회복의 환상' },
+          { book: '다니엘', description: '믿음과 미래의 이야기' },
+          { book: '호세아', description: '사랑과 회복' },
+          { book: '요엘', description: '회개의 부르심' },
+          { book: '아모스', description: '정의에 대한 외침' },
+          { book: '오바댜', description: '심판의 선언' },
+          { book: '요나', description: '도망과 순종' },
+          { book: '미가', description: '심판과 회복' },
+          { book: '나훔', description: '하나님의 심판' },
+          { book: '하박국', description: '질문과 믿음' },
+          { book: '스바냐', description: '날의 경고' },
+          { book: '학개', description: '다시 시작하라' },
+          { book: '스가랴', description: '회복과 소망' },
+          { book: '말라기', description: '마지막 외침' },
         ],
       },
     ],
   },
   {
-    id: 'nt',
-    title: '신약',
-    subtitle: '예수님과 복음, 교회와 소망으로 이어집니다.',
+    type: 'new',
+    label: '신약',
+    description: '예수와 복음, 그리고 삶의 변화',
     groups: [
       {
-        id: 'gospels',
-        title: '복음서',
-        subtitle: '예수님의 삶과 길',
+        label: '사복음서',
+        description: '예수의 삶과 메시지',
         books: [
-          {
-            id: 'matthew',
-            title: '마태복음',
-            subtitle: '왕으로 오신 예수',
-            stories: [
-              { id: 'birth', title: '탄생' },
-              { id: 'ministry', title: '공생애' },
-              { id: 'cross', title: '십자가' },
-            ],
-          },
-          {
-            id: 'mark',
-            title: '마가복음',
-            subtitle: '곧게 가는 예수',
-            stories: [
-              { id: 'miracles', title: '기적' },
-              { id: 'mission', title: '사역' },
-            ],
-          },
+          { book: '마태복음', description: '왕으로 오신 예수' },
+          { book: '마가복음', description: '행동하시는 예수' },
+          { book: '누가복음', description: '사람과 함께하신 예수' },
+          { book: '요한복음', description: '하나님의 아들 예수' },
         ],
       },
       {
-        id: 'acts',
-        title: '사도행전',
-        subtitle: '교회의 시작',
+        label: '역사서',
+        description: '교회의 시작',
         books: [
-          {
-            id: 'acts-book',
-            title: '사도행전',
-            subtitle: '복음의 확장',
-            stories: [
-              { id: 'holy-spirit', title: '성령' },
-              { id: 'missionary-journeys', title: '선교' },
-            ],
-          },
+          { book: '사도행전', description: '복음이 퍼져가는 이야기' },
         ],
       },
       {
-        id: 'letters',
-        title: '서신서',
-        subtitle: '믿음을 가르치는 편지',
+        label: '서신서',
+        description: '믿음의 삶을 설명하다',
         books: [
-          {
-            id: 'romans',
-            title: '로마서',
-            subtitle: '믿음으로 사는 길',
-            stories: [
-              { id: 'salvation', title: '구원' },
-              { id: 'new-life', title: '새 삶' },
-            ],
-          },
+          { book: '로마서', description: '복음의 핵심' },
+          { book: '고린도전서', description: '교회 문제와 해결' },
+          { book: '고린도후서', description: '회복과 위로' },
+          { book: '갈라디아서', description: '자유의 복음' },
+          { book: '에베소서', description: '교회의 정체성' },
+          { book: '빌립보서', description: '기쁨의 삶' },
+          { book: '골로새서', description: '그리스도의 중심성' },
+          { book: '데살로니가전서', description: '기다림의 삶' },
+          { book: '데살로니가후서', description: '끝에 대한 이해' },
+          { book: '디모데전서', description: '교회와 리더' },
+          { book: '디모데후서', description: '끝까지 믿음' },
+          { book: '디도서', description: '삶의 질서' },
+          { book: '빌레몬서', description: '용서와 관계' },
+          { book: '히브리서', description: '예수의 완성' },
+          { book: '야고보서', description: '행동하는 믿음' },
+          { book: '베드로전서', description: '고난 속 믿음' },
+          { book: '베드로후서', description: '진리의 경고' },
+          { book: '요한일서', description: '사랑과 진리' },
+          { book: '요한이서', description: '진리 안의 삶' },
+          { book: '요한삼서', description: '환대와 공동체' },
+          { book: '유다서', description: '믿음을 지켜라' },
         ],
       },
       {
-        id: 'revelation',
-        title: '계시록',
-        subtitle: '마지막과 새 시작',
+        label: '예언서',
+        description: '마지막과 새 시작',
         books: [
-          {
-            id: 'revelation-book',
-            title: '요한계시록',
-            subtitle: '완성과 새 하늘',
-            stories: [
-              { id: 'judgment', title: '심판' },
-              { id: 'new-heaven-earth', title: '새 하늘과 새 땅' },
-            ],
-          },
+          { book: '요한계시록', description: '마침과 새로운 시작' },
         ],
       },
     ],
   },
 ];
+
+export function findBibleBookMeta(bookName: string) {
+  return bibleBooks.find((item) => item.church === bookName) || null;
+}
