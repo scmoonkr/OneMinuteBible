@@ -1,4 +1,4 @@
-import { getBibleChapter } from './bible.service.js';
+import { getBibleChapter, listBibleChapters } from './bible.service.js';
 
 export async function readChapter(req, res, next) {
   try {
@@ -15,6 +15,21 @@ export async function readChapter(req, res, next) {
       ok: true,
       count: rows.length,
       data: chapter,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+
+export async function readBookChapters(req, res, next) {
+  try {
+    const chapters = await listBibleChapters(req.query);
+
+    return res.json({
+      ok: true,
+      count: chapters.length,
+      data: chapters,
     });
   } catch (error) {
     return next(error);

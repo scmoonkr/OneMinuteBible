@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { bibleExplorer, findBibleBookMeta } from '~/data/bibleExplorer';
+import { useBible } from '~/composables/useBible';
 
 const route = useRoute();
 const router = useRouter();
+const bible = useBible();
 
 const testamentType = computed(() => {
   const value = route.query.testament;
@@ -14,6 +16,11 @@ const groupLabel = computed(() => {
   return typeof value === 'string' ? value : '';
 });
 
+const bookName = computed(() => {
+  const value = route.query.book;
+  return typeof value === 'string' ? value : '';
+});
+
 const selectedTestament = computed(() =>
   bibleExplorer.find((item) => item.type === testamentType.value) ?? null,
 );
@@ -22,25 +29,49 @@ const selectedGroup = computed(() =>
   selectedTestament.value?.groups.find((item) => item.label === groupLabel.value) ?? null,
 );
 
+const selectedBook = computed(() =>
+  selectedGroup.value?.books.find((item) => item.book === bookName.value) ?? null,
+);
+
+const selectedBookMeta = computed(() =>
+  selectedBook.value ? findBibleBookMeta(selectedBook.value.book) : null,
+);
+
+const { data: chapterData } = await useAsyncData(
+  () => `bible-chapters-${selectedBookMeta.value?.bookNo || 0}`,
+  async () => {
+    if (!selectedBookMeta.value) return [];
+    const response = await bible.listBookChapters({ bookNo: selectedBookMeta.value.bookNo });
+    return response.data;
+  },
+  {
+    watch: [selectedBookMeta],
+    default: () => [],
+  },
+);
+
 const breadcrumb = computed(() => [
-  { label: '말씀 펼쳐보기', step: 'root' as const, active: !selectedTestament.value },
+  { label: '?? ????', step: 'root' as const, active: !selectedTestament.value },
   ...(selectedTestament.value ? [{ label: selectedTestament.value.label, step: 'testament' as const, active: !selectedGroup.value }] : []),
-  ...(selectedGroup.value ? [{ label: selectedGroup.value.label, step: 'group' as const, active: true }] : []),
+  ...(selectedGroup.value ? [{ label: selectedGroup.value.label, step: 'group' as const, active: !selectedBook.value }] : []),
+  ...(selectedBook.value ? [{ label: selectedBook.value.book, step: 'book' as const, active: true }] : []),
 ]);
 
 const sectionTitle = computed(() => {
-  if (!selectedTestament.value) return '구약과 신약 중 어디에서 시작할지 골라보세요';
-  if (!selectedGroup.value) return `${selectedTestament.value.label}의 흐름을 펼쳐봅니다`;
-  return `${selectedGroup.value.label}에서 읽고 싶은 책을 골라보세요`;
+  if (!selectedTestament.value) return '??? ?? ? ???? ???? ?????';
+  if (!selectedGroup.value) return `${selectedTestament.value.label}? ??? ?????`;
+  if (!selectedBook.value) return `${selectedGroup.value.label}?? ?? ?? ?? ?????`;
+  return `${selectedBook.value.book}?? ?? ?? ?? ?????`;
 });
 
 const sectionCopy = computed(() => {
   if (!selectedTestament.value) {
-    return '성경을 목차보다 흐름으로 펼쳐 읽을 수 있도록 큰 묶음부터 책까지 자연스럽게 따라가도록 구성했습니다.';
+    return '??? ???? ???? ?? ?? ? ??? ? ???? ?, ??? ??? ????? ????? ??????.';
   }
 
   if (!selectedGroup.value) return selectedTestament.value.description;
-  return selectedGroup.value.description;
+  if (!selectedBook.value) return selectedGroup.value.description;
+  return selectedBook.value.description;
 });
 
 const currentItems = computed(() => {
@@ -62,46 +93,64 @@ const currentItems = computed(() => {
     }));
   }
 
-  return selectedGroup.value.books.map((item) => ({
-    key: `${selectedGroup.value?.label}-${item.book}`,
-    title: item.book,
-    description: item.description,
-    level: 'book' as const,
+  if (!selectedBook.value) {
+    return selectedGroup.value.books.map((item) => ({
+      key: `${selectedGroup.value?.label}-${item.book}`,
+      title: item.book,
+      description: item.description,
+      level: 'book' as const,
+    }));
+  }
+
+  return chapterData.value.map((item) => ({
+    key: `${item.bookNo}-${item.chapterNo}`,
+    title: `${item.chapterNo}?`,
+    description: item.subject || '? ??? ?? ????.',
+    chapterNo: item.chapterNo,
+    level: 'chapter' as const,
   }));
 });
 
-function updateQuery(next: { testament?: string; group?: string }) {
+function updateQuery(next: { testament?: string; group?: string; book?: string }) {
   return router.push({
     path: '/bible',
     query: {
       testament: next.testament,
       group: next.group,
+      book: next.book,
     },
   });
 }
 
-function selectItem(item: { title: string; level: 'testament' | 'group' | 'book' }) {
+function selectItem(item: { title: string; level: 'testament' | 'group' | 'book' | 'chapter'; chapterNo?: number }) {
   if (item.level === 'testament') {
     const next = bibleExplorer.find((entry) => entry.label === item.title);
-    return updateQuery({ testament: next?.type, group: undefined });
+    return updateQuery({ testament: next?.type, group: undefined, book: undefined });
   }
 
   if (item.level === 'group') {
-    return updateQuery({ testament: testamentType.value, group: item.title });
+    return updateQuery({ testament: testamentType.value, group: item.title, book: undefined });
   }
 
-  const bookMeta = findBibleBookMeta(item.title);
-  if (!bookMeta) return null;
-  return navigateTo(`/read/${bookMeta.bookNo}/1`);
+  if (item.level === 'book') {
+    return updateQuery({ testament: testamentType.value, group: groupLabel.value, book: item.title });
+  }
+
+  if (!selectedBookMeta.value || !item.chapterNo) return null;
+  return navigateTo(`/read/${selectedBookMeta.value.bookNo}/${item.chapterNo}`);
 }
 
-function moveTo(step: 'root' | 'testament' | 'group') {
+function moveTo(step: 'root' | 'testament' | 'group' | 'book') {
   if (step === 'root') {
-    return updateQuery({ testament: undefined, group: undefined });
+    return updateQuery({ testament: undefined, group: undefined, book: undefined });
   }
 
   if (step === 'testament') {
-    return updateQuery({ testament: testamentType.value, group: undefined });
+    return updateQuery({ testament: testamentType.value, group: undefined, book: undefined });
+  }
+
+  if (step === 'group') {
+    return updateQuery({ testament: testamentType.value, group: groupLabel.value, book: undefined });
   }
 
   return null;
@@ -111,10 +160,10 @@ function moveTo(step: 'root' | 'testament' | 'group') {
 <template>
   <section class="bible-explorer page-stack">
     <div class="bible-explorer-hero">
-      <p class="bible-explorer-kicker">말씀 펼쳐보기</p>
-      <h1 class="bible-explorer-title">성경을 목차보다 흐름으로 펼쳐 읽습니다</h1>
+      <p class="bible-explorer-kicker">?? ????</p>
+      <h1 class="bible-explorer-title">??? ???? ???? ?? ????</h1>
       <p class="bible-explorer-copy">
-        시작과 약속, 예수와 복음, 기다림과 회복의 흐름 안에서 책을 고르고 바로 읽기로 이어집니다.
+        ??? ??, ??? ??, ???? ??? ?? ??? ?? ???, ?? ??? ?? ?? ??? ?????.
       </p>
     </div>
 
@@ -139,7 +188,7 @@ function moveTo(step: 'root' | 'testament' | 'group') {
         </div>
 
         <NuxtLink class="bible-explorer-read-link" to="/read/1/1">
-          바로 읽기
+          ?? ??
         </NuxtLink>
       </div>
 

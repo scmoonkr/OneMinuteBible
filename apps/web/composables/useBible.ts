@@ -34,6 +34,12 @@ export type BibleReadResponse = {
   data: BibleChapter;
 };
 
+export type BibleChapterSummary = {
+  bookNo: number;
+  chapterNo: number;
+  subject: string;
+};
+
 export type SelectedVerseItem = {
   verseNo: number;
   category: string;
@@ -81,6 +87,13 @@ export function useBible() {
     });
   }
 
+  async function listBookChapters(query: { bookNo: number }) {
+    return await $fetch<{ ok: boolean; data: BibleChapterSummary[] }>(
+      `${config.public.apiBase}/api/bible/chapters`,
+      { query },
+    );
+  }
+
   async function listReflections(query: {
     userNo?: number;
     bookNo: number;
@@ -106,6 +119,7 @@ export function useBible() {
 
   return {
     readChapter,
+    listBookChapters,
     listReflections,
     saveReflection,
   };

@@ -1,4 +1,4 @@
-import { findBibleRows } from './bible.repository.js';
+import { findBibleChaptersByBookNo, findBibleRows } from './bible.repository.js';
 import { parsePositiveInteger } from '../../utils/validation.js';
 
 export function convertToBibleChapter(rows = []) {
@@ -81,3 +81,15 @@ export async function getBibleChapter(params = {}) {
   };
 }
 
+
+
+export async function listBibleChapters(params = {}) {
+  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
+  const rows = await findBibleChaptersByBookNo(bookNo);
+
+  return rows.map((row) => ({
+    bookNo: row.bookNo,
+    chapterNo: row.chapterNo,
+    subject: row.subject || '',
+  }));
+}

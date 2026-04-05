@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { readChapter } from './bible.controller.js';
+import { readBookChapters, readChapter } from './bible.controller.js';
 
 const router = Router();
 
 router.get('/read', readChapter);
+router.get('/chapters', readBookChapters);
 
 export default router;

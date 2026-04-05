@@ -40,3 +40,24 @@ export async function findBibleRows(params = {}) {
 
   return rows;
 }
+
+
+export async function findBibleChaptersByBookNo(bookNo) {
+  const database = getDatabase();
+
+  const rows = await database
+    .collection(env.mongoCollectionBibleEdit)
+    .find(
+      {
+        bookNo: Number(bookNo),
+        verseNo: 1,
+      },
+      {
+        projection: { _id: 0, bookNo: 1, chapterNo: 1, subject: 1 },
+        sort: { chapterNo: 1 },
+      },
+    )
+    .toArray();
+
+  return rows;
+}
