@@ -77,17 +77,20 @@ async function applyWriteReflectionScores(document) {
     )
     .toArray();
 
-  const verseIdMap = new Map(verseRows.map((row) => [Number(row.verseNo), row.index || `${document.bookNo}:${document.chapterNo}:${row.verseNo}`]));
+  const verseIdMap = new Map(
+    verseRows.map((row) => [
+      Number(row.verseNo),
+      row.index || `${document.bookNo}:${document.chapterNo}:${row.verseNo}`,
+    ]),
+  );
 
   for (const item of document.verseIDs) {
+    const verseId = verseIdMap.get(item.verseNo) || `${document.bookNo}:${document.chapterNo}:${item.verseNo}`;
     const recentAction = await database.collection(TOPIC_ACTION_COLLECTION).findOne(
       {
         userNo: document.userNo,
+        verseId,
         actionType,
-        bookNo: document.bookNo,
-        chapterNo: document.chapterNo,
-        verseNo: item.verseNo,
-        mainCategory: item.category,
         createdAt: { $gte: cutoffIso },
       },
       { projection: { _id: 1 } },
@@ -99,14 +102,11 @@ async function applyWriteReflectionScores(document) {
 
     await database.collection(env.mongoCollectionVerseTopics).updateOne(
       {
-        bookNo: document.bookNo,
-        chapterNo: document.chapterNo,
-        verseNo: item.verseNo,
-        mainCategory: item.category,
+        verseId,
       },
       {
         $setOnInsert: {
-          verseId: verseIdMap.get(item.verseNo) || `${document.bookNo}:${document.chapterNo}:${item.verseNo}`,
+          verseId,
           bookNo: document.bookNo,
           chapterNo: document.chapterNo,
           verseNo: item.verseNo,
@@ -125,6 +125,7 @@ async function applyWriteReflectionScores(document) {
 
     await database.collection(TOPIC_ACTION_COLLECTION).insertOne({
       userNo: document.userNo,
+      verseId,
       actionType,
       bookNo: document.bookNo,
       chapterNo: document.chapterNo,
@@ -160,6 +161,8 @@ export async function saveReflection(body = {}) {
   await applyWriteReflectionScores(document);
   return saved;
 }
+
+
 
 
 
