@@ -10,10 +10,14 @@ import {
 import { formatChurchKorVerseId } from '../../utils/bible-book-meta.js';
 
 function parseReflectionQuery(params = {}) {
-  const query = {
-    bookNo: parsePositiveInteger(params.bookNo, 'bookNo'),
-    chapterNo: parsePositiveInteger(params.chapterNo, 'chapterNo'),
-  };
+  const query = {};
+
+  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo', {
+    required: false,
+  });
+  const chapterNo = parsePositiveInteger(params.chapterNo, 'chapterNo', {
+    required: false,
+  });
 
   const paragraphNo = parsePositiveInteger(params.paragraphNo, 'paragraphNo', {
     required: false,
@@ -24,6 +28,14 @@ function parseReflectionQuery(params = {}) {
   const verseNo = parsePositiveInteger(params.verseNo, 'verseNo', {
     required: false,
   });
+
+  if (bookNo !== undefined) {
+    query.bookNo = bookNo;
+  }
+
+  if (chapterNo !== undefined) {
+    query.chapterNo = chapterNo;
+  }
 
   if (paragraphNo !== undefined) {
     query.paragraphNo = paragraphNo;

@@ -105,3 +105,13 @@ async function submit() {
     </div>
   </section>
 </template>
+
+<style scoped>
+.panel-card,
+.auth-form input,
+.auth-form button,
+.ghost-button,
+.primary-button {
+  border-radius: 5px;
+}
+</style>

@@ -22,7 +22,7 @@ async function logout() {
 <template>
   <section class="hero-grid">
     <article class="hero-card">
-      <p class="muted">Account Hub</p>
+      <p class="muted">계정 홈</p>
       <h1>{{ user?.nickname || '사용자' }}님, 읽기와 기록을 여기서 이어가세요.</h1>
       <p>
         계정 허브에서는 현재 로그인 상태, 읽기 기록으로 이동하는 빠른 링크, 보안 설정과 프로필 요약을 한 번에
@@ -37,18 +37,18 @@ async function logout() {
 
     <article class="panel-card">
       <h2>현재 세션</h2>
-      <div class="info-grid">
+      <div class="info-grid account-session-grid">
         <div class="info-card">
           <span>닉네임</span>
           <strong>{{ user?.nickname || '-' }}</strong>
         </div>
         <div class="info-card">
-          <span>이메일</span>
-          <strong>{{ user?.email || '-' }}</strong>
-        </div>
-        <div class="info-card">
           <span>리더 ID</span>
           <strong>{{ identity.readerId }}</strong>
+        </div>
+        <div class="info-card account-info-card--wide">
+          <span>이메일</span>
+          <strong class="account-info-value--email">{{ user?.email || '-' }}</strong>
         </div>
       </div>
       <div class="badge-row">

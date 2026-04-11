@@ -316,7 +316,7 @@ async function handleReflectionClick(item: ReflectionItem) {
 
             <div class="topics-reflection-block">
               <strong>묵상</strong>
-              <p>{{ selectedReflection.text }}</p>
+              <p class="topics-reflection-body">{{ selectedReflection.text }}</p>
             </div>
           </div>
         </section>
@@ -324,6 +324,13 @@ async function handleReflectionClick(item: ReflectionItem) {
     </div>
   </section>
 </template>
+
+<style scoped>
+.topics-reflection-card p,
+.topics-reflection-body {
+  white-space: pre-line;
+}
+</style>
 
 
 

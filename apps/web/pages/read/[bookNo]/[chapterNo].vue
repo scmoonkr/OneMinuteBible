@@ -315,42 +315,52 @@ function wrapCanvasText(
   text: string,
   maxWidth: number,
 ) {
-  const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
-  let currentLine = '';
+  const paragraphs = text.replace(/\r\n/g, '\n').split('\n');
 
-  const flushLine = () => {
-    if (currentLine) lines.push(currentLine);
-    currentLine = '';
-  };
+  paragraphs.forEach((paragraph) => {
+    const words = paragraph.split(/\s+/).filter(Boolean);
+    let currentLine = '';
 
-  words.forEach((word) => {
-    const nextLine = currentLine ? `${currentLine} ${word}` : word;
-    if (context.measureText(nextLine).width <= maxWidth) {
-      currentLine = nextLine;
+    const flushLine = () => {
+      if (currentLine) lines.push(currentLine);
+      currentLine = '';
+    };
+
+    if (!words.length) {
+      lines.push('');
       return;
     }
 
-    if (!currentLine) {
-      let chunk = '';
-      for (const char of word) {
-        const nextChunk = `${chunk}${char}`;
-        if (context.measureText(nextChunk).width <= maxWidth) {
-          chunk = nextChunk;
-        } else {
-          if (chunk) lines.push(chunk);
-          chunk = char;
-        }
+    words.forEach((word) => {
+      const nextLine = currentLine ? `${currentLine} ${word}` : word;
+      if (context.measureText(nextLine).width <= maxWidth) {
+        currentLine = nextLine;
+        return;
       }
-      currentLine = chunk;
-      return;
-    }
+
+      if (!currentLine) {
+        let chunk = '';
+        for (const char of word) {
+          const nextChunk = `${chunk}${char}`;
+          if (context.measureText(nextChunk).width <= maxWidth) {
+            chunk = nextChunk;
+          } else {
+            if (chunk) lines.push(chunk);
+            chunk = char;
+          }
+        }
+        currentLine = chunk;
+        return;
+      }
+
+      flushLine();
+      currentLine = word;
+    });
 
     flushLine();
-    currentLine = word;
   });
 
-  flushLine();
   return lines.length ? lines : [''];
 }
 
@@ -1094,6 +1104,7 @@ watch(
   font-weight: 700;
   color: #9d4f2c;
   text-align: center;
+  white-space: pre-line;
 }
 
 .mvp-share-card-verses--compact {

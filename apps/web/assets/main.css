@@ -258,7 +258,7 @@ input {
 .landing-note-card {
   padding: 2rem;
   border: 1px solid #eaeaea;
-  border-radius: 32px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 8px 24px rgba(17, 17, 17, 0.04);
 }
@@ -337,7 +337,7 @@ input {
 .panel-card {
   background: rgba(255, 250, 242, 0.92);
   border: 1px solid var(--line);
-  border-radius: 28px;
+  border-radius: 5px;
   box-shadow: 0 18px 50px rgba(66, 42, 22, 0.08);
 }
 
@@ -391,7 +391,7 @@ input {
 .reading-controls input {
   min-width: 120px;
   padding: 0.8rem 0.9rem;
-  border-radius: 14px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: white;
 }
@@ -399,7 +399,7 @@ input {
 .paragraph-card {
   padding: 1rem 1.1rem;
   border: 1px solid var(--line);
-  border-radius: 20px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.8);
 }
 
@@ -476,7 +476,7 @@ input {
 .feature-card,
 .info-card {
   padding: 0.9rem 1rem;
-  border-radius: 18px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.82);
 }
@@ -519,7 +519,7 @@ input {
   align-items: start;
   width: 100%;
   padding: 1rem 1.05rem;
-  border-radius: 20px;
+  border-radius: 5px;
   border: 1px solid rgba(80, 54, 29, 0.12);
   text-align: left;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
@@ -566,7 +566,7 @@ input {
   width: 100%;
   min-height: 140px;
   padding: 0.9rem 1rem;
-  border-radius: 18px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.92);
   resize: vertical;
@@ -585,7 +585,7 @@ input {
 
 .auth-form input {
   padding: 0.85rem 0.95rem;
-  border-radius: 14px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.94);
 }
@@ -660,7 +660,7 @@ input {
 .mvp-card {
   background: rgba(255, 250, 242, 0.92);
   border: 1px solid var(--line);
-  border-radius: 28px;
+  border-radius: 5px;
   box-shadow: 0 18px 50px rgba(66, 42, 22, 0.08);
 }
 
@@ -844,7 +844,7 @@ input {
   width: 100%;
   min-width: 0;
   padding: 0.7rem 5px;
-  border-radius: 16px;
+  border-radius: 5px;
   border: 1px solid rgba(80, 54, 29, 0.12);
   background: #fffdfa;
   text-align: center;
@@ -872,7 +872,7 @@ input {
 .mvp-paragraph-card {
   padding: 1.35rem;
   border: 1px solid rgba(80, 54, 29, 0.12);
-  border-radius: 26px;
+  border-radius: 5px;
   background: rgba(255, 251, 244, 0.86);
 }
 
@@ -889,7 +889,7 @@ input {
 .mvp-block-summary {
   margin-bottom: 1rem;
   padding: 1.1rem 1.2rem;
-  border-radius: 22px;
+  border-radius: 5px;
   background: rgba(159, 123, 85, 0.08);
   color: #5b4a39;
   line-height: 1.8;
@@ -906,7 +906,7 @@ input {
   align-items: start;
   width: 100%;
   padding: 0.85rem 0.95rem;
-  border-radius: 22px;
+  border-radius: 5px;
   border: 1px solid rgba(80, 54, 29, 0.08);
   background: transparent;
   transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
@@ -988,7 +988,7 @@ input {
 .mvp-selected-range,
 .mvp-share-preview {
   padding: 0.9rem 1rem;
-  border-radius: 18px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid var(--line);
 }
@@ -1010,7 +1010,7 @@ input {
   min-height: 120px;
   margin: 0 0 0.3rem 0;
   padding: 1rem 1.05rem;
-  border-radius: 18px;
+  border-radius: 5px;
   border: 1px solid rgba(90, 64, 38, 0.16);
   resize: vertical;
   background: #fffdfa;
@@ -1111,7 +1111,7 @@ input {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   padding: 1rem;
-  border-radius: 22px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 239, 228, 0.92));
 }
@@ -1123,7 +1123,7 @@ input {
 
 .mvp-share-card-verse {
   padding: 0.8rem 0.9rem;
-  border-radius: 16px;
+  border-radius: 5px;
   border: 1px solid rgba(80, 54, 29, 0.12);
 }
 
@@ -1331,7 +1331,7 @@ input {
 .theme-card,
 .feature-card {
   padding: 1.1rem;
-  border-radius: 22px;
+  border-radius: 5px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.82);
 }
@@ -1400,6 +1400,26 @@ input {
   color: var(--muted);
 }
 
+.detail-row strong,
+.info-card strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.account-session-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.account-info-card--wide {
+  grid-column: 1 / -1;
+}
+
+.account-info-value--email {
+  display: block;
+  width: 100%;
+}
+
 @media (max-width: 1080px) {
   .reading-page,
   .mvp-hero-grid,
@@ -1425,6 +1445,14 @@ input {
   .info-grid,
   .landing-flow-grid {
     grid-template-columns: 1fr;
+  }
+
+  .account-session-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-info-card--wide {
+    grid-column: auto;
   }
 
   .mvp-section-header {

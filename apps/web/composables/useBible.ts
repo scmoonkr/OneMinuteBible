@@ -146,8 +146,8 @@ export function useBible() {
 
   async function listReflections(query: {
     userNo?: number;
-    bookNo: number;
-    chapterNo: number;
+    bookNo?: number;
+    chapterNo?: number;
     verseNo?: number;
     paragraphNo?: number;
     mine?: boolean;

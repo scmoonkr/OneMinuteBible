@@ -41,6 +41,18 @@ pnpm run dev:server
 pnpm run dev:web
 ```
 
+### 5. 운영용 빌드 / 실행
+
+```bash
+pnpm run build:all
+pnpm run start:server
+pnpm run start:web
+```
+
+- 서버 빌드 결과는 `server/dist`에 생성됩니다.
+- 웹 빌드 결과는 `apps/web/.output`에 생성됩니다.
+- 운영 서버에서는 `.env` 수정 후 다시 `build` 또는 `start`를 재실행합니다.
+
 ## Git 업로드 / 다운로드
 
 프로젝트 루트(`OneMinuteBible`) 기준으로 실행합니다.
