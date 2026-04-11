@@ -15,6 +15,9 @@ app.use(cors({
     /^http:\/\/localhost:\d+$/,
     /^http:\/\/127\.0\.0\.1:\d+$/,
     /^http:\/\/221\.143\.48\.153:\d+$/,
+    /^https:\/\/oneminutebible\.co\.kr$/,
+    /^https:\/\/www\.oneminutebible\.co\.kr$/,
+    /^https:\/\/node\.oneminutebible\.co\.kr$/,
   ],
   credentials: true,
 }));
