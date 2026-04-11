@@ -3,14 +3,16 @@ export default defineNuxtConfig({
   css: ['~/assets/main.css'],
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || '',
     },
   },
-  nitro: {
-    devProxy: {
-      '/api': {
-        target: process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:7710',
-        changeOrigin: true,
+  vite: {
+    server: {
+      proxy: {
+        '/api': {
+          target: process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:7710',
+          changeOrigin: true,
+        },
       },
     },
   },
