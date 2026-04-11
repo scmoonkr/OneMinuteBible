@@ -272,12 +272,41 @@ const shareImageLabels = computed(() => (
     ? ['나눔카드 복사']
     : shareImagePageItems.value.map((_, index) => `카드${index + 1} 복사`)
 ));
+const shareVerseRange = computed(() => {
+  if (selectedVerseRange.value) return selectedVerseRange.value;
+  return shareReflection.value?.verseRange || '';
+});
+const shareDateLabel = computed(() => {
+  const rawDate = shareReflection.value?.updatedAt || shareReflection.value?.createdAt;
+  const date = rawDate ? new Date(rawDate) : new Date();
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date).replace(/\s/g, '');
+});
+const shareNicknameLabel = computed(() => {
+  if (!shareReflection.value) return '';
+  return getReflectionDisplayName(shareReflection.value);
+});
+const shareHashtags = computed(() => {
+  const tags = ['#모줄성'];
+  if (bookLabel.value) tags.push(`#${bookLabel.value}`);
+  if (chapterLabel.value) tags.push(`#${chapterLabel.value.replace(/\s+/g, '')}`);
+  return tags.join(' ');
+});
 
 const shareMessage = computed(() => {
   const reflection = shareReflection.value?.text || '';
+  const metaText = [shareNicknameLabel.value, shareDateLabel.value].filter(Boolean).join(' ');
   return [
+    `${metaText}    ${shareVerseRange.value}`.trim(),
+    '',
     reflection,
-    `#모줄성 #${chapterLabel.value}`, // ${bookLabel.value}
+    '',
+    shareHashtags.value,
   ].join('\n');
 });
 
@@ -325,20 +354,6 @@ function wrapCanvasText(
   return lines.length ? lines : [''];
 }
 
-function getCanvasSharePrefixWidth(
-  context: CanvasRenderingContext2D,
-  item: { category: string; verseNo: number },
-  categoryFont: string,
-  numberFont: string,
-) {
-  const categoryText = `[${item.category}]`;
-  context.font = categoryFont;
-  const categoryWidth = context.measureText(categoryText).width;
-  context.font = numberFont;
-  const numberWidth = context.measureText(String(item.verseNo)).width;
-  return categoryWidth + 14 + numberWidth + 14;
-}
-
 function drawRoundedRect(
   context: CanvasRenderingContext2D,
   x: number,
@@ -370,11 +385,10 @@ function getShareLayout(items: ShareVerseDetail[]) {
   const width = 1080;
   const height = 1350;
   const layoutPresets = [
-    { outerPadding: 42, cardGap: 28, cardPaddingX: 38, cardPaddingY: 30, titleSize: 38, bodySize: 30, lineHeight: 46, borderRadius: 24 },
-    { outerPadding: 38, cardGap: 24, cardPaddingX: 34, cardPaddingY: 28, titleSize: 36, bodySize: 28, lineHeight: 42, borderRadius: 22 },
-    { outerPadding: 34, cardGap: 20, cardPaddingX: 30, cardPaddingY: 24, titleSize: 34, bodySize: 26, lineHeight: 38, borderRadius: 20 },
-    { outerPadding: 30, cardGap: 18, cardPaddingX: 26, cardPaddingY: 22, titleSize: 32, bodySize: 24, lineHeight: 34, borderRadius: 18 },
-    { outerPadding: 24, cardGap: 14, cardPaddingX: 22, cardPaddingY: 18, titleSize: 28, bodySize: 21, lineHeight: 30, borderRadius: 16 },
+    { outerPadding: 56, topMetaSize: 22, messageSize: 64, messageLineHeight: 94, verseLabelSize: 16, verseBodySize: 18, verseLineHeight: 24, verseGap: 16, cardPaddingX: 20, cardPaddingY: 16, borderRadius: 5, hashtagSize: 28, sectionGap: 28, messageTopMargin: 44, messageBottomMargin: 32, verseTopMargin: 22 },
+    { outerPadding: 48, topMetaSize: 20, messageSize: 56, messageLineHeight: 82, verseLabelSize: 15, verseBodySize: 17, verseLineHeight: 22, verseGap: 14, cardPaddingX: 18, cardPaddingY: 15, borderRadius: 5, hashtagSize: 26, sectionGap: 24, messageTopMargin: 38, messageBottomMargin: 28, verseTopMargin: 20 },
+    { outerPadding: 40, topMetaSize: 18, messageSize: 50, messageLineHeight: 74, verseLabelSize: 14, verseBodySize: 16, verseLineHeight: 21, verseGap: 12, cardPaddingX: 16, cardPaddingY: 14, borderRadius: 5, hashtagSize: 24, sectionGap: 20, messageTopMargin: 32, messageBottomMargin: 24, verseTopMargin: 18 },
+    { outerPadding: 32, topMetaSize: 17, messageSize: 44, messageLineHeight: 64, verseLabelSize: 13, verseBodySize: 15, verseLineHeight: 20, verseGap: 10, cardPaddingX: 14, cardPaddingY: 12, borderRadius: 5, hashtagSize: 22, sectionGap: 18, messageTopMargin: 26, messageBottomMargin: 20, verseTopMargin: 16 },
   ] as const;
 
   const canvas = document.createElement('canvas');
@@ -383,28 +397,49 @@ function getShareLayout(items: ShareVerseDetail[]) {
 
   const fittedLayout = layoutPresets
     .map((preset) => {
-      const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
-      const titleFont = `600 ${Math.max(20, preset.bodySize - 2)}px "Noto Sans KR", sans-serif`;
-      const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
-      const numberFont = `700 ${Math.max(18, preset.bodySize - 4)}px "Noto Sans KR", sans-serif`;
+      const contentWidth = width - preset.outerPadding * 2;
+      const messageFont = `700 ${preset.messageSize}px "Noto Sans KR", sans-serif`;
+      const verseBodyFont = `500 ${preset.verseBodySize}px "Noto Sans KR", sans-serif`;
+      const verseLabelFont = `700 ${preset.verseLabelSize}px "Noto Sans KR", sans-serif`;
+      measure.font = messageFont;
+      const messageLines = wrapCanvasText(measure, shareReflection.value?.text || '', contentWidth);
 
       const cardLayouts = items.map((item) => {
-        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, numberFont);
-        measure.font = bodyFont;
-        const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
-        const contentHeight = Math.max(preset.bodySize, verseLines.length * preset.lineHeight);
-        const cardHeight = preset.cardPaddingY * 2 + contentHeight;
-        return { item, verseLines, cardHeight, prefixWidth, numberFont };
+        measure.font = verseBodyFont;
+        const categoryText = `[${item.category}] `;
+        measure.font = verseLabelFont;
+        const categoryWidth = measure.measureText(categoryText).width;
+        measure.font = `700 ${Math.max(11, preset.verseLabelSize - 2)}px "Noto Sans KR", sans-serif`;
+        const verseNoWidth = measure.measureText(String(item.verseNo)).width;
+        measure.font = verseBodyFont;
+        const verseLines = wrapCanvasText(measure, item.verse, Math.max(140, contentWidth - preset.cardPaddingX * 2 - categoryWidth - verseNoWidth));
+        const cardHeight = preset.cardPaddingY * 2 + verseLines.length * preset.verseLineHeight;
+        return { item, verseLines, cardHeight, categoryText };
       });
 
+      const metaHeight = preset.topMetaSize;
+      const messageHeight = messageLines.length * preset.messageLineHeight;
+      const hashtagHeight = preset.hashtagSize;
+      const cardsHeight = cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
+        + preset.verseGap * Math.max(0, cardLayouts.length - 1);
       const totalHeight = preset.outerPadding * 2
-        + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
-        + preset.cardGap * Math.max(0, cardLayouts.length - 1);
+        + metaHeight
+        + preset.sectionGap
+        + preset.messageTopMargin
+        + messageHeight
+        + preset.messageBottomMargin
+        + preset.sectionGap
+        + preset.verseTopMargin
+        + cardsHeight
+        + preset.sectionGap
+        + hashtagHeight;
 
       return {
         preset,
-        titleFont,
-        bodyFont,
+        messageFont,
+        verseBodyFont,
+        verseLabelFont,
+        messageLines,
         cardLayouts,
         totalHeight,
       };
@@ -412,23 +447,42 @@ function getShareLayout(items: ShareVerseDetail[]) {
     .find((entry) => entry.totalHeight <= height)
     || (() => {
       const preset = layoutPresets[layoutPresets.length - 1];
-      const contentWidth = width - preset.outerPadding * 2 - preset.cardPaddingX * 2;
-      const titleFont = `600 ${Math.max(20, preset.bodySize - 2)}px "Noto Sans KR", sans-serif`;
-      const bodyFont = `500 ${preset.bodySize}px "Noto Sans KR", sans-serif`;
-      const numberFont = `700 ${Math.max(18, preset.bodySize - 4)}px "Noto Sans KR", sans-serif`;
+      const contentWidth = width - preset.outerPadding * 2;
+      const messageFont = `700 ${preset.messageSize}px "Noto Sans KR", sans-serif`;
+      const verseBodyFont = `500 ${preset.verseBodySize}px "Noto Sans KR", sans-serif`;
+      const verseLabelFont = `700 ${preset.verseLabelSize}px "Noto Sans KR", sans-serif`;
+      measure.font = messageFont;
+      const messageLines = wrapCanvasText(measure, shareReflection.value?.text || '', contentWidth);
       const cardLayouts = items.map((item) => {
-        const prefixWidth = getCanvasSharePrefixWidth(measure, item, titleFont, numberFont);
-        measure.font = bodyFont;
-        const verseLines = wrapCanvasText(measure, item.verse, Math.max(120, contentWidth - prefixWidth));
-        const contentHeight = Math.max(preset.bodySize, verseLines.length * preset.lineHeight);
-        const cardHeight = preset.cardPaddingY * 2 + contentHeight;
-        return { item, verseLines, cardHeight, prefixWidth, numberFont };
+        measure.font = verseBodyFont;
+        const categoryText = `[${item.category}] `;
+        measure.font = verseLabelFont;
+        const categoryWidth = measure.measureText(categoryText).width;
+        measure.font = `700 ${Math.max(11, preset.verseLabelSize - 2)}px "Noto Sans KR", sans-serif`;
+        const verseNoWidth = measure.measureText(String(item.verseNo)).width;
+        measure.font = verseBodyFont;
+        const verseLines = wrapCanvasText(measure, item.verse, Math.max(140, contentWidth - preset.cardPaddingX * 2 - categoryWidth - verseNoWidth));
+        const cardHeight = preset.cardPaddingY * 2 + verseLines.length * preset.verseLineHeight;
+        return { item, verseLines, cardHeight, categoryText };
       });
+      const metaHeight = preset.topMetaSize;
+      const messageHeight = messageLines.length * preset.messageLineHeight;
+      const hashtagHeight = preset.hashtagSize;
+      const cardsHeight = cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
+        + preset.verseGap * Math.max(0, cardLayouts.length - 1);
       const totalHeight = preset.outerPadding * 2
-        + cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
-        + preset.cardGap * Math.max(0, cardLayouts.length - 1);
+        + metaHeight
+        + preset.sectionGap
+        + preset.messageTopMargin
+        + messageHeight
+        + preset.messageBottomMargin
+        + preset.sectionGap
+        + preset.verseTopMargin
+        + cardsHeight
+        + preset.sectionGap
+        + hashtagHeight;
 
-      return { preset, titleFont, bodyFont, cardLayouts, totalHeight };
+      return { preset, messageFont, verseBodyFont, verseLabelFont, messageLines, cardLayouts, totalHeight };
     })();
 
   return {
@@ -446,6 +500,16 @@ const shareImagePageItems = computed(() => {
   if (!layout) return [];
 
   const maxContentHeight = layout.height - layout.preset.outerPadding * 2;
+  const staticHeight = layout.preset.topMetaSize
+    + layout.preset.sectionGap
+    + layout.preset.messageTopMargin
+    + layout.messageLines.length * layout.preset.messageLineHeight
+    + layout.preset.messageBottomMargin
+    + layout.preset.sectionGap
+    + layout.preset.verseTopMargin
+    + layout.preset.sectionGap
+    + layout.preset.hashtagSize;
+  const maxCardsHeight = Math.max(0, maxContentHeight - staticHeight);
   const pages: typeof items[] = [];
   let currentPage: typeof items = [];
   let currentHeight = 0;
@@ -453,9 +517,9 @@ const shareImagePageItems = computed(() => {
   layout.cardLayouts.forEach(({ item, cardHeight }, index) => {
     const nextHeight = currentPage.length === 0
       ? cardHeight
-      : currentHeight + layout.preset.cardGap + cardHeight;
+      : currentHeight + layout.preset.verseGap + cardHeight;
 
-    if (currentPage.length > 0 && nextHeight > maxContentHeight) {
+    if (currentPage.length > 0 && nextHeight > maxCardsHeight) {
       pages.push(currentPage);
       currentPage = [item];
       currentHeight = cardHeight;
@@ -465,7 +529,7 @@ const shareImagePageItems = computed(() => {
     currentPage.push(item);
     currentHeight = currentPage.length === 1
       ? cardHeight
-      : currentHeight + layout.preset.cardGap + cardHeight;
+      : currentHeight + layout.preset.verseGap + cardHeight;
 
     if (index === layout.cardLayouts.length - 1 && currentPage.length) {
       pages.push(currentPage);
@@ -489,8 +553,10 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
   const {
     width,
     preset,
-    titleFont,
-    bodyFont,
+    messageFont,
+    verseBodyFont,
+    verseLabelFont,
+    messageLines,
     cardLayouts,
     totalHeight,
   } = layout;
@@ -500,46 +566,73 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
   context.fillRect(0, 0, width, actualHeight);
 
   let currentY = preset.outerPadding;
+  const contentWidth = width - preset.outerPadding * 2;
 
-  cardLayouts.forEach(({ item, verseLines, cardHeight, prefixWidth, numberFont }) => {
+  context.textBaseline = 'top';
+  context.font = `600 ${preset.topMetaSize}px "Noto Sans KR", sans-serif`;
+  context.fillStyle = '#7b6758';
+  context.textAlign = 'left';
+  context.fillText([shareNicknameLabel.value, shareDateLabel.value].filter(Boolean).join(' '), preset.outerPadding, currentY);
+  context.textAlign = 'right';
+  context.fillStyle = '#4a3426';
+  context.fillText(shareVerseRange.value, width - preset.outerPadding, currentY);
+
+  currentY += preset.topMetaSize + preset.sectionGap;
+  currentY += preset.messageTopMargin;
+
+  context.textAlign = 'center';
+  context.font = messageFont;
+  context.fillStyle = '#9d4f2c';
+  messageLines.forEach((line) => {
+    context.fillText(line, width / 2, currentY);
+    currentY += preset.messageLineHeight;
+  });
+
+  currentY += preset.messageBottomMargin;
+  currentY += preset.sectionGap;
+  currentY += preset.verseTopMargin;
+  context.textAlign = 'left';
+
+  cardLayouts.forEach(({ item, verseLines, cardHeight, categoryText }) => {
     const x = preset.outerPadding;
     const y = currentY;
-    const cardWidth = width - preset.outerPadding * 2;
+    const cardWidth = contentWidth;
 
     drawRoundedRect(context, x, y, cardWidth, cardHeight, preset.borderRadius);
-    context.fillStyle = item.palette?.soft || '#ffffff';
+    context.fillStyle = item.palette?.soft || '#fffaf4';
     context.fill();
-    context.lineWidth = 3;
+    context.lineWidth = 2;
     context.strokeStyle = item.palette?.color || '#d7cabc';
     context.stroke();
 
     const startX = x + preset.cardPaddingX;
-    const contentHeight = Math.max(preset.titleSize, verseLines.length * preset.lineHeight);
-    const startY = y + Math.max(preset.cardPaddingY, Math.floor((cardHeight - contentHeight) / 2));
+    let lineY = y + preset.cardPaddingY;
 
-    context.textBaseline = 'top';
-    context.fillStyle = '#4a3426';
-    context.font = titleFont;
-    const categoryText = `[${item.category}]`;
-    context.fillText(categoryText, startX, startY);
-
+    context.font = verseLabelFont;
+    context.fillStyle = '#7b6758';
+    context.fillText(categoryText, startX, lineY);
     const categoryWidth = context.measureText(categoryText).width;
-    const noX = startX + categoryWidth + 14;
+    context.font = `700 ${Math.max(11, preset.verseLabelSize - 2)}px "Noto Sans KR", sans-serif`;
     context.fillStyle = '#bf2d2d';
-    context.font = numberFont;
-    context.fillText(String(item.verseNo), noX, startY - 2);
-
-    const verseX = startX + prefixWidth;
-    context.font = bodyFont;
-    let lineY = startY + 2;
+    context.fillText(String(item.verseNo), startX + categoryWidth, lineY - 4);
+    const verseStartX = startX + categoryWidth + context.measureText(String(item.verseNo)).width + 4;
+    context.font = verseBodyFont;
+    lineY += 1;
     verseLines.forEach((line) => {
       context.fillStyle = item.godSay ? '#bf2d2d' : '#2f261d';
-      context.fillText(line, verseX, lineY);
-      lineY += preset.lineHeight;
+      context.fillText(line, verseStartX, lineY);
+      lineY += preset.verseLineHeight;
     });
 
-    currentY += cardHeight + preset.cardGap;
+    currentY += cardHeight + preset.verseGap;
   });
+
+  currentY += preset.sectionGap - preset.verseGap;
+
+  context.font = `700 ${preset.hashtagSize}px "Noto Sans KR", sans-serif`;
+  context.fillStyle = '#9d4f2c';
+  context.textAlign = 'left';
+  context.fillText(shareHashtags.value, preset.outerPadding, currentY);
 
   return await new Promise<Blob | null>((resolve) => {
     canvas.toBlob((blob) => resolve(blob), 'image/png');
@@ -945,28 +1038,109 @@ watch(
           </button>
         </div>
         <div class="mvp-share-card">
-          <div class="mvp-share-card-verses">
+          <div class="mvp-share-card-meta">
+            <span>{{ [shareNicknameLabel, shareDateLabel].filter(Boolean).join(' ') }}</span>
+            <strong>{{ shareVerseRange }}</strong>
+          </div>
+          <p class="mvp-share-card-message">{{ shareReflection?.text || '' }}</p>
+          <div class="mvp-share-card-verses mvp-share-card-verses--compact">
             <div
               v-for="item in previewVerseDetails"
               :key="`${item.label}-${item.category}-${item.verse}`"
               class="mvp-share-card-verse"
               :style="{ background: item.palette?.soft || '#ffffff', borderColor: item.palette?.color || '#d7cabc' }"
             >
-              <strong>{{ item.label }}</strong>
-              <span>{{ item.category }}</span>
-              <p :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</p>
+              <p class="mvp-share-card-verse-line">
+                <span class="mvp-share-card-verse-category">[{{ item.category }}]</span>
+                <sup class="mvp-share-card-verse-no">{{ item.verseNo }}</sup>
+                <span class="mvp-share-card-verse-text" :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</span>
+              </p>
             </div>
             <p v-if="!previewVerseDetails.length" class="mvp-muted"></p>
           </div>
-        </div>
-        <div class="mvp-share-copy-text">
-          <p>{{ shareReflection?.text || '' }}</p>
-          <strong v-if="shareReflection">#모줄성 #{{ bookLabel }}</strong>
+          <div class="mvp-share-copy-text">
+            <strong v-if="shareReflection">{{ shareHashtags }}</strong>
+          </div>
         </div>
       </section>
     </aside>
   </div>
 </template>
+
+<style scoped>
+.mvp-share-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.mvp-share-card-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: #7b6758;
+}
+
+.mvp-share-card-meta strong {
+  color: #3a271b;
+  text-align: right;
+}
+
+.mvp-share-card-message {
+  margin: 1.8rem 0 1.25rem;
+  font-size: 1.35rem;
+  line-height: 1.65;
+  font-weight: 700;
+  color: #9d4f2c;
+  text-align: center;
+}
+
+.mvp-share-card-verses--compact {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+
+.mvp-share-card-verse {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #d7cabc;
+  border-radius: 5px;
+}
+
+.mvp-share-card-verse-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.18rem;
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.mvp-share-card-verse-category {
+  color: #7b6758;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.mvp-share-card-verse-no {
+  color: #bf2d2d;
+  font-size: 0.68rem;
+  line-height: 1;
+  top: 0.05rem;
+}
+
+.mvp-share-card-verse-text {
+  font-size: 0.88rem;
+}
+
+.mvp-share-copy-text strong {
+  display: block;
+  color: #9d4f2c;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+</style>
 
 
 
