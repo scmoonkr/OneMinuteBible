@@ -87,8 +87,20 @@ input {
   position: relative;
 }
 
+.site-account .account-link,
+.site-mobile-account .account-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .account-trigger {
-  min-width: 110px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .account-dropdown {
@@ -132,6 +144,31 @@ input {
   background: white;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.account-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.account-link-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(159, 75, 46, 0.08);
+  color: var(--accent);
+  flex: none;
+}
+
+.account-link-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .nav-link.active,
@@ -510,6 +547,39 @@ input {
 .info-card {
   display: grid;
   gap: 0.35rem;
+}
+
+.account-session-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.account-session-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(159, 75, 46, 0.08);
+  color: var(--accent);
+  flex: none;
+  font-size: 1rem;
+}
+
+.account-session-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.account-session-identity strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .verse-card {
@@ -1599,17 +1669,23 @@ input {
     justify-content: flex-start;
   }
 
+  .mvp-reading-nav-right,
+  .mvp-nav-input-wrap {
+    flex-wrap: nowrap;
+  }
+
   .mvp-nav-select,
   .mvp-nav-input {
-    width: 100%;
+    width: 65px;
   }
 }
 
 @media (max-width: 760px) {
   .mvp-segment-plain,
   .mvp-segment-picked {
-    flex-direction: column;
-    gap: 0.2rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.25rem;
   }
 
   .segment {

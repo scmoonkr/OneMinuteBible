@@ -40,7 +40,13 @@ async function logout() {
       <div class="info-grid account-session-grid">
         <div class="info-card">
           <span>닉네임</span>
-          <strong>{{ user?.nickname || '-' }}</strong>
+          <div class="account-session-identity">
+            <span class="account-session-avatar" aria-hidden="true">
+              <img v-if="user?.profileImage" :src="user.profileImage" alt="" />
+              <i v-else class="fa-regular fa-user"></i>
+            </span>
+            <strong>{{ user?.nickname || '-' }}</strong>
+          </div>
         </div>
         <div class="info-card">
           <span>리더 ID</span>

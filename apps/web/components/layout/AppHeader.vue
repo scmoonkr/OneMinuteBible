@@ -11,7 +11,7 @@ const mainMenus = [
 ];
 
 const isAuthenticated = computed(() => Boolean(auth.currentUser.value?.userNo || auth.token.value));
-const displayName = computed(() => auth.currentUser.value?.nickname || auth.currentUser.value?.email || 'Guest');
+const profileImage = computed(() => auth.currentUser.value?.profileImage?.trim() || '');
 
 const accountMenuOpen = ref(false);
 const mobileMenuOpen = ref(false);
@@ -73,9 +73,13 @@ async function handleLogout() {
           <button
             type="button"
             class="account-link account-trigger"
+            aria-label="계정 메뉴"
             @click="accountMenuOpen = !accountMenuOpen"
           >
-            {{ displayName }}
+            <span class="account-link-avatar" aria-hidden="true">
+              <img v-if="profileImage" :src="profileImage" alt="" />
+              <i v-else class="fa-regular fa-user"></i>
+            </span>
           </button>
 
           <div v-if="accountMenuOpen" class="account-dropdown">
@@ -108,9 +112,13 @@ async function handleLogout() {
           <button
             type="button"
             class="account-link account-trigger"
+            aria-label="계정 메뉴"
             @click="accountMenuOpen = !accountMenuOpen"
           >
-            {{ displayName }}
+            <span class="account-link-avatar" aria-hidden="true">
+              <img v-if="profileImage" :src="profileImage" alt="" />
+              <i v-else class="fa-regular fa-user"></i>
+            </span>
           </button>
 
           <div v-if="accountMenuOpen" class="account-dropdown account-dropdown--mobile">
