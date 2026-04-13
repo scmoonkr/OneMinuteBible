@@ -21,11 +21,14 @@ const chapterInput = ref(String(chapterNo.value));
 const selectedCategory = ref(categoryPalette[0].category);
 const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
+const quickJumpTarget = ref<'read' | 'share'>('read');
 const reflectionText = ref('');
 const toast = ref('');
 const copyingImageKey = ref('');
 const copyingMessage = ref(false);
 const savingReflection = ref(false);
+const readTopRef = ref<HTMLElement | null>(null);
+const shareSectionRef = ref<HTMLElement | null>(null);
 const localSelectedVerseItems = ref<SelectedVerseItem[]>([]);
 const reflections = ref<ReflectionItem[]>([]);
 const selectedShareReflection = ref<ReflectionItem | null>(null);
@@ -195,6 +198,31 @@ function moveToFirstChapter() { moveToChapter(bookNo.value, 1); }
 function moveToPreviousChapter() { moveToChapter(bookNo.value, chapterNo.value - 1); }
 function moveToNextChapter() { moveToChapter(bookNo.value, chapterNo.value + 1); }
 function moveToLastChapter() { moveToChapter(bookNo.value, maxChapterNo.value); }
+
+function scrollToReadTop() {
+  quickJumpTarget.value = 'read';
+  readTopRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  });
+}
+
+function scrollToShareSection() {
+  quickJumpTarget.value = 'share';
+  shareSectionRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  });
+}
+
+function toggleQuickJump() {
+  if (quickJumpTarget.value === 'read') {
+    scrollToShareSection();
+    return;
+  }
+
+  scrollToReadTop();
+}
 
 function submitChapterInput() {
   const nextChapterNo = Number(chapterInput.value);
@@ -852,8 +880,8 @@ watch(
 
 <template>
   <div class="reading-page">
-    <section class="mvp-card mvp-main">
-      <section class="mvp-section mvp-sticky-controls">
+    <section ref="readTopRef" class="mvp-main">
+      <div class="mvp-sticky-controls">
         <div class="mvp-reading-nav">
           <div class="mvp-reading-nav-row mvp-reading-nav-row--top">
             <div class="mvp-reading-nav-left">
@@ -925,12 +953,15 @@ watch(
                 {{ showSourceCategories ? '내 선택 보기' : '카테고리 보기' }}
               </button>
               <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">선택 초기화</button>
+              <button type="button" class="mvp-toolbar-button mvp-quick-jump-button" @click="toggleQuickJump()">
+                {{ quickJumpTarget === 'read' ? '나눔' : '읽기' }}
+              </button>
             </div>
           <!-- </div> -->
         </div>
-      </section>
+      </div>
 
-      <section class="mvp-hero">
+      <div class="mvp-read-head">
         <div class="mvp-hero-grid">
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
             <h2 class="mvp-title">{{ chapterLabel }}</h2>
@@ -942,9 +973,9 @@ watch(
             <!-- <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p> -->
           </div>
         </div>
-      </section>
+      </div>
 
-      <section class="mvp-section">
+      <div class="mvp-read-body">
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
         <p v-else-if="error" class="mvp-muted">{{ error.message }}</p>
 
@@ -961,8 +992,8 @@ watch(
                 :style="{ background: getDisplayBackground(verse), borderColor: getDisplayBorderColor(verse) }"
                 @click="handleVerseClick(verse)"
               >
-                <span v-if="getSelectedCategoryLabel(verse)" class="mvp-segment-picked">
-                  <span class="mvp-segment-picked-category">[{{ getSelectedCategoryLabel(verse) }}]</span>
+                <span v-if="getDisplayCategoryLabel(verse)" class="mvp-segment-picked">
+                  <span class="mvp-segment-picked-category">[{{ getDisplayCategoryLabel(verse) }}]</span>
                   <sup class="mvp-segment-picked-no">{{ verse.verseNo }}</sup>
                   <span class="mvp-segment-picked-text" :style="{ color: getVerseTextColor(verse) }">{{ verse.verse }}</span>
                 </span>
@@ -974,11 +1005,11 @@ watch(
             </div>
           </article>
         </div>
-      </section>
+      </div>
     </section>
 
-    <aside class="mvp-card mvp-sidebar">
-      <section class="mvp-sidebar-block">
+    <aside class="mvp-sidebar">
+      <section ref="shareSectionRef" class="mvp-sidebar-block">
         <h3>한 구절 나눔</h3>
         <div class="mvp-selected-range mvp-selected-range--compact">
           <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
@@ -1152,9 +1183,3 @@ watch(
   line-height: 1.5;
 }
 </style>
-
-
-
-
-
-
