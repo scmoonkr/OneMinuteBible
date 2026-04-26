@@ -821,6 +821,24 @@ async function copyShareMessage() {
   }
 }
 
+function buildShareImageFilename(pageIndex?: number) {
+  const safeChapter = chapterLabel.value.replace(/\s+/g, '-');
+  const safeRange = shareVerseRange.value.replace(/[^\w가-힣-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const pageSuffix = pageIndex === undefined ? '' : `-${pageIndex + 1}`;
+  return `one-minute-bible-${safeChapter}${safeRange ? `-${safeRange}` : ''}${pageSuffix}.png`;
+}
+
+function downloadShareImage(imageBlob: Blob, pageIndex?: number) {
+  const url = URL.createObjectURL(imageBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = buildShareImageFilename(pageIndex);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 async function copyShareImage(pageIndex?: number) {
   const copyKey = pageIndex === undefined ? 'single' : `page-${pageIndex}`;
   copyingImageKey.value = copyKey;
@@ -849,7 +867,8 @@ async function copyShareImage(pageIndex?: number) {
         'image/png': imageBlob,
       }),
     ]);
-    setToast('공유 이미지를 복사했습니다.');
+    downloadShareImage(imageBlob, pageIndex);
+    setToast('공유 이미지를 복사하고 다운로드했습니다.');
   } catch {
     setToast('이미지 복사에 실패했습니다.');
   } finally {
@@ -881,7 +900,7 @@ watch(
 <template>
   <div class="reading-page">
     <section ref="readTopRef" class="mvp-main">
-      <div class="mvp-sticky-controls">
+      <section class="mvp-reader-section mvp-sticky-controls" aria-label="성경 읽기 선택 도구">
         <div class="mvp-reading-nav">
           <div class="mvp-reading-nav-row mvp-reading-nav-row--top">
             <div class="mvp-reading-nav-left">
@@ -959,12 +978,12 @@ watch(
             </div>
           <!-- </div> -->
         </div>
-      </div>
+      </section>
 
-      <div class="mvp-read-head">
+      <section class="mvp-reader-section mvp-read-head" aria-labelledby="read-chapter-title">
         <div class="mvp-hero-grid">
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
-            <h2 class="mvp-title">{{ chapterLabel }}</h2>
+            <h2 id="read-chapter-title" class="mvp-title">{{ chapterLabel }}</h2>
             <h4 class="mvp-block-title">장별 주제</h4>
           </div>
 
@@ -973,9 +992,9 @@ watch(
             <!-- <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p> -->
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="mvp-read-body">
+      <section class="mvp-reader-section mvp-read-body" aria-label="성경 본문">
         <p v-if="pending" class="mvp-muted">본문을 불러오는 중입니다.</p>
         <p v-else-if="error" class="mvp-muted">{{ error.message }}</p>
 
@@ -1005,7 +1024,7 @@ watch(
             </div>
           </article>
         </div>
-      </div>
+      </section>
     </section>
 
     <aside class="mvp-sidebar">

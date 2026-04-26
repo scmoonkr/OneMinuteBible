@@ -1,4 +1,16 @@
-﻿# 문서 구조
+﻿
+# git
+git status
+git add .
+git commit -m "update read mobile toolbar"
+git push origin main
+
+git pull origin main
+pnpm run build:all
+pm2 restart one-minute-bible-server
+pm2 restart one-minute-bible-web
+
+# 문서 구조
 
 이 디렉터리는 OneMinuteBible 프로젝트의 기획, 콘텐츠, 화면 설계를 정리하는 공간입니다.
 
