@@ -8,6 +8,7 @@
     "clean": "node scripts/build.mjs --clean",
     "build": "node scripts/build.mjs",
     "dev": "node src/index.js",
+    "prestart": "node scripts/build.mjs",
     "start": "node dist/index.js"
   },
   "dependencies": {
