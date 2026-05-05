@@ -89,6 +89,9 @@ git push origin main
 ```bash
 git clone <저장소주소>
 cd OneMinuteBible
+
+
+git pull origin main
 ```
 
 ## 폴더 안내

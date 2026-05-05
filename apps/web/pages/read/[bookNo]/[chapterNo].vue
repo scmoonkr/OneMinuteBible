@@ -320,8 +320,8 @@ const shareNicknameLabel = computed(() => {
   return getReflectionDisplayName(shareReflection.value);
 });
 const shareHashtags = computed(() => {
-  const tags = ['#모줄성'];
-  if (bookLabel.value) tags.push(`#${bookLabel.value}`);
+  const tags = ['#모줄성','#성경읽기','#말씀묵상','#말씀나눔'];
+  // if (bookLabel.value) tags.push(`#${bookLabel.value}`);
   if (chapterLabel.value) tags.push(`#${chapterLabel.value.replace(/\s+/g, '')}`);
   return tags.join(' ');
 });
@@ -423,10 +423,10 @@ function getShareLayout(items: ShareVerseDetail[]) {
   const width = 1080;
   const height = 1350;
   const layoutPresets = [
-    { outerPadding: 56, topMetaSize: 22, messageSize: 64, messageLineHeight: 94, verseLabelSize: 16, verseBodySize: 18, verseLineHeight: 24, verseGap: 16, cardPaddingX: 20, cardPaddingY: 16, borderRadius: 5, hashtagSize: 28, sectionGap: 28, messageTopMargin: 44, messageBottomMargin: 32, verseTopMargin: 22 },
-    { outerPadding: 48, topMetaSize: 20, messageSize: 56, messageLineHeight: 82, verseLabelSize: 15, verseBodySize: 17, verseLineHeight: 22, verseGap: 14, cardPaddingX: 18, cardPaddingY: 15, borderRadius: 5, hashtagSize: 26, sectionGap: 24, messageTopMargin: 38, messageBottomMargin: 28, verseTopMargin: 20 },
-    { outerPadding: 40, topMetaSize: 18, messageSize: 50, messageLineHeight: 74, verseLabelSize: 14, verseBodySize: 16, verseLineHeight: 21, verseGap: 12, cardPaddingX: 16, cardPaddingY: 14, borderRadius: 5, hashtagSize: 24, sectionGap: 20, messageTopMargin: 32, messageBottomMargin: 24, verseTopMargin: 18 },
-    { outerPadding: 32, topMetaSize: 17, messageSize: 44, messageLineHeight: 64, verseLabelSize: 13, verseBodySize: 15, verseLineHeight: 20, verseGap: 10, cardPaddingX: 14, cardPaddingY: 12, borderRadius: 5, hashtagSize: 22, sectionGap: 18, messageTopMargin: 26, messageBottomMargin: 20, verseTopMargin: 16 },
+    { outerPadding: 56, topMetaSize: 22, messageSize: 64, messageLineHeight: 94, verseLabelSize: 22, verseBodySize: 25, verseLineHeight: 33, verseGap: 18, cardPaddingX: 22, cardPaddingY: 20, borderRadius: 5, hashtagSize: 28, sectionGap: 28, messageTopMargin: 44, messageBottomMargin: 32, verseTopMargin: 22 },
+    { outerPadding: 48, topMetaSize: 20, messageSize: 56, messageLineHeight: 82, verseLabelSize: 21, verseBodySize: 24, verseLineHeight: 32, verseGap: 16, cardPaddingX: 20, cardPaddingY: 19, borderRadius: 5, hashtagSize: 26, sectionGap: 24, messageTopMargin: 38, messageBottomMargin: 28, verseTopMargin: 20 },
+    { outerPadding: 40, topMetaSize: 18, messageSize: 50, messageLineHeight: 74, verseLabelSize: 20, verseBodySize: 23, verseLineHeight: 31, verseGap: 14, cardPaddingX: 18, cardPaddingY: 18, borderRadius: 5, hashtagSize: 24, sectionGap: 20, messageTopMargin: 32, messageBottomMargin: 24, verseTopMargin: 18 },
+    { outerPadding: 32, topMetaSize: 17, messageSize: 44, messageLineHeight: 64, verseLabelSize: 19, verseBodySize: 22, verseLineHeight: 30, verseGap: 12, cardPaddingX: 16, cardPaddingY: 17, borderRadius: 5, hashtagSize: 22, sectionGap: 18, messageTopMargin: 26, messageBottomMargin: 20, verseTopMargin: 16 },
   ] as const;
 
   const canvas = document.createElement('canvas');
@@ -479,6 +479,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
         verseLabelFont,
         messageLines,
         cardLayouts,
+        cardsHeight,
         totalHeight,
       };
     })
@@ -520,7 +521,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
         + preset.sectionGap
         + hashtagHeight;
 
-      return { preset, messageFont, verseBodyFont, verseLabelFont, messageLines, cardLayouts, totalHeight };
+      return { preset, messageFont, verseBodyFont, verseLabelFont, messageLines, cardLayouts, cardsHeight, totalHeight };
     })();
 
   return {
@@ -583,25 +584,25 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
 
   const canvas = document.createElement('canvas');
   canvas.width = layout.width;
-  canvas.height = Math.min(layout.height, layout.totalHeight);
+  canvas.height = layout.height;
 
   const context = canvas.getContext('2d');
   if (!context) return null;
 
   const {
     width,
+    height,
     preset,
     messageFont,
     verseBodyFont,
     verseLabelFont,
     messageLines,
     cardLayouts,
-    totalHeight,
+    cardsHeight,
   } = layout;
-  const actualHeight = Math.min(layout.height, totalHeight);
 
   context.fillStyle = '#f7f0e5';
-  context.fillRect(0, 0, width, actualHeight);
+  context.fillRect(0, 0, width, height);
 
   let currentY = preset.outerPadding;
   const contentWidth = width - preset.outerPadding * 2;
@@ -626,9 +627,12 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
     currentY += preset.messageLineHeight;
   });
 
-  currentY += preset.messageBottomMargin;
-  currentY += preset.sectionGap;
-  currentY += preset.verseTopMargin;
+  const hashtagY = height - preset.outerPadding - preset.hashtagSize;
+  const cardsStartY = hashtagY - preset.sectionGap - cardsHeight;
+  currentY = Math.max(
+    cardsStartY,
+    currentY + preset.messageBottomMargin + preset.sectionGap + preset.verseTopMargin,
+  );
   context.textAlign = 'left';
 
   cardLayouts.forEach(({ item, verseLines, cardHeight, categoryText }) => {
@@ -639,9 +643,6 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
     drawRoundedRect(context, x, y, cardWidth, cardHeight, preset.borderRadius);
     context.fillStyle = item.palette?.soft || '#fffaf4';
     context.fill();
-    context.lineWidth = 2;
-    context.strokeStyle = item.palette?.color || '#d7cabc';
-    context.stroke();
 
     const startX = x + preset.cardPaddingX;
     let lineY = y + preset.cardPaddingY;
@@ -665,7 +666,7 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
     currentY += cardHeight + preset.verseGap;
   });
 
-  currentY += preset.sectionGap - preset.verseGap;
+  currentY = hashtagY;
 
   context.font = `700 ${preset.hashtagSize}px "Noto Sans KR", sans-serif`;
   context.fillStyle = '#9d4f2c';
@@ -850,6 +851,7 @@ async function copyShareImage(pageIndex?: number) {
     const pageItems = pageIndex === undefined
       ? previewVerseDetails.value
       : shareImagePageItems.value[pageIndex] || [];
+      console.log("pageItems", JSON.stringify(pageItems, null,2));
     const imageBlob = await createShareImageBlobForItems(pageItems);
 
     if (!imageBlob) {
@@ -1108,7 +1110,7 @@ watch(
               v-for="item in previewVerseDetails"
               :key="`${item.label}-${item.category}-${item.verse}`"
               class="mvp-share-card-verse"
-              :style="{ background: item.palette?.soft || '#ffffff', borderColor: item.palette?.color || '#d7cabc' }"
+              :style="{ background: item.palette?.soft || '#ffffff' }"
             >
               <p class="mvp-share-card-verse-line">
                 <span class="mvp-share-card-verse-category">[{{ item.category }}]</span>
@@ -1165,7 +1167,6 @@ watch(
 
 .mvp-share-card-verse {
   padding: 0.85rem 0.9rem;
-  border: 1px solid #d7cabc;
   border-radius: 5px;
 }
 
