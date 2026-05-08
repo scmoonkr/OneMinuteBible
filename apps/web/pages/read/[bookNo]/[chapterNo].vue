@@ -22,6 +22,7 @@ const selectedCategory = ref(categoryPalette[0].category);
 const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
 const quickJumpTarget = ref<'read' | 'share'>('read');
+const shareDrawerOpen = ref(false);
 const reflectionText = ref('');
 const toast = ref('');
 const copyingImageKey = ref('');
@@ -215,8 +216,26 @@ function scrollToShareSection() {
   });
 }
 
+function isShareDrawerViewport() {
+  return import.meta.client && window.matchMedia('(max-width: 1080px)').matches;
+}
+
+function closeShareDrawer() {
+  shareDrawerOpen.value = false;
+}
+
 function toggleQuickJump() {
+  if (shareDrawerOpen.value) {
+    closeShareDrawer();
+    return;
+  }
+
   if (quickJumpTarget.value === 'read') {
+    if (isShareDrawerViewport()) {
+      shareDrawerOpen.value = true;
+      return;
+    }
+
     scrollToShareSection();
     return;
   }
@@ -604,7 +623,7 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
   context.fillStyle = '#f7f0e5';
   context.fillRect(0, 0, width, height);
 
-  let currentY = preset.outerPadding;
+  let currentY: number = preset.outerPadding;
   const contentWidth = width - preset.outerPadding * 2;
 
   context.textBaseline = 'top';
@@ -645,7 +664,7 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
     context.fill();
 
     const startX = x + preset.cardPaddingX;
-    let lineY = y + preset.cardPaddingY;
+    let lineY: number = y + preset.cardPaddingY;
 
     context.font = verseLabelFont;
     context.fillStyle = '#7b6758';
@@ -740,6 +759,7 @@ function resetCurrentChapter() {
   localSelectedVerseItems.value = [];
   reflectionText.value = '';
   representativeVerseNo.value = null;
+  selectedShareReflection.value = null;
   setToast('현재 창에서 선택한 내용을 지웠습니다.');
 }
 
@@ -888,8 +908,9 @@ watch(
 
     showSourceCategories.value = false;
     showAllSharing.value = false;
+    shareDrawerOpen.value = false;
     reflectionText.value = '';
-  representativeVerseNo.value = null;
+    representativeVerseNo.value = null;
     localSelectedVerseItems.value = [];
     selectedShareReflection.value = null;
     chapterInput.value = String(chapterNo.value);
@@ -900,7 +921,7 @@ watch(
 </script>
 
 <template>
-  <div class="reading-page">
+  <div :class="['reading-page', { 'is-share-drawer-open': shareDrawerOpen }]">
     <section ref="readTopRef" class="mvp-main">
       <section class="mvp-reader-section mvp-sticky-controls" aria-label="성경 읽기 선택 도구">
         <div class="mvp-reading-nav">
@@ -975,7 +996,7 @@ watch(
               </button>
               <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">선택 초기화</button>
               <button type="button" class="mvp-toolbar-button mvp-quick-jump-button" @click="toggleQuickJump()">
-                {{ quickJumpTarget === 'read' ? '나눔' : '읽기' }}
+                {{ shareDrawerOpen ? '닫기' : (quickJumpTarget === 'read' ? '나눔' : '읽기') }}
               </button>
             </div>
           <!-- </div> -->
@@ -1029,9 +1050,22 @@ watch(
       </section>
     </section>
 
+    <button
+      v-if="shareDrawerOpen"
+      type="button"
+      class="mvp-share-drawer-backdrop"
+      aria-label="나눔 입력 닫기"
+      @click="closeShareDrawer()"
+    />
+
     <aside class="mvp-sidebar">
       <section ref="shareSectionRef" class="mvp-sidebar-block">
-        <h3>한 구절 나눔</h3>
+        <div class="mvp-share-drawer-head">
+          <h3>한 구절 나눔</h3>
+          <button type="button" class="mvp-share-drawer-close" aria-label="나눔 입력 닫기" @click="closeShareDrawer()">
+            <i class="fa-solid fa-xmark" />
+          </button>
+        </div>
         <div class="mvp-selected-range mvp-selected-range--compact">
           <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
           <div class="mvp-selected-verse-chips">
@@ -1201,5 +1235,82 @@ watch(
   color: #9d4f2c;
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+.mvp-share-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.mvp-share-drawer-head h3 {
+  margin: 0;
+}
+
+.mvp-share-drawer-close,
+.mvp-share-drawer-backdrop {
+  display: none;
+}
+
+@keyframes mvp-share-drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1080px) {
+  .mvp-share-drawer-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    margin: -0.2rem -0.15rem 0 0;
+    border: 1px solid rgba(80, 54, 29, 0.12);
+    border-radius: 5px;
+    background: #fffdfa;
+    color: #4b3c30;
+  }
+
+  .mvp-share-drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    border: 0;
+    background: rgba(35, 25, 17, 0.38);
+  }
+
+  .reading-page .mvp-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    width: min(390px, calc(100vw - 28px));
+    max-width: 100vw;
+    padding: 1.1rem;
+    overflow-y: auto;
+    background: rgba(255, 251, 244, 0.98);
+    border-left: 1px solid rgba(80, 54, 29, 0.14);
+    box-shadow: -18px 0 40px rgba(47, 32, 21, 0.18);
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 180ms ease-out, visibility 180ms ease-out;
+  }
+
+  .reading-page.is-share-drawer-open .mvp-sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
 }
 </style>

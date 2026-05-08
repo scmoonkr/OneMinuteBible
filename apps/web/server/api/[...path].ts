@@ -26,7 +26,12 @@ export default defineEventHandler(async (event) => {
   const method = event.method || 'GET';
   const incomingHeaders = getRequestHeaders(event);
   const headers = Object.fromEntries(
-    Object.entries(incomingHeaders).filter(([key]) => !HOP_BY_HOP_HEADERS.has(key.toLowerCase())),
+    Object.entries(incomingHeaders).filter(
+      (entry): entry is [string, string] => (
+        typeof entry[1] === 'string'
+        && !HOP_BY_HOP_HEADERS.has(entry[0].toLowerCase())
+      ),
+    ),
   );
   const body = method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event, false);
 
