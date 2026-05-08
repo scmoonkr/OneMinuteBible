@@ -64,8 +64,17 @@ button:disabled {
 }
 
 .site-brand a {
-  font-size: 1.6rem;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+
+.site-brand img {
+  display: block;
+  width: auto;
+  height: 44px;
+  max-width: min(280px, calc(100vw - 6.5rem));
+  object-fit: contain;
 }
 
 .site-brand p {
