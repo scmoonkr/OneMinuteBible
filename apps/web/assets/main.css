@@ -866,7 +866,7 @@ button:disabled {
 }
 
 .mvp-hero-summary {
-  padding: 1rem;
+  padding: 0.5rem;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.66);
   border: 1px solid rgba(120, 86, 54, 0.12);
@@ -875,6 +875,13 @@ button:disabled {
 .mvp-hero-summary h2 {
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
+}
+
+.mvp-hero-summary h4 {
+  margin: 0;
+  padding: 0.5rem;
+  color: #6f6a63;
+  font-weight: 400;
 }
 
 .mvp-section {
@@ -985,6 +992,12 @@ button:disabled {
 .mvp-block-title {
   margin: 0 0 1rem;
   font-size: 1.25rem;
+}
+
+.mvp-read-head .mvp-block-title {
+  color: #6f6a63;
+  font-size: 1.4rem;
+  font-weight: 400;
 }
 
 .mvp-block-summary {

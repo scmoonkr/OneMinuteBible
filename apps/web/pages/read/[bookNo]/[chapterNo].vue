@@ -1006,12 +1006,12 @@ watch(
       <section class="mvp-reader-section mvp-read-head" aria-labelledby="read-chapter-title">
         <div class="mvp-hero-grid">
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
-            <h2 id="read-chapter-title" class="mvp-title">{{ chapterLabel }}</h2>
-            <h4 class="mvp-block-title">장별 주제</h4>
+            <h2 id="read-chapter-title" class="mvp-title">{{ chapterLabel }}</h2>            
+            <h4 class="mvp-block-title">&nbsp;{{ chapter?.subject ?? "장별 주제" }}</h4>
           </div>
 
           <div class="mvp-hero-summary">
-            <h4>{{ chapter?.subject || '장 주제 미정' }}</h4>
+            <h4>{{ chapter?.excerpt || '장별 요약' }}</h4>
             <!-- <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p> -->
           </div>
         </div>
@@ -1059,106 +1059,108 @@ watch(
     />
 
     <aside class="mvp-sidebar">
-      <section ref="shareSectionRef" class="mvp-sidebar-block">
-        <div class="mvp-share-drawer-head">
-          <h3>한 구절 나눔</h3>
-          <button type="button" class="mvp-share-drawer-close" aria-label="나눔 입력 닫기" @click="closeShareDrawer()">
-            <i class="fa-solid fa-xmark" />
-          </button>
-        </div>
-        <div class="mvp-selected-range mvp-selected-range--compact">
-          <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
-          <div class="mvp-selected-verse-chips">
-            <button
-              v-for="verseNo in selectedVerseIds"
-              :key="verseNo"
-              type="button"
-              :class="['mvp-selected-verse-chip', { active: representativeVerseNo === verseNo }]"
-              @click="selectRepresentativeVerse(verseNo)"
-            >
-              {{ verseNo }}절
+      <div class="mvp-share-drawer-scroll">
+        <section ref="shareSectionRef" class="mvp-sidebar-block">
+          <div class="mvp-share-drawer-head">
+            <h3>한 구절 나눔</h3>
+            <button type="button" class="mvp-share-drawer-close" aria-label="나눔 입력 닫기" @click="closeShareDrawer()">
+              <i class="fa-solid fa-xmark" />
             </button>
-            <span v-if="!selectedVerseIds.length" class="mvp-muted">선택한 구절이 아직 없습니다.</span>
           </div>
-        </div>
-        <textarea
-          v-model="reflectionText"
-          class="mvp-textarea"
-          placeholder="내가 선택한 성경절을 붙들고 한 줄 나눔을 적어 주세요."
-        />
-        <!-- <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div> -->
-        <div class="mvp-toolbar-actions">
-          <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
-            {{ savingReflection ? '저장 중' : '한 구절 나눔 저장' }}
-          </button>
-          <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
-            {{ showAllSharing ? '나눔감추기' : '나눔전체 보기' }}
-          </button>
-        </div>
-        <p v-if="toast" class="mvp-muted">{{ toast }}</p>
-      </section>
-
-      <section class="mvp-sidebar-block">
-        <div class="mvp-sharing-list">
-          <article
-            v-for="item in sharingList"
-            :key="`${item.userNo}-${item.verseRange}-${item.updatedAt}`"
-            class="mvp-sharing-item"
-            @click="applyReflectionSelection(item)"
-          >
-            <div class="mvp-sharing-head">
-              <span><strong>{{ getReflectionDisplayName(item) }}</strong> {{ formatRelativeTime(item.updatedAt) }}</span>
-              <span>{{ item.verseRange }}</span>
+          <div class="mvp-selected-range mvp-selected-range--compact">
+            <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
+            <div class="mvp-selected-verse-chips">
+              <button
+                v-for="verseNo in selectedVerseIds"
+                :key="verseNo"
+                type="button"
+                :class="['mvp-selected-verse-chip', { active: representativeVerseNo === verseNo }]"
+                @click="selectRepresentativeVerse(verseNo)"
+              >
+                {{ verseNo }}절
+              </button>
+              <span v-if="!selectedVerseIds.length" class="mvp-muted">선택한 구절이 아직 없습니다.</span>
             </div>
-            <p class="mvp-sharing-message">{{ item.text }}</p>
-          </article>
-          <p v-if="!sharingList.length" class="mvp-muted">아직 저장된 나눔이 없습니다.</p>
-        </div>
-      </section>
-
-      <section class="mvp-sidebar-block">
-        <h3>지금 말씀 나눠보기</h3>
-        <div class="mvp-toolbar-actions">
-          <button
-            v-for="(label, index) in shareImageLabels"
-            :key="label"
-            type="button"
-            class="mvp-toolbar-button active"
-            :disabled="copyingImageKey !== '' || !shareReflection"
-            @click="copyShareImage(shareImageLabels.length === 1 ? undefined : index)"
-          >
-            {{ copyingImageKey === (shareImageLabels.length === 1 ? 'single' : `page-${index}`) ? '복사 중' : label }}
-          </button>
-          <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage || !shareReflection" @click="copyShareMessage()">
-            {{ copyingMessage ? '복사 중' : '나눔문장 복사' }}
-          </button>
-        </div>
-        <div class="mvp-share-card">
-          <div class="mvp-share-card-meta">
-            <span>{{ [shareNicknameLabel, shareDateLabel].filter(Boolean).join(' ') }}</span>
-            <strong>{{ shareVerseRange }}</strong>
           </div>
-          <p class="mvp-share-card-message">{{ shareReflection?.text || '' }}</p>
-          <div class="mvp-share-card-verses mvp-share-card-verses--compact">
-            <div
-              v-for="item in previewVerseDetails"
-              :key="`${item.label}-${item.category}-${item.verse}`"
-              class="mvp-share-card-verse"
-              :style="{ background: item.palette?.soft || '#ffffff' }"
+          <textarea
+            v-model="reflectionText"
+            class="mvp-textarea"
+            placeholder="내가 선택한 성경절을 붙들고 한 줄 나눔을 적어 주세요."
+          />
+          <!-- <div class="mvp-selected-range">{{ selectedVerseRange || '선택한 구절이 없습니다.' }}</div> -->
+          <div class="mvp-toolbar-actions">
+            <button type="button" class="mvp-toolbar-button active" :disabled="savingReflection" @click="submitReflection()">
+              {{ savingReflection ? '저장 중' : '한 구절 나눔 저장' }}
+            </button>
+            <button type="button" :class="['mvp-toolbar-button', { active: showAllSharing }]" @click="showAllSharing = !showAllSharing">
+              {{ showAllSharing ? '나눔감추기' : '나눔전체 보기' }}
+            </button>
+          </div>
+          <p v-if="toast" class="mvp-muted">{{ toast }}</p>
+        </section>
+
+        <section class="mvp-sidebar-block">
+          <div class="mvp-sharing-list">
+            <article
+              v-for="item in sharingList"
+              :key="`${item.userNo}-${item.verseRange}-${item.updatedAt}`"
+              class="mvp-sharing-item"
+              @click="applyReflectionSelection(item)"
             >
-              <p class="mvp-share-card-verse-line">
-                <span class="mvp-share-card-verse-category">[{{ item.category }}]</span>
-                <sup class="mvp-share-card-verse-no">{{ item.verseNo }}</sup>
-                <span class="mvp-share-card-verse-text" :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</span>
-              </p>
+              <div class="mvp-sharing-head">
+                <span><strong>{{ getReflectionDisplayName(item) }}</strong> {{ formatRelativeTime(item.updatedAt) }}</span>
+                <span>{{ item.verseRange }}</span>
+              </div>
+              <p class="mvp-sharing-message">{{ item.text }}</p>
+            </article>
+            <p v-if="!sharingList.length" class="mvp-muted">아직 저장된 나눔이 없습니다.</p>
+          </div>
+        </section>
+
+        <section class="mvp-sidebar-block">
+          <h3>지금 말씀 나눠보기</h3>
+          <div class="mvp-toolbar-actions">
+            <button
+              v-for="(label, index) in shareImageLabels"
+              :key="label"
+              type="button"
+              class="mvp-toolbar-button active"
+              :disabled="copyingImageKey !== '' || !shareReflection"
+              @click="copyShareImage(shareImageLabels.length === 1 ? undefined : index)"
+            >
+              {{ copyingImageKey === (shareImageLabels.length === 1 ? 'single' : `page-${index}`) ? '복사 중' : label }}
+            </button>
+            <button type="button" class="mvp-toolbar-button active" :disabled="copyingMessage || !shareReflection" @click="copyShareMessage()">
+              {{ copyingMessage ? '복사 중' : '나눔문장 복사' }}
+            </button>
+          </div>
+          <div class="mvp-share-card">
+            <div class="mvp-share-card-meta">
+              <span>{{ [shareNicknameLabel, shareDateLabel].filter(Boolean).join(' ') }}</span>
+              <strong>{{ shareVerseRange }}</strong>
             </div>
-            <p v-if="!previewVerseDetails.length" class="mvp-muted"></p>
+            <p class="mvp-share-card-message">{{ shareReflection?.text || '' }}</p>
+            <div class="mvp-share-card-verses mvp-share-card-verses--compact">
+              <div
+                v-for="item in previewVerseDetails"
+                :key="`${item.label}-${item.category}-${item.verse}`"
+                class="mvp-share-card-verse"
+                :style="{ background: item.palette?.soft || '#ffffff' }"
+              >
+                <p class="mvp-share-card-verse-line">
+                  <span class="mvp-share-card-verse-category">[{{ item.category }}]</span>
+                  <sup class="mvp-share-card-verse-no">{{ item.verseNo }}</sup>
+                  <span class="mvp-share-card-verse-text" :style="{ color: item.godSay ? '#bf2d2d' : '#2f261d' }">{{ item.verse }}</span>
+                </p>
+              </div>
+              <p v-if="!previewVerseDetails.length" class="mvp-muted"></p>
+            </div>
+            <div class="mvp-share-copy-text">
+              <strong v-if="shareReflection">{{ shareHashtags }}</strong>
+            </div>
           </div>
-          <div class="mvp-share-copy-text">
-            <strong v-if="shareReflection">{{ shareHashtags }}</strong>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </aside>
   </div>
 </template>
@@ -1254,6 +1256,10 @@ watch(
   display: none;
 }
 
+.mvp-share-drawer-scroll {
+  display: block;
+}
+
 @keyframes mvp-share-drawer-in {
   from {
     transform: translateX(100%);
@@ -1296,8 +1302,9 @@ watch(
     z-index: 90;
     width: min(390px, calc(100vw - 28px));
     max-width: 100vw;
+    height: 100dvh;
     padding: 1.1rem;
-    overflow-y: auto;
+    overflow: hidden;
     background: rgba(255, 251, 244, 0.98);
     border-left: 1px solid rgba(80, 54, 29, 0.14);
     box-shadow: -18px 0 40px rgba(47, 32, 21, 0.18);
@@ -1305,6 +1312,13 @@ watch(
     visibility: hidden;
     pointer-events: none;
     transition: transform 180ms ease-out, visibility 180ms ease-out;
+  }
+
+  .reading-page .mvp-share-drawer-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .reading-page.is-share-drawer-open .mvp-sidebar {
