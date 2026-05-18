@@ -806,6 +806,11 @@ button:disabled {
   align-items: start;
 }
 
+.mvp-read-head .mvp-hero-grid {
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+}
+
 .mvp-eyebrow {
   margin: 0 0 0.5rem;
   color: var(--muted);
@@ -1537,13 +1542,13 @@ button:disabled {
   html,
   body,
   * {
-    scrollbar-color: rgba(93, 88, 82, 0.72) transparent;
+    scrollbar-color: rgba(93, 88, 82, 0.72) var(--bg);
   }
 
   html::-webkit-scrollbar,
   body::-webkit-scrollbar,
   *::-webkit-scrollbar {
-    background: transparent;
+    background: var(--bg);
   }
 
   html::-webkit-scrollbar-track,
@@ -1552,13 +1557,13 @@ button:disabled {
   html::-webkit-scrollbar-track-piece,
   body::-webkit-scrollbar-track-piece,
   *::-webkit-scrollbar-track-piece {
-    background: transparent;
+    background: var(--bg);
   }
 
   html::-webkit-scrollbar-corner,
   body::-webkit-scrollbar-corner,
   *::-webkit-scrollbar-corner {
-    background: transparent;
+    background: var(--bg);
   }
 
   .reading-page,

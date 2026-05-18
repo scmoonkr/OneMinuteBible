@@ -503,6 +503,7 @@ async function createShareImageBlob() {
 function getShareLayout(items: ShareVerseDetail[]) {
   const width = 1080;
   const height = 1350;
+  const verticalSafePadding = Math.round((height - width) / 2) + 24;
   const layoutPresets = [
     { outerPadding: 56, topMetaSize: 22, messageSize: 64, messageLineHeight: 94, verseLabelSize: 22, verseBodySize: 25, verseLineHeight: 33, verseGap: 18, cardPaddingX: 22, cardPaddingY: 20, borderRadius: 5, hashtagSize: 28, sectionGap: 28, messageTopMargin: 44, messageBottomMargin: 32, verseTopMargin: 22 },
     { outerPadding: 48, topMetaSize: 20, messageSize: 56, messageLineHeight: 82, verseLabelSize: 21, verseBodySize: 24, verseLineHeight: 32, verseGap: 16, cardPaddingX: 20, cardPaddingY: 19, borderRadius: 5, hashtagSize: 26, sectionGap: 24, messageTopMargin: 38, messageBottomMargin: 28, verseTopMargin: 20 },
@@ -517,6 +518,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
   const fittedLayout = layoutPresets
     .map((preset) => {
       const contentWidth = width - preset.outerPadding * 2;
+      const verticalPadding = Math.max(preset.outerPadding, verticalSafePadding);
       const messageFont = `700 ${preset.messageSize}px "Noto Sans KR", sans-serif`;
       const verseBodyFont = `500 ${preset.verseBodySize}px "Noto Sans KR", sans-serif`;
       const verseLabelFont = `700 ${preset.verseLabelSize}px "Noto Sans KR", sans-serif`;
@@ -541,7 +543,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
       const hashtagHeight = preset.hashtagSize;
       const cardsHeight = cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
         + preset.verseGap * Math.max(0, cardLayouts.length - 1);
-      const totalHeight = preset.outerPadding * 2
+      const totalHeight = verticalPadding * 2
         + metaHeight
         + preset.sectionGap
         + preset.messageTopMargin
@@ -555,6 +557,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
 
       return {
         preset,
+        verticalPadding,
         messageFont,
         verseBodyFont,
         verseLabelFont,
@@ -568,6 +571,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
     || (() => {
       const preset = layoutPresets[layoutPresets.length - 1];
       const contentWidth = width - preset.outerPadding * 2;
+      const verticalPadding = Math.max(preset.outerPadding, verticalSafePadding);
       const messageFont = `700 ${preset.messageSize}px "Noto Sans KR", sans-serif`;
       const verseBodyFont = `500 ${preset.verseBodySize}px "Noto Sans KR", sans-serif`;
       const verseLabelFont = `700 ${preset.verseLabelSize}px "Noto Sans KR", sans-serif`;
@@ -590,7 +594,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
       const hashtagHeight = preset.hashtagSize;
       const cardsHeight = cardLayouts.reduce((sum, entry) => sum + entry.cardHeight, 0)
         + preset.verseGap * Math.max(0, cardLayouts.length - 1);
-      const totalHeight = preset.outerPadding * 2
+      const totalHeight = verticalPadding * 2
         + metaHeight
         + preset.sectionGap
         + preset.messageTopMargin
@@ -602,7 +606,7 @@ function getShareLayout(items: ShareVerseDetail[]) {
         + preset.sectionGap
         + hashtagHeight;
 
-      return { preset, messageFont, verseBodyFont, verseLabelFont, messageLines, cardLayouts, cardsHeight, totalHeight };
+      return { preset, verticalPadding, messageFont, verseBodyFont, verseLabelFont, messageLines, cardLayouts, cardsHeight, totalHeight };
     })();
 
   return {
@@ -619,7 +623,7 @@ const shareImagePageItems = computed(() => {
   const layout = getShareLayout(items);
   if (!layout) return [];
 
-  const maxContentHeight = layout.height - layout.preset.outerPadding * 2;
+  const maxContentHeight = layout.height - layout.verticalPadding * 2;
   const staticHeight = layout.preset.topMetaSize
     + layout.preset.sectionGap
     + layout.preset.messageTopMargin
@@ -685,7 +689,7 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
   context.fillStyle = '#f7f0e5';
   context.fillRect(0, 0, width, height);
 
-  let currentY: number = preset.outerPadding;
+  let currentY: number = layout.verticalPadding;
   const contentWidth = width - preset.outerPadding * 2;
 
   context.textBaseline = 'top';
@@ -708,7 +712,7 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
     currentY += preset.messageLineHeight;
   });
 
-  const hashtagY = height - preset.outerPadding - preset.hashtagSize;
+  const hashtagY = height - layout.verticalPadding - preset.hashtagSize;
   const cardsStartY = hashtagY - preset.sectionGap - cardsHeight;
   currentY = Math.max(
     cardsStartY,
@@ -1027,7 +1031,7 @@ watch(
                 <label class="mvp-nav-field mvp-nav-field--inline mvp-nav-field--input">
                   <input v-model="chapterInput" class="mvp-nav-input mvp-nav-input--compact" inputmode="numeric" @keyup.enter="submitChapterInput()" />
                   <button type="button" class="mvp-nav-input-action" aria-label="장 이동" @click="submitChapterInput()">
-                    <i class="fa-solid fa-paper-plane" />
+                    <i class="fa-solid fa-arrow-right" />
                   </button>
                 </label>
               </div>
