@@ -83,6 +83,60 @@ const paintMap = computed(() => {
   return map;
 });
 
+const sourceCategoryMap = computed(() => {
+  const map = new Map<string, string>();
+  let currentCategory = '';
+
+  chapter.value?.paragraphs.forEach((paragraph) => {
+    paragraph.verses.forEach((verse) => {
+      const explicitCategory = getExplicitSourceCategory(verse);
+      if (explicitCategory) currentCategory = explicitCategory;
+      map.set(getVerseItemKey(verse), currentCategory);
+    });
+  });
+
+  return map;
+});
+
+function hasVerseText(verse: BibleVerse) {
+  return String(verse.verse || '').trim() !== '';
+}
+
+function normalizeSubject(value?: string | null) {
+  return String(value || '').trim();
+}
+
+const displayParagraphs = computed(() => (
+  chapter.value?.paragraphs
+    .map((paragraph, index, paragraphs) => {
+      const subject = normalizeSubject(paragraph.subject);
+      const previousSubject = normalizeSubject(paragraphs[index - 1]?.subject);
+
+      return {
+        ...paragraph,
+        verses: paragraph.verses.filter(hasVerseText),
+        showSubject: Boolean(subject) && subject !== previousSubject,
+      };
+    })
+    .filter((paragraph) => paragraph.verses.length > 0) || []
+));
+
+if (import.meta.client) {
+  watch(
+    shareDrawerOpen,
+    (isOpen) => {
+      document.documentElement.classList.toggle('is-share-drawer-active', isOpen);
+      document.body.classList.toggle('is-share-drawer-active', isOpen);
+    },
+    { immediate: true },
+  );
+
+  onBeforeUnmount(() => {
+    document.documentElement.classList.remove('is-share-drawer-active');
+    document.body.classList.remove('is-share-drawer-active');
+  });
+}
+
 function setToast(message: string) {
   toast.value = message;
   if (toastTimer) clearTimeout(toastTimer);
@@ -132,8 +186,12 @@ function getSavedPaint(verse: BibleVerse) {
   return paintMap.value.get(getVerseItemKey(verse)) || null;
 }
 
+function getExplicitSourceCategory(verse: BibleVerse) {
+  return String(verse.categoryOriginal || verse.category || '').trim();
+}
+
 function getSourceCategory(verse: BibleVerse) {
-  return verse.categoryOriginal || verse.category || '';
+  return sourceCategoryMap.value.get(getVerseItemKey(verse)) || '';
 }
 
 function getDisplayBackground(verse: BibleVerse) {
@@ -187,6 +245,10 @@ function moveToChapter(targetBookNo: number, targetChapterNo: number) {
 function moveToTestament(testament: 'old' | 'new') {
   const nextBook = bibleBooks.find((item) => item.testament === testament) || bibleBooks[0];
   return moveToChapter(nextBook.bookNo, 1);
+}
+
+function toggleTestament() {
+  return moveToTestament(currentTestament.value === 'old' ? 'new' : 'old');
 }
 
 function handleBookChange(event: Event) {
@@ -928,8 +990,9 @@ watch(
           <div class="mvp-reading-nav-row mvp-reading-nav-row--top">
             <div class="mvp-reading-nav-left">
               <div class="mvp-testament-tabs">
-                <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'old' }]" @click="moveToTestament('old')">구약</button>
-                <button type="button" :class="['mvp-toolbar-button', { active: currentTestament === 'new' }]" @click="moveToTestament('new')">신약</button>
+                <button type="button" class="mvp-toolbar-button active" @click="toggleTestament()">
+                  {{ currentTestament === 'old' ? '구약' : '신약' }}
+                </button>
               </div>
 
               <label class="mvp-nav-field mvp-nav-field--select">
@@ -1007,11 +1070,11 @@ watch(
         <div class="mvp-hero-grid">
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem;">
             <h2 id="read-chapter-title" class="mvp-title">{{ chapterLabel }}</h2>            
-            <h4 class="mvp-block-title">&nbsp;{{ chapter?.subject ?? "장별 주제" }}</h4>
+            <h4 class="mvp-block-title">&nbsp;{{ chapter?.title || "" }}</h4>
           </div>
 
           <div class="mvp-hero-summary">
-            <h4>{{ chapter?.excerpt || '장별 요약' }}</h4>
+            <h4>{{ chapter?.excerpt || '장별 요약-' }}</h4>
             <!-- <p>{{ chapter?.excerpt || '장 요약 데이터가 아직 없습니다.' }}</p> -->
           </div>
         </div>
@@ -1022,8 +1085,8 @@ watch(
         <p v-else-if="error" class="mvp-muted">{{ error.message }}</p>
 
         <div v-else-if="chapter" class="mvp-paragraphs">
-          <article v-for="paragraph in chapter.paragraphs" :key="paragraph.paragraphNo" class="mvp-paragraph-card">
-            <h4 class="mvp-block-title">{{ paragraph.subject || '블록 주제 없음' }}</h4>
+          <article v-for="paragraph in displayParagraphs" :key="paragraph.paragraphNo" class="mvp-paragraph-card">
+            <h4 v-if="paragraph.showSubject" class="mvp-block-title">{{ paragraph.subject }}</h4>
 
             <div class="mvp-segments">
               <button
@@ -1166,18 +1229,42 @@ watch(
 </template>
 
 <style scoped>
+:global(html.is-share-drawer-active),
+:global(body.is-share-drawer-active) {
+  overflow: hidden;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+:global(html.is-share-drawer-active::-webkit-scrollbar),
+:global(body.is-share-drawer-active::-webkit-scrollbar) {
+  display: none;
+}
+
 .mvp-share-card {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .mvp-share-card-meta {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
   font-size: 0.78rem;
   color: #7b6758;
+}
+
+.mvp-share-card-meta span,
+.mvp-share-card-meta strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .mvp-share-card-meta strong {
@@ -1204,6 +1291,7 @@ watch(
 .mvp-share-card-verse {
   padding: 0.85rem 0.9rem;
   border-radius: 5px;
+  min-width: 0;
 }
 
 .mvp-share-card-verse-line {
@@ -1211,6 +1299,7 @@ watch(
   align-items: flex-start;
   gap: 0.18rem;
   margin: 0;
+  min-width: 0;
   font-size: 0.88rem;
   line-height: 1.45;
 }
@@ -1229,14 +1318,19 @@ watch(
 }
 
 .mvp-share-card-verse-text {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 0.88rem;
+  overflow-wrap: anywhere;
 }
 
 .mvp-share-copy-text strong {
   display: block;
+  min-width: 0;
   color: #9d4f2c;
   font-size: 0.95rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .mvp-share-drawer-head {
@@ -1258,6 +1352,9 @@ watch(
 
 .mvp-share-drawer-scroll {
   display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 @keyframes mvp-share-drawer-in {
@@ -1288,8 +1385,12 @@ watch(
   .mvp-share-drawer-backdrop {
     display: block;
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 80;
+    width: 100vw;
     border: 0;
     background: rgba(35, 25, 17, 0.38);
   }
@@ -1300,11 +1401,12 @@ watch(
     right: 0;
     bottom: 0;
     z-index: 90;
-    width: min(390px, calc(100vw - 28px));
+    width: min(390px, 100vw);
     max-width: 100vw;
     height: 100dvh;
     padding: 1.1rem;
     overflow: hidden;
+    overflow-x: hidden;
     background: rgba(255, 251, 244, 0.98);
     border-left: 1px solid rgba(80, 54, 29, 0.14);
     box-shadow: -18px 0 40px rgba(47, 32, 21, 0.18);
@@ -1316,9 +1418,46 @@ watch(
 
   .reading-page .mvp-share-drawer-scroll {
     height: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-color: rgba(74, 52, 38, 0.32) rgba(255, 251, 244, 0.98);
+    scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar {
+    width: 7px;
+    background: rgba(255, 251, 244, 0.98);
+  }
+
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track,
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track-piece {
+    background: rgba(255, 251, 244, 0.98);
+  }
+
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(255, 251, 244, 0.98);
+    border-radius: 999px;
+    background: rgba(74, 52, 38, 0.28);
+  }
+
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(74, 52, 38, 0.42);
+  }
+
+  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-corner {
+    background: rgba(255, 251, 244, 0.98);
+  }
+
+  .reading-page .mvp-textarea {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .reading-page .mvp-textarea::-webkit-scrollbar {
+    display: none;
   }
 
   .reading-page.is-share-drawer-open .mvp-sidebar {

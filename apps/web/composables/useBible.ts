@@ -13,6 +13,7 @@ export type BibleParagraph = {
   startVerse: number;
   endVerse: number;
   subject: string;
+  title: string;
   summary: string;
   excerpt?: string;
   verses: BibleVerse[];
@@ -22,6 +23,7 @@ export type BibleChapter = {
   book: string;
   bookNo: number;
   chapterNo: number;
+  title?: string;
   subject: string;
   excerpt: string;
   audio?: string;
