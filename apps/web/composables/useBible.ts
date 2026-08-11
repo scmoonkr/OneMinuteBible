@@ -70,14 +70,12 @@ export type SelectedVerseItem = {
 };
 
 export type ReadingPaint = {
-  userNo: number;
+  userId: string;
   bookNo: number;
   chapterNo: number;
   verseRange: string;
   verseIDs: SelectedVerseItem[];
-  text?: string;
   updatedAt: string;
-  createdAt?: string;
 };
 
 export type ReflectionItem = {
@@ -182,6 +180,39 @@ export function useBible() {
     );
   }
 
+  async function listReadingPaints(query: { userId: string; bookNo: number; chapterNo: number }) {
+    return await $fetch<{ ok: boolean; data: ReadingPaint[] }>(
+      `${config.public.apiBase}/api/reading`,
+      { query },
+    );
+  }
+
+  async function saveReadingPaint(body: {
+    userId: string;
+    bookNo: number;
+    chapterNo: number;
+    verseRange: string;
+    verseIDs: SelectedVerseItem[];
+  }) {
+    return await $fetch<{ ok: boolean; data: ReadingPaint }>(
+      `${config.public.apiBase}/api/reading`,
+      {
+        method: 'POST',
+        body,
+      },
+    );
+  }
+
+  async function clearReadingPaints(query: { userId: string; bookNo: number; chapterNo: number }) {
+    return await $fetch<{ ok: boolean; data: { deletedCount: number } }>(
+      `${config.public.apiBase}/api/reading`,
+      {
+        method: 'DELETE',
+        query,
+      },
+    );
+  }
+
   return {
     readChapter,
     listBookChapters,
@@ -190,5 +221,8 @@ export function useBible() {
     listReflections,
     viewReflection,
     saveReflection,
+    listReadingPaints,
+    saveReadingPaint,
+    clearReadingPaints,
   };
 }

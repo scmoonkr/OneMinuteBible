@@ -1184,6 +1184,25 @@ button:disabled {
   gap: 0.35rem;
 }
 
+.mvp-selected-verse-chips--grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* In the 나눔 verse picker every verse number is shown. Two independent states:
+   - a category was painted on the verse → bold dark border
+   - the verse is added to the 나눔      → filled background */
+.mvp-selected-verse-chips--grid .mvp-selected-verse-chip.has-category {
+  border-color: #3e250d;
+  box-shadow: inset 0 0 0 2px #3e250d;
+  font-weight: 700;
+}
+
+.mvp-selected-verse-chips--grid .mvp-selected-verse-chip.active {
+  background: #f3dcae;
+  color: #3e250d;
+}
+
 .mvp-selected-verse-chip {
   display: inline-flex;
   align-items: center;

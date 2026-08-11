@@ -34,6 +34,8 @@ const localSelectedVerseItems = ref<SelectedVerseItem[]>([]);
 const reflections = ref<ReflectionItem[]>([]);
 const selectedShareReflection = ref<ReflectionItem | null>(null);
 let toastTimer: ReturnType<typeof setTimeout> | null = null;
+let paintSyncTimer: ReturnType<typeof setTimeout> | null = null;
+let suppressPaintSync = false;
 
 type ShareVerseDetail = SelectedVerseItem & {
   label: string;
@@ -70,6 +72,12 @@ const myReflections = computed(() => reflections.value.filter((item) => item.use
 const sharingList = computed(() => (showAllSharing.value ? reflections.value : myReflections.value));
 const latestMyReflection = computed(() => myReflections.value[0] || null);
 const representativeVerseNo = ref<number | null>(null);
+// Verses the user has explicitly picked for the current 나눔 — a subset of the
+// painted verses, kept separate so category painting (chapter-wide, persisted)
+// doesn't dump every colored verse into a single reflection.
+const reflectionItems = ref<SelectedVerseItem[]>([]);
+const reflectionVerseIds = computed(() => [...new Set(reflectionItems.value.map((item) => item.verseNo))].sort((a, b) => a - b));
+const reflectionVerseRange = computed(() => formatVerseRange(reflectionVerseIds.value));
 
 function getVerseItemKey(item: Pick<SelectedVerseItem, 'verseNo' | 'verse'> | Pick<BibleVerse, 'verseNo' | 'verse'>) {
   return `${item.verseNo}|${item.verse}`;
@@ -102,6 +110,25 @@ function hasVerseText(verse: BibleVerse) {
   return String(verse.verse || '').trim() !== '';
 }
 
+// Every verse in the chapter (with text), for the 나눔 verse picker.
+const chapterVerses = computed(() => {
+  const list: BibleVerse[] = [];
+  chapter.value?.paragraphs.forEach((paragraph) => {
+    paragraph.verses.forEach((verse) => {
+      if (hasVerseText(verse)) list.push(verse);
+    });
+  });
+  return list;
+});
+const chapterVerseNos = computed(() => [...new Set(chapterVerses.value.map((verse) => verse.verseNo))].sort((a, b) => a - b));
+const chapterVerseMap = computed(() => {
+  const map = new Map<number, BibleVerse>();
+  chapterVerses.value.forEach((verse) => {
+    if (!map.has(verse.verseNo)) map.set(verse.verseNo, verse);
+  });
+  return map;
+});
+
 function normalizeSubject(value?: string | null) {
   return String(value || '').trim();
 }
@@ -121,7 +148,18 @@ const displayParagraphs = computed(() => (
     .filter((paragraph) => paragraph.verses.length > 0) || []
 ));
 
+const SELECTED_CATEGORY_STORAGE_KEY = 'read:selectedCategory';
+
 if (import.meta.client) {
+  const savedCategory = localStorage.getItem(SELECTED_CATEGORY_STORAGE_KEY);
+  if (savedCategory && categoryPalette.some((item) => item.category === savedCategory)) {
+    selectedCategory.value = savedCategory;
+  }
+
+  watch(selectedCategory, (value) => {
+    localStorage.setItem(SELECTED_CATEGORY_STORAGE_KEY, value);
+  });
+
   watch(
     shareDrawerOpen,
     (isOpen) => {
@@ -236,6 +274,39 @@ function getVerseTextColor(verse: BibleVerse) {
   return verse.godSay || verse.say ? '#bf2d2d' : '#2f261d';
 }
 
+// Darken a #rrggbb color by pulling each channel toward black.
+function darkenHexColor(hex: string, amount = 0.35) {
+  const normalized = hex.replace('#', '');
+  if (normalized.length !== 6) return hex;
+  const num = Number.parseInt(normalized, 16);
+  if (Number.isNaN(num)) return hex;
+  const r = Math.round(((num >> 16) & 255) * (1 - amount));
+  const g = Math.round(((num >> 8) & 255) * (1 - amount));
+  const b = Math.round((num & 255) * (1 - amount));
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+function getVerseCardStyle(verse: BibleVerse) {
+  const style: Record<string, string> = {
+    background: getDisplayBackground(verse),
+    borderColor: getDisplayBorderColor(verse),
+  };
+
+  // In category-view mode, outline the verses the user has picked with a
+  // thicker, darker ring in the same color family as their chosen category.
+  if (showSourceCategories.value) {
+    const savedPaint = getSavedPaint(verse);
+    if (savedPaint) {
+      const categoryColor = getPaletteMetaBySourceCategory(savedPaint.category)?.color || '#3e250d';
+      const ringColor = darkenHexColor(categoryColor, 0.35);
+      style.borderColor = ringColor;
+      style.boxShadow = `inset 0 0 0 3px ${ringColor}`;
+    }
+  }
+
+  return style;
+}
+
 function moveToChapter(targetBookNo: number, targetChapterNo: number) {
   const targetBook = bibleBooks.find((item) => item.bookNo === targetBookNo) || currentBookMeta.value;
   const nextChapter = Math.min(Math.max(targetChapterNo, 1), targetBook.chapter);
@@ -317,7 +388,6 @@ function submitChapterInput() {
 
 function handlePickCategory(category: string) {
   selectedCategory.value = category;
-  if (showSourceCategories.value) showSourceCategories.value = false;
 }
 
 function formatVerseRange(verseIds: number[]) {
@@ -361,8 +431,8 @@ const selectedVerseDetails = computed(() => (
 ));
 const shareReflection = computed(() => selectedShareReflection.value);
 const previewVerseDetails = computed<ShareVerseDetail[]>(() => {
-  const sourceItems = selectedVerseItems.value.length
-    ? selectedVerseItems.value
+  const sourceItems = reflectionItems.value.length
+    ? reflectionItems.value
     : (shareReflection.value?.verseIDs || []);
 
   return sourceItems
@@ -382,7 +452,7 @@ const shareImageLabels = computed(() => (
     : shareImagePageItems.value.map((_, index) => `카드${index + 1} 복사`)
 ));
 const shareVerseRange = computed(() => {
-  if (selectedVerseRange.value) return selectedVerseRange.value;
+  if (reflectionVerseRange.value) return reflectionVerseRange.value;
   return shareReflection.value?.verseRange || '';
 });
 const shareDateLabel = computed(() => {
@@ -770,7 +840,76 @@ async function loadChapterState() {
   });
 
   reflections.value = reflectionResponse.data;
+
+  await loadReadingPaint();
 }
+
+async function loadReadingPaint() {
+  auth.syncSession();
+
+  if (!currentUserNo.value) {
+    localSelectedVerseItems.value = [];
+    return;
+  }
+
+  try {
+    const response = await bible.listReadingPaints({
+      userId: String(currentUserNo.value),
+      bookNo: bookNo.value,
+      chapterNo: chapterNo.value,
+    });
+
+    localSelectedVerseItems.value = response.data[0]?.verseIDs || [];
+  } catch {
+    localSelectedVerseItems.value = [];
+  }
+}
+
+async function persistReadingPaint(payload: {
+  userId: string;
+  bookNo: number;
+  chapterNo: number;
+  verseRange: string;
+  verseIDs: SelectedVerseItem[];
+}) {
+  try {
+    if (!payload.verseIDs.length) {
+      await bible.clearReadingPaints({
+        userId: payload.userId,
+        bookNo: payload.bookNo,
+        chapterNo: payload.chapterNo,
+      });
+      return;
+    }
+
+    await bible.saveReadingPaint(payload);
+  } catch {
+    // Ignore transient sync errors; the next change will retry.
+  }
+}
+
+watch(
+  localSelectedVerseItems,
+  (items) => {
+    if (suppressPaintSync || !currentUserNo.value) return;
+
+    // Snapshot the current chapter and selection so a later navigation can't
+    // redirect this pending save to the wrong chapter.
+    const payload = {
+      userId: String(currentUserNo.value),
+      bookNo: bookNo.value,
+      chapterNo: chapterNo.value,
+      verseRange: selectedVerseRange.value,
+      verseIDs: items.map((item) => ({ ...item })),
+    };
+
+    if (paintSyncTimer) clearTimeout(paintSyncTimer);
+    paintSyncTimer = setTimeout(() => {
+      persistReadingPaint(payload);
+    }, 800);
+  },
+  { deep: true },
+);
 
 function buildNextSelectedItems(verse: BibleVerse) {
   const key = getVerseItemKey(verse);
@@ -806,7 +945,7 @@ function handleVerseClick(verse: BibleVerse) {
   localSelectedVerseItems.value = buildNextSelectedItems(verse);
 }
 
-watch(selectedVerseIds, (ids) => {
+watch(reflectionVerseIds, (ids) => {
   if (!ids.length) {
     representativeVerseNo.value = null;
     return;
@@ -817,12 +956,49 @@ watch(selectedVerseIds, (ids) => {
   }
 }, { immediate: true });
 
+// Build a 나눔 item for any chapter verse, using the user's painted category
+// when present, otherwise the verse's source category.
+function buildReflectionItemForVerse(verseNo: number): SelectedVerseItem | null {
+  const verse = chapterVerseMap.value.get(verseNo);
+  if (!verse) return null;
+
+  const savedPaint = paintMap.value.get(getVerseItemKey(verse));
+  const category = savedPaint?.category || getSourceCategory(verse) || selectedCategory.value;
+
+  return {
+    verseNo,
+    category,
+    verse: verse.verse,
+    godSay: verse.godSay === true || verse.say === true,
+  };
+}
+
+// Whether the user has painted a category onto this verse number.
+function isVerseNoPainted(verseNo: number) {
+  const verse = chapterVerseMap.value.get(verseNo);
+  if (!verse) return false;
+  return paintMap.value.has(getVerseItemKey(verse));
+}
+
+// Toggle whether a verse is included in the current 나눔.
+function toggleReflectionVerse(verseNo: number) {
+  if (reflectionItems.value.some((item) => item.verseNo === verseNo)) {
+    reflectionItems.value = reflectionItems.value.filter((item) => item.verseNo !== verseNo);
+    return;
+  }
+
+  const item = buildReflectionItemForVerse(verseNo);
+  if (!item) return;
+  reflectionItems.value = [...reflectionItems.value, item];
+}
+
 function selectRepresentativeVerse(verseNo: number) {
   representativeVerseNo.value = verseNo;
 }
 
 function resetCurrentChapter() {
   localSelectedVerseItems.value = [];
+  reflectionItems.value = [];
   reflectionText.value = '';
   representativeVerseNo.value = null;
   selectedShareReflection.value = null;
@@ -830,7 +1006,7 @@ function resetCurrentChapter() {
 }
 
 function applyReflectionSelection(item: ReflectionItem) {
-  localSelectedVerseItems.value = item.verseIDs || [];
+  reflectionItems.value = item.verseIDs || [];
   reflectionText.value = item.text || '';
   representativeVerseNo.value = item.mainVerseNo || item.verseIDs?.[0]?.verseNo || null;
   selectedShareReflection.value = item;
@@ -854,8 +1030,8 @@ async function submitReflection() {
     return;
   }
 
-  if (!selectedVerseItems.value.length) {
-    setToast('선택한 성경절이 없습니다.');
+  if (!reflectionItems.value.length) {
+    setToast('나눔에 담을 구절을 선택해 주세요.');
     return;
   }
 
@@ -873,10 +1049,10 @@ async function submitReflection() {
       nickname: auth.currentUser.value.nickname,
       bookNo: bookNo.value,
       chapterNo: chapterNo.value,
-      paragraphNo: getParagraphNoForVerse(representativeVerseNo.value || selectedVerseItems.value[0]?.verseNo || 1),
-      mainVerseNo: representativeVerseNo.value || selectedVerseItems.value[0]?.verseNo || 1,
-      verseRange: selectedVerseRange.value,
-      verseIDs: selectedVerseItems.value,
+      paragraphNo: getParagraphNoForVerse(representativeVerseNo.value || reflectionItems.value[0]?.verseNo || 1),
+      mainVerseNo: representativeVerseNo.value || reflectionItems.value[0]?.verseNo || 1,
+      verseRange: reflectionVerseRange.value,
+      verseIDs: reflectionItems.value,
       text: reflectionText.value.trim(),
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
@@ -972,15 +1148,18 @@ watch(
       return;
     }
 
+    suppressPaintSync = true;
     showSourceCategories.value = false;
     showAllSharing.value = false;
     shareDrawerOpen.value = false;
     reflectionText.value = '';
     representativeVerseNo.value = null;
     localSelectedVerseItems.value = [];
+    reflectionItems.value = [];
     selectedShareReflection.value = null;
     chapterInput.value = String(chapterNo.value);
     await loadChapterState();
+    suppressPaintSync = false;
   },
   { immediate: true },
 );
@@ -1098,7 +1277,7 @@ watch(
                 :key="`${paragraph.paragraphNo}-${verse.verseNo}-${verse.verse}`"
                 type="button"
                 :class="['segment', { painted: Boolean(getSavedPaint(verse)), say: verse.godSay || verse.say }]"
-                :style="{ background: getDisplayBackground(verse), borderColor: getDisplayBorderColor(verse) }"
+                :style="getVerseCardStyle(verse)"
                 @click="handleVerseClick(verse)"
               >
                 <span v-if="getDisplayCategoryLabel(verse)" class="mvp-segment-picked">
@@ -1135,10 +1314,25 @@ watch(
             </button>
           </div>
           <div class="mvp-selected-range mvp-selected-range--compact">
-            <p class="mvp-selected-range-title">마음에 남은 구절을 눌러보세요</p>
+            <p class="mvp-selected-range-title">나눔에 담을 구절을 선택하세요</p>
+            <div class="mvp-selected-verse-chips mvp-selected-verse-chips--grid">
+              <button
+                v-for="verseNo in chapterVerseNos"
+                :key="verseNo"
+                type="button"
+                :class="['mvp-selected-verse-chip', { active: reflectionVerseIds.includes(verseNo), 'has-category': isVerseNoPainted(verseNo) }]"
+                @click="toggleReflectionVerse(verseNo)"
+              >
+                {{ verseNo }}
+              </button>
+              <span v-if="!chapterVerseNos.length" class="mvp-muted">구절을 불러오는 중입니다.</span>
+            </div>
+          </div>
+          <div v-if="reflectionVerseIds.length" class="mvp-selected-range mvp-selected-range--compact">
+            <p class="mvp-selected-range-title">마음에 남은 대표 구절을 눌러보세요</p>
             <div class="mvp-selected-verse-chips">
               <button
-                v-for="verseNo in selectedVerseIds"
+                v-for="verseNo in reflectionVerseIds"
                 :key="verseNo"
                 type="button"
                 :class="['mvp-selected-verse-chip', { active: representativeVerseNo === verseNo }]"
@@ -1146,7 +1340,6 @@ watch(
               >
                 {{ verseNo }}절
               </button>
-              <span v-if="!selectedVerseIds.length" class="mvp-muted">선택한 구절이 아직 없습니다.</span>
             </div>
           </div>
           <textarea

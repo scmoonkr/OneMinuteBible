@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRouter from './modules/auth/auth.routes.js';
 import bibleRouter from './modules/bible/bible.routes.js';
 import reflectionRouter from './modules/reflections/reflection.routes.js';
+import readingRouter from './modules/reading/reading.routes.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/bible', bibleRouter);
 app.use('/api/reflections', reflectionRouter);
+app.use('/api/reading', readingRouter);
 
 app.use((error, req, res, next) => {
   console.error(error);

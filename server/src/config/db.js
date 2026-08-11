@@ -38,6 +38,9 @@ async function ensureCoreIndexes(database) {
       { key: { userNo: 1, bookNo: 1, chapterNo: 1, verseRange: 1 }, name: 'reflections_unique_userNo' },
       { key: { bookNo: 1, chapterNo: 1, updatedAt: -1 }, name: 'reflections_recent_userNo' },
     ]),
+    database.collection('reading_paints').createIndexes([
+      { key: { userId: 1, bookNo: 1, chapterNo: 1 }, name: 'reading_paints_unique_user_chapter', unique: true },
+    ]),
     database.collection('action_log').createIndexes([
       {
         key: { userNo: 1, actionType: 1, bookNo: 1, chapterNo: 1, verseNo: 1, mainCategory: 1, createdAt: -1 },
