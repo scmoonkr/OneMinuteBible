@@ -1,4 +1,4 @@
-﻿import { MongoClient } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import { env } from './env.js';
 
 let client;
@@ -11,6 +11,8 @@ async function ensureCoreIndexes(database) {
       { key: { userNo: 1 }, name: 'users_userNo' },
       { key: { email: 1 }, name: 'users_email' },
       { key: { nickname: 1 }, name: 'users_nickname' },
+      // CMS 소셜 로그인 조회 (users 컬렉션을 CMS 와 공유한다)
+      { key: { provider: 1, providerId: 1 }, name: 'users_provider_providerId' },
     ]),
     database.collection('auth_accounts').createIndexes([
       { key: { provider: 1, providerUserId: 1 }, name: 'auth_accounts_provider_user' },
@@ -41,6 +43,29 @@ async function ensureCoreIndexes(database) {
     database.collection('reading_paints').createIndexes([
       { key: { userId: 1, bookNo: 1, chapterNo: 1 }, name: 'reading_paints_unique_user_chapter', unique: true },
     ]),
+    // ── CMS (InsureDesign 에서 이식) ─────────────────────────────────────
+    database.collection('contents').createIndexes([
+      { key: { slug: 1 }, name: 'contents_slug' },
+      { key: { contentType: 1, status: 1, publishedAt: -1 }, name: 'contents_type_status' },
+      { key: { authorId: 1 }, name: 'contents_authorId' },
+    ]),
+    database.collection('contentRevisions').createIndexes([
+      { key: { contentId: 1, createdAt: -1 }, name: 'contentRevisions_content' },
+    ]),
+    database.collection('categories').createIndexes([
+      { key: { slug: 1 }, name: 'categories_slug' },
+      { key: { parentId: 1 }, name: 'categories_parentId' },
+    ]),
+    database.collection('tags').createIndexes([
+      { key: { slug: 1 }, name: 'tags_slug' },
+    ]),
+    database.collection('menus').createIndexes([
+      { key: { location: 1 }, name: 'menus_location' },
+    ]),
+    database.collection('media').createIndexes([
+      { key: { createdAt: -1 }, name: 'media_createdAt' },
+      { key: { ownerId: 1 }, name: 'media_ownerId' },
+    ]),
     database.collection('action_log').createIndexes([
       {
         key: { userNo: 1, actionType: 1, bookNo: 1, chapterNo: 1, verseNo: 1, mainCategory: 1, createdAt: -1 },
@@ -54,7 +79,7 @@ export async function connectToDatabase() {
   if (db) {
     return db;
   }
-
+console.log("env.mongoDbName=", env.mongoDbName);
   client = new MongoClient(env.mongoUri);
   await client.connect();
   db = client.db(env.mongoDbName);

@@ -17,6 +17,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
-    "mongodb": "^6.15.0"
+    "marked": "^18.0.10",
+    "mongodb": "^6.15.0",
+    "puppeteer": "^22.15.0"
   }
 }
