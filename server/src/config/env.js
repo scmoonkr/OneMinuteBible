@@ -8,9 +8,10 @@ const rootEnvPath = path.resolve(__dirname, '../../../.env');
 
 dotenv.config({ path: rootEnvPath });
 
+
 const port = Number(process.env.PORT || process.env.APP_PORT || 7710);
 const mongoHost = process.env.MONGODB_ADDR || '127.0.0.1:27017';
-const mongoDbName = process.env.MONGODB_DB || 'Bible';
+const mongoDbName = process.env.MONGODB_DB || 'OneMinuteBible';
 const mongoCollectionBibleEdit =
   process.env.MONGODB_COLLECTION_BIBLE_EDIT || 'Bibles';
 const mongoCollectionVerseTopics =

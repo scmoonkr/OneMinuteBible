@@ -834,12 +834,16 @@ async function createShareImageBlobForItems(items: ShareVerseDetail[]) {
 }
 
 async function loadChapterState() {
-  const reflectionResponse = await bible.listReflections({
-    bookNo: bookNo.value,
-    chapterNo: chapterNo.value,
-  });
+  try {
+    const reflectionResponse = await bible.listReflections({
+      bookNo: bookNo.value,
+      chapterNo: chapterNo.value,
+    });
 
-  reflections.value = reflectionResponse.data;
+    reflections.value = reflectionResponse.data;
+  } catch {
+    reflections.value = [];
+  }
 
   await loadReadingPaint();
 }
@@ -884,7 +888,9 @@ async function persistReadingPaint(payload: {
 
     await bible.saveReadingPaint(payload);
   } catch {
-    // Ignore transient sync errors; the next change will retry.
+    // Surface the failure: a silently dropped save looks like the paint
+    // simply never persisted, with nothing for the reader to act on.
+    setToast('선택한 구절을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
   }
 }
 
@@ -942,6 +948,10 @@ function buildNextSelectedItems(verse: BibleVerse) {
 }
 
 function handleVerseClick(verse: BibleVerse) {
+  if (!currentUserNo.value) {
+    setToast('로그인해야 칠한 구절이 저장됩니다.');
+  }
+
   localSelectedVerseItems.value = buildNextSelectedItems(verse);
 }
 
@@ -1158,8 +1168,13 @@ watch(
     reflectionItems.value = [];
     selectedShareReflection.value = null;
     chapterInput.value = String(chapterNo.value);
-    await loadChapterState();
-    suppressPaintSync = false;
+
+    try {
+      await loadChapterState();
+    } finally {
+      await nextTick();
+      suppressPaintSync = false;
+    }
   },
   { immediate: true },
 );

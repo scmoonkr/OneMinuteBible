@@ -28,7 +28,7 @@ function buildQuery(params = {}) {
 export async function findBibleRows(params = {}) {
   const database = getDatabase();
   const query = buildQuery(params);
-
+  
   const rows = await database
     .collection(env.mongoCollectionBibleEdit)
     .find(query, {

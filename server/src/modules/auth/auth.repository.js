@@ -47,6 +47,7 @@ export async function getNextUserNo() {
 }
 
 export async function findAuthAccountByEmail(email) {
+  console.log("111111111111111111111111111111111111111111", email);
   const database = getDatabase();
 
   return database.collection(AUTH_ACCOUNTS_COLLECTION).findOne(

@@ -1186,7 +1186,21 @@ button:disabled {
 
 .mvp-selected-verse-chips--grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.2rem;
+}
+
+/* Ten columns only fit if the chips drop to a compact size; the wider chips
+   below (대표 구절, "N절") keep the default sizing. */
+.mvp-selected-verse-chips--grid .mvp-selected-verse-chip {
+  min-height: 22px;
+  padding: 0.1rem 0.12rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+.mvp-selected-verse-chips--grid .mvp-muted {
+  grid-column: 1 / -1;
 }
 
 /* In the 나눔 verse picker every verse number is shown. Two independent states:

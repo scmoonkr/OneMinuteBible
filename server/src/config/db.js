@@ -43,7 +43,7 @@ async function ensureCoreIndexes(database) {
     database.collection('reading_paints').createIndexes([
       { key: { userId: 1, bookNo: 1, chapterNo: 1 }, name: 'reading_paints_unique_user_chapter', unique: true },
     ]),
-    // ── CMS (InsureDesign 에서 이식) ─────────────────────────────────────
+    // ── CMS (OneMinuteBible 에서 이식) ─────────────────────────────────────
     database.collection('contents').createIndexes([
       { key: { slug: 1 }, name: 'contents_slug' },
       { key: { contentType: 1, status: 1, publishedAt: -1 }, name: 'contents_type_status' },
