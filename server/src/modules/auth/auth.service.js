@@ -1,4 +1,4 @@
-﻿import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
@@ -177,7 +177,7 @@ export async function signUp(body = {}) {
 export async function login(body = {}) {
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');
-console.log("---->", body);
+
   if (!email || !password) {
     throw appError('Email and password are required.', 400);
   }

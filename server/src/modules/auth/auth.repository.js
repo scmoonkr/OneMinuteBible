@@ -1,4 +1,4 @@
-﻿import { getDatabase } from '../../config/db.js';
+import { getDatabase } from '../../config/db.js';
 
 const USERS_COLLECTION = 'users';
 const AUTH_ACCOUNTS_COLLECTION = 'auth_accounts';
@@ -47,7 +47,6 @@ export async function getNextUserNo() {
 }
 
 export async function findAuthAccountByEmail(email) {
-  console.log("111111111111111111111111111111111111111111", email);
   const database = getDatabase();
 
   return database.collection(AUTH_ACCOUNTS_COLLECTION).findOne(

@@ -1,6 +1,13 @@
 node_modules/
 **/node_modules/
 
+# pnpm 워크스페이스이므로 pnpm-lock.yaml 만 쓴다.
+# 루트에서 npm/yarn 을 실수로 돌렸을 때 생기는 락파일은 무시한다.
+package-lock.json
+**/package-lock.json
+yarn.lock
+**/yarn.lock
+
 .env
 .env.*
 !.env.example
