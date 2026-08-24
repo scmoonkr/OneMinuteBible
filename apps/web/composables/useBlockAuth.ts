@@ -1,11 +1,6 @@
-const ROLE_LEVELS: Record<string, number> = {
-  public:   0,
-  member:   1,
-  employee: 2,
-  manager:  3,
-  admin:    4,
-  super:    5,
-}
+// 역할 등급표는 서버(CMS)와 공유하는 shared/roles.js 가 단일 원본이다.
+// 'public' 은 등급표에 없고, 아래에서 `?? 0` 으로 0(비로그인)이 된다.
+import { ROLE_LEVELS } from '@shared/roles.js'
 
 type Role    = { role: string }
 type MeUser  = { id: string; name?: string; roles?: Role[] } | null

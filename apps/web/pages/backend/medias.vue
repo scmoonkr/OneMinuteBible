@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="theme-backend">
     <DefaultThemeTopbar
       :items="navItems"
@@ -27,6 +27,8 @@
 <script setup lang="ts">
 import DefaultThemeTopbar from '~/components/public/DefaultThemeTopbar.vue'
 import BackendSidebar from '~/components/admin/BackendSidebar.vue'
+
+definePageMeta({ layout: 'insure', middleware: 'backend' })
 
 const { navItems } = useBackendMenu()
 

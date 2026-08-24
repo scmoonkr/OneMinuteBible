@@ -39,7 +39,7 @@ import DefaultThemeTopbar from '~/components/public/DefaultThemeTopbar.vue'
 import BackendSidebar from '~/components/admin/BackendSidebar.vue'
 import ContentEditor from '~/components/admin/ContentEditor.vue'
 
-definePageMeta({ layout: 'insure' })
+definePageMeta({ layout: 'insure', middleware: 'backend' })
 
 const { navItems } = useBackendMenu()
 const route = useRoute()

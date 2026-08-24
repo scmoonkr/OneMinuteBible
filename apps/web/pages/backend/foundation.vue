@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="theme-backend">
     <DefaultThemeTopbar
       :items="navItems"
@@ -33,6 +33,7 @@ import ThemeFoundationPreview from '~/components/admin/ThemeFoundationPreview.vu
 
 definePageMeta({
   layout: 'insure',
+  middleware: 'backend',
 })
 
 const { navItems } = useBackendMenu()

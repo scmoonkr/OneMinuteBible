@@ -5,6 +5,16 @@ definePageMeta({
 
 const auth = useAuth();
 const router = useRouter();
+const route = useRoute();
+
+// 가드(middleware/backend.ts 등)가 붙여준 복귀 경로.
+// 오픈 리다이렉트를 막기 위해 같은 오리진의 절대경로만 허용한다.
+const redirectTo = computed(() => {
+  const raw = route.query.redirect;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof value !== 'string') return '/account';
+  return value.startsWith('/') && !value.startsWith('//') ? value : '/account';
+});
 
 const form = reactive({
   email: '',
@@ -22,7 +32,7 @@ async function submit() {
 
   try {
     await auth.login(form);
-    await router.push('/account');
+    await router.push(redirectTo.value);
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.message || '로그인 중 오류가 발생했습니다.';
   } finally {

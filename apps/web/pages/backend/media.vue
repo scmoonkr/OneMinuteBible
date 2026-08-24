@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="theme-backend">
     <DefaultThemeTopbar
       :items="navItems"
@@ -151,6 +151,7 @@ import BackendSidebar from '~/components/admin/BackendSidebar.vue'
 
 definePageMeta({
   layout: 'insure',
+  middleware: 'backend',
 })
 
 type ApiMediaItem = {

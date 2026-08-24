@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="theme-backend">
     <DefaultThemeTopbar
       :items="navItems"
@@ -72,7 +72,7 @@
 import DefaultThemeTopbar from '~/components/public/DefaultThemeTopbar.vue'
 import BackendSidebar from '~/components/admin/BackendSidebar.vue'
 
-definePageMeta({ layout: 'insure' })
+definePageMeta({ layout: 'insure', middleware: 'backend' })
 
 type PostListItem = {
   id: string

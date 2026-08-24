@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="theme-backend">
     <DefaultThemeTopbar
       :items="navItems"
@@ -80,6 +80,7 @@ import { themesMeta } from '~/themes/meta'
 
 definePageMeta({
   layout: 'insure',
+  middleware: 'backend',
 })
 
 const { navItems } = useBackendMenu()

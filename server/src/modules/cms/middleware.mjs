@@ -2,26 +2,10 @@ import { getAuthSession } from './auth-session.mjs'
 import { getUserById } from './auth-service.mjs'
 import { getConfig } from './config.mjs'
 
-// Role hierarchy: member < employee < manager < admin < super
-// super is a system-only bypass role kept for bootstrap/system operations.
-// Only member/employee/manager/admin are surfaced in the user role UI.
-// Backend (/backend/*) access is manager+, so employee is a content-viewing tier
-// (can see employee-gated pages/posts) without management access.
-export const ROLE_LEVELS = { member: 1, employee: 2, manager: 3, admin: 4, super: 5 }
-export const USER_ROLES = ['member', 'employee', 'manager', 'admin']
-
-// Check if user meets the minimum role. super role bypasses all checks.
-export function hasRole(roles = [], minRole = 'viewer') {
-  const minLevel = ROLE_LEVELS[minRole] || 1
-  return roles.some(r => {
-    if (r.role === 'super') return true
-    return (ROLE_LEVELS[r.role] || 0) >= minLevel
-  })
-}
-
-export function isSuperUser(roles = []) {
-  return roles.some(r => r.role === 'super')
-}
+// 역할 등급표는 웹과 공유하는 shared/roles.js 가 단일 원본이다.
+// 기존 import 경로를 유지하기 위해 여기서 그대로 다시 내보낸다.
+import { hasRole } from '../../../../shared/roles.js'
+export { ROLE_LEVELS, USER_ROLES, hasRole, isSuperUser } from '../../../../shared/roles.js'
 
 // TEMP(dev): synthetic super-user used when AUTH_BYPASS=true so the backend is
 // reachable without login. Remove the bypass branches once login is restored.
