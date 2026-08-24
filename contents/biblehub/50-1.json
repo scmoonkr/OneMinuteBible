@@ -1,0 +1,225 @@
+{
+  "book": "Matthew",
+  "bookNo": 50,
+  "chapterNo": 1,
+  "title": "The Genealogy and Birth of Jesus",
+  "excerpt": "Matthew 1 turns what could seem a dry list into a vibrant testament of God’s faithfulness. Every branch, every unlikely person, every twist of exile and return points to the night Joseph heard an angel say, “Do not be afraid.” From that moment forward, fear yields to faith because “God with us” has stepped into human history.",
+  "paragraphs": [
+    {
+      "paragraphNo": 1,
+      "startVerse": 1,
+      "endVerse": 17,
+      "title": "The Royal Genealogy",
+      "summary": "Matthew opens by tracing Jesus’ legal line through Joseph, anchoring Him to Abraham, the covenant father, and to David, the covenant king. The carefully structured list of “fourteen generations” underscores God’s ordered plan in history and highlights Jesus as rightful heir to the throne."
+    },
+    {
+      "paragraphNo": 2,
+      "startVerse": 18,
+      "endVerse": 25,
+      "title": "Birth of Jesus Christ",
+      "summary": "Mary is found to be “with child by the Holy Spirit.” Joseph, a just man, plans a quiet divorce until an angel assures him: “That which is conceived in her is from the Holy Spirit” (v.20). Joseph obeys, names the Child “Jesus,” and receives Him as his legal son. Matthew notes Isaiah 7:14: “They will call Him Immanuel,” affirming that in Jesus, “God with us” has arrived.Matthew 1, the opening chapter of the New Testament's first book, establishes the historical and theological foundation for the life of Jesus Christ. By tracing Jesus' lineage from Abraham and David, the chapter establishes Christ's royal and Abrahamic heritage. It then recounts the miraculous circumstances of Jesus' conception and birth, highlighting Joseph's obedient response to God's command in a dream."
+    }
+  ],
+  "people": [
+    {
+      "name": "Abraham",
+      "description": "The patriarch of the Israelites, with whom God made a covenant. His name in Hebrew is אַבְרָהָם (Avraham), meaning \"father of many.\""
+    },
+    {
+      "name": "Isaac",
+      "description": "Son of Abraham and Sarah, and father of Jacob. His name in Hebrew is יִצְחָק (Yitzchak), meaning \"he will laugh.\""
+    },
+    {
+      "name": "Jacob",
+      "description": "Son of Isaac, also known as Israel. He had twelve sons who became the tribes of Israel. His name in Hebrew is יַעֲקֹב (Ya'akov), meaning \"heel holder\" or \"supplanter.\""
+    },
+    {
+      "name": "Judah",
+      "description": "One of Jacob's twelve sons, from whom the tribe of Judah descends. His name in Hebrew is יְהוּדָה (Yehudah), meaning \"praised.\""
+    },
+    {
+      "name": "Perez",
+      "description": "Son of Judah and Tamar. His name in Hebrew is פֶּרֶץ (Peretz), meaning \"breach\" or \"burst forth.\""
+    },
+    {
+      "name": "Hezron",
+      "description": "Son of Perez. His name in Hebrew is חֶצְרוֹן (Chetzron), meaning \"enclosed\" or \"surrounded by a wall.\""
+    },
+    {
+      "name": "Ram",
+      "description": "Son of Hezron. His name in Hebrew is רָם (Ram), meaning \"high\" or \"exalted.\""
+    },
+    {
+      "name": "Amminadab",
+      "description": "Son of Ram. His name in Hebrew is עַמִּינָדָב (Amminadav), meaning \"my kinsman is noble.\""
+    },
+    {
+      "name": "Nahshon",
+      "description": "Son of Amminadab, a leader of the tribe of Judah during the Exodus. His name in Hebrew is נַחְשׁוֹן (Nachshon), meaning \"enchanter.\""
+    },
+    {
+      "name": "Salmon",
+      "description": "Son of Nahshon. His name in Hebrew is שַׂלְמוֹן (Salmon), possibly meaning \"garment\" or \"peaceable.\""
+    },
+    {
+      "name": "Boaz",
+      "description": "Son of Salmon and Rahab, husband of Ruth. His name in Hebrew is בֹּעַז (Bo'az), meaning \"in him is strength.\""
+    },
+    {
+      "name": "Obed",
+      "description": "Son of Boaz and Ruth. His name in Hebrew is עוֹבֵד (Oved), meaning \"servant\" or \"worshiper.\""
+    },
+    {
+      "name": "Jesse",
+      "description": "Father of King David. His name in Hebrew is יִשַׁי (Yishai), meaning \"gift.\""
+    },
+    {
+      "name": "David",
+      "description": "The second king of Israel, known for his heart for God. His name in Hebrew is דָּוִד (David), meaning \"beloved.\""
+    },
+    {
+      "name": "Solomon",
+      "description": "Son of David and Bathsheba, known for his wisdom. His name in Hebrew is שְׁלֹמֹה (Shlomo), meaning \"peaceful.\""
+    },
+    {
+      "name": "Rehoboam",
+      "description": "Son of Solomon, under whose reign the kingdom split. His name in Hebrew is רְחַבְעָם (Rechav'am), meaning \"the people are enlarged.\""
+    },
+    {
+      "name": "Abijah",
+      "description": "Son of Rehoboam. His name in Hebrew is אֲבִיָּה (Aviyah), meaning \"my father is Yahweh.\""
+    },
+    {
+      "name": "Asa",
+      "description": "Son of Abijah, known for his religious reforms. His name in Hebrew is אָסָא (Asa), meaning \"physician\" or \"healer.\""
+    },
+    {
+      "name": "Jehoshaphat",
+      "description": "Son of Asa, known for his judicial reforms. His name in Hebrew is יְהוֹשָׁפָט (Yehoshafat), meaning \"Yahweh has judged.\""
+    },
+    {
+      "name": "Joram",
+      "description": "Son of Jehoshaphat. His name in Hebrew is יוֹרָם (Yoram), meaning \"Yahweh is exalted.\""
+    },
+    {
+      "name": "Uzziah",
+      "description": "Also known as Azariah, a king of Judah. His name in Hebrew is עֻזִּיָּה (Uziyahu), meaning \"my strength is Yahweh.\""
+    },
+    {
+      "name": "Jotham",
+      "description": "Son of Uzziah, known for his building projects. His name in Hebrew is יוֹתָם (Yotam), meaning \"Yahweh is perfect.\""
+    },
+    {
+      "name": "Ahaz",
+      "description": "Son of Jotham, known for his idolatry. His name in Hebrew is אָחָז (Achaz), meaning \"he has grasped.\""
+    },
+    {
+      "name": "Hezekiah",
+      "description": "Son of Ahaz, known for his religious reforms. His name in Hebrew is חִזְקִיָּהוּ (Chizkiyahu), meaning \"Yahweh strengthens.\""
+    },
+    {
+      "name": "Manasseh",
+      "description": "Son of Hezekiah, known for his long and idolatrous reign. His name in Hebrew is מְנַשֶּׁה (Menashe), meaning \"causing to forget.\""
+    },
+    {
+      "name": "Amon",
+      "description": "Son of Manasseh. His name in Hebrew is אָמוֹן (Amon), meaning \"faithful\" or \"trustworthy.\""
+    },
+    {
+      "name": "Josiah",
+      "description": "Son of Amon, known for his religious reforms. His name in Hebrew is יֹאשִׁיָּהוּ (Yoshiyahu), meaning \"Yahweh supports.\""
+    },
+    {
+      "name": "Jeconiah",
+      "description": "Also known as Jehoiachin, son of Josiah. His name in Hebrew is יְכָנְיָה (Yekhonyah), meaning \"Yahweh will establish.\""
+    },
+    {
+      "name": "Shealtiel",
+      "description": "Son of Jeconiah. His name in Hebrew is שְׁאַלְתִּיאֵל (She'altiel), meaning \"I have asked of God.\""
+    },
+    {
+      "name": "Zerubbabel",
+      "description": "Son of Shealtiel, leader of the first group of Jews returning from Babylonian exile. His name in Hebrew is זְרֻבָּבֶל (Zerubbavel), meaning \"seed of Babylon.\""
+    },
+    {
+      "name": "Abiud",
+      "description": "Son of Zerubbabel. His name in Greek is Ἀβιούδ (Abioud), possibly meaning \"my father is majesty.\""
+    },
+    {
+      "name": "Eliakim",
+      "description": "Son of Abiud. His name in Hebrew is אֶלְיָקִים (Elyakim), meaning \"God will establish.\""
+    },
+    {
+      "name": "Azor",
+      "description": "Son of Eliakim. His name in Greek is Ἀζώρ (Azor), possibly meaning \"helper.\""
+    },
+    {
+      "name": "Zadok",
+      "description": "Son of Azor. His name in Hebrew is צָדוֹק (Tzadok), meaning \"righteous.\""
+    },
+    {
+      "name": "Akim",
+      "description": "Son of Zadok. His name in Greek is Ἀχείμ (Acheim), possibly meaning \"the Lord will establish.\""
+    },
+    {
+      "name": "Eliud",
+      "description": "Son of Akim. His name in Greek is Ἐλιούδ (Elioud), possibly meaning \"God is majesty.\""
+    },
+    {
+      "name": "Eleazar",
+      "description": "Son of Eliud. His name in Hebrew is אֶלְעָזָר (El'azar), meaning \"God has helped.\""
+    },
+    {
+      "name": "Matthan",
+      "description": "Son of Eleazar. His name in Greek is Ματθάν (Matthan), possibly meaning \"gift.\""
+    },
+    {
+      "name": "Jacob",
+      "description": "Son of Matthan, father of Joseph. His name in Hebrew is יַעֲקֹב (Ya'akov), meaning \"heel holder\" or \"supplanter.\""
+    },
+    {
+      "name": "Joseph",
+      "description": "Husband of Mary, legal father of Jesus. His name in Hebrew is יוֹסֵף (Yosef), meaning \"he will add.\""
+    },
+    {
+      "name": "Mary",
+      "description": "Mother of Jesus. Her name in Hebrew is מִרְיָם (Miryam), meaning \"beloved\" or \"bitter.\""
+    },
+    {
+      "name": "Jesus",
+      "description": "The Messiah, Son of God. His name in Greek is Ἰησοῦς (Iēsous), derived from the Hebrew יְהוֹשׁוּעַ (Yehoshua), meaning \"Yahweh is salvation.\""
+    }
+  ],
+  "place": [
+    {
+      "name": "Babylon",
+      "description": "Mentioned in Matthew 1:11, 12, and 17, Babylon is referenced in the context of the Babylonian exile, a significant event in Jewish history. The exile to Babylon marked a period of captivity for the Israelites, which began in 586 BC when Jerusalem was conquered by the Babylonians. The Greek term used here is \"Βαβυλῶνος\" (Babylōnos), reflecting the historical and theological significance of this period in the lineage of Jesus."
+    },
+    {
+      "name": "Bethlehem",
+      "description": "While not explicitly mentioned in Matthew 1, Bethlehem is implied as the birthplace of Jesus, which is further elaborated in Matthew 2. Bethlehem, known as the \"City of David,\" holds prophetic significance as the prophesied birthplace of the Messiah (Micah 5:2). The Hebrew root of Bethlehem is \"בֵּית לֶחֶם\" (Beit Lechem), meaning \"House of Bread,\" symbolically linking to Jesus as the \"Bread of Life.\""
+    }
+  ],
+  "events": [
+    {
+      "name": "Genealogy of Jesus Christ",
+      "description": "Matthew 1:1-17 outlines the genealogy of Jesus Christ, tracing His lineage from Abraham through David to Joseph, the husband of Mary. This genealogy establishes Jesus' legal right to the throne of David, fulfilling Old Testament prophecies. The Greek term \"γενεαλογία\" (genealogia) emphasizes the importance of lineage and heritage in Jewish tradition."
+    },
+    {
+      "name": "The Birth of Jesus Christ",
+      "description": "Matthew 1:18 describes the circumstances surrounding the birth of Jesus Christ. Mary, who was betrothed to Joseph, was found to be with child through the Holy Spirit. The Greek word \"μνηστευθείσης\" (mnēsteutheisēs) indicates a formal engagement, which was legally binding in Jewish culture."
+    },
+    {
+      "name": "Joseph's Dilemma and Angelic Revelation",
+      "description": "In Matthew 1:19-21, Joseph, described as a righteous man, considers divorcing Mary quietly to avoid public disgrace. However, an angel of the Lord appears to him in a dream, instructing him not to fear taking Mary as his wife because the child conceived in her is from the Holy Spirit. The angel tells Joseph to name the child Jesus, \"for He will save His people from their sins.\" The name Jesus, \"Ἰησοῦς\" (Iēsous), is derived from the Hebrew \"Yeshua,\" meaning \"Yahweh is salvation.\""
+    },
+    {
+      "name": "Fulfillment of Prophecy",
+      "description": "Matthew 1:22-23 highlights the fulfillment of the prophecy from Isaiah 7:14, stating, \"Behold, the virgin will be with child and will give birth to a son, and they will call Him Immanuel\" (which means, \"God with us\"). The Greek term \"Ἐμμανουήλ\" (Emmanouēl) underscores the divine presence with humanity through Jesus."
+    },
+    {
+      "name": "Joseph's Obedience",
+      "description": "In Matthew 1:24-25, Joseph obeys the angel's command. He takes Mary as his wife but does not consummate their marriage until she gives birth to a son, whom he names Jesus. This act of obedience reflects Joseph's faith and righteousness, aligning with the divine plan."
+    }
+  ]
+}
