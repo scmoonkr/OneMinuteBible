@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * BibleHub 장(chapter) 페이지를 읽어 contents/biblehub/{bookNo}-{chapterNo}.json 으로 저장한다.
+ * BibleHub 장(chapter) 페이지를 읽어 {BIBLEHUB}/biblehub/{bookNo}-{chapterNo}.json 으로 저장한다.
+ * 저장 위치는 루트 .env 의 BIBLEHUB 값을 따른다(미설정 시 contents/biblehub 로 대체).
  *
  *   node contents/script/export_biblehub.js <bookNo> [chapterNo]
  *
@@ -25,7 +26,34 @@ const fs = require('fs');
 const path = require('path');
 const { bibleTable } = require('../../docs/content/bible_table.js');
 
-const OUT_DIR = path.resolve(__dirname, '..', 'biblehub');
+// 저장 위치는 루트 .env 의 BIBLEHUB 경로 아래 biblehub/ 로 한다.
+// 예) BIBLEHUB=D:\OneDrive\0. 모줄성\Contents  ->  D:\...\Contents\biblehub
+function readEnvBiblehub() {
+  if (process.env.BIBLEHUB) return process.env.BIBLEHUB.trim();
+
+  const envPath = path.resolve(__dirname, '..', '..', '.env');
+  try {
+    const raw = fs.readFileSync(envPath, 'utf8');
+    for (const line of raw.split(/\r?\n/)) {
+      const m = line.match(/^\s*BIBLEHUB\s*=\s*(.*)$/);
+      if (!m) continue;
+      let value = m[1].trim();
+      if ((value.startsWith('"') && value.endsWith('"'))
+        || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
+      if (value) return value;
+    }
+  } catch {
+    // .env 가 없거나 읽을 수 없으면 아래 기본값으로 넘어간다.
+  }
+  return '';
+}
+
+const biblehubRoot = readEnvBiblehub();
+const OUT_DIR = biblehubRoot
+  ? path.join(biblehubRoot, 'biblehub')
+  : path.resolve(__dirname, '..', 'biblehub');
 const USER_AGENT = 'Mozilla/5.0 (compatible; OneMinuteBible/1.0; +export_biblehub.js)';
 
 // 요청 간 간격(ms). BibleHub 에 부담을 주지 않도록 순차 요청한다.
