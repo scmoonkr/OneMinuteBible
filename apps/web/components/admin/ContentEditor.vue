@@ -41,6 +41,26 @@
           />
         </div>
 
+        <!-- BibleHub 연결 (post 전용) -->
+        <label v-if="isPost" class="theme-form-field">
+          <span>
+            BibleHub Title
+            <a
+              v-if="biblehubUrl"
+              :href="biblehubUrl"
+              target="_blank"
+              rel="noopener"
+              class="theme-meta"
+              style="margin-left:8px"
+            >{{ biblehubUrl }}</a>
+          </span>
+          <input
+            v-model.trim="form.biblehubTitle"
+            maxlength="120"
+            placeholder="예) Adam — BibleHub 의 people / place / event 항목명"
+          />
+        </label>
+
         <!-- Excerpt -->
         <label class="theme-form-field">
           <span>요약 (Excerpt)</span>
@@ -634,6 +654,7 @@ const form = reactive({
   showEyebrow: true,
   bannerTextColor: 'white',
   // post-only
+  biblehubTitle: '',
   categoryIds: [] as string[],
   tagNamesInput: '',
   featured: false,
@@ -641,6 +662,15 @@ const form = reactive({
   parentId: '',
   template: 'basic',
   showInMenu: false,
+})
+
+// 입력한 제목으로 BibleHub topical 문서 주소를 만들어 확인용 링크로 보여 준다.
+// (BibleHub 규칙: 첫 글자 폴더 + 소문자 이름, 공백은 _)
+const biblehubUrl = computed(() => {
+  const raw = form.biblehubTitle?.trim()
+  if (!raw) return ''
+  const name = raw.toLowerCase().replace(/\s+/g, '_')
+  return `https://biblehub.com/topical/${name[0]}/${name}.htm`
 })
 
 // ── Conditional fetches (admin-only: categories/tags/parent-options) ─────────
@@ -1050,6 +1080,7 @@ async function loadDetail() {
     form.thumbnailImageId = c.thumbnailImageId ? String(c.thumbnailImageId) : ''
     form.status = c.status || 'draft'
     form.accessLevel = c.accessLevel || 'public'
+    form.biblehubTitle = c.biblehubTitle || ''
     form.categoryIds = (c.categoryIds || []).map(String)
     // showEyebrow defaults to true when meta is missing the field (preserves
     // existing posts' eyebrow visibility before this toggle existed).
@@ -1101,6 +1132,7 @@ function buildSaveBody(): Record<string, unknown> {
   }
   if (isPost.value) {
     base.tagNames = parseTagNames(form.tagNamesInput)
+    base.biblehubTitle = form.biblehubTitle.trim()
   }
   if (isAdmin.value) {
     base.status = form.status

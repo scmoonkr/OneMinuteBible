@@ -35,7 +35,22 @@
       </section>
 
       <footer class="theme-backend-media-picker-foot">
-        <span v-if="multiple" class="theme-meta">{{ selected.length }}개 선택됨</span>
+        <!-- 라이브러리에 없는 이미지를 여기서 바로 올리고 그대로 고를 수 있다. -->
+        <label :class="['theme-form-submit', 'theme-form-submit-secondary-soft', 'media-picker-upload', { disabled: isUploading }]">
+          <input
+            type="file"
+            accept="image/*"
+            :multiple="multiple"
+            :disabled="isUploading"
+            hidden
+            @change="onFilesSelected"
+          />
+          {{ isUploading ? '업로드 중...' : '+ 파일 업로드' }}
+        </label>
+
+        <span v-if="uploadError" class="theme-form-status error">{{ uploadError }}</span>
+        <span v-else-if="multiple" class="theme-meta">{{ selected.length }}개 선택됨</span>
+        <span v-else class="theme-meta"></span>
         <button type="button" class="theme-form-submit theme-form-submit-secondary-soft" @click="$emit('close')">취소</button>
         <button
           type="button"
@@ -72,7 +87,10 @@ const apiBase = useApiBase()
 const query = ref('')
 const selected = ref<string[]>([])
 
-const { data, pending } = useFetch<{ items: MediaItem[] }>(
+const isUploading = ref(false)
+const uploadError = ref('')
+
+const { data, pending, refresh } = useFetch<{ items: MediaItem[] }>(
   `${apiBase}/api/admin/media`,
   {
     key: 'media-picker',
@@ -93,8 +111,55 @@ const filtered = computed(() => {
 })
 
 watch(() => props.open, (o) => {
-  if (o) selected.value = []
+  if (o) {
+    selected.value = []
+    uploadError.value = ''
+  }
 })
+
+// 업로드한 이미지는 목록을 새로고침한 뒤 곧바로 선택 상태로 만들어 준다.
+// (단일 선택 모드면 마지막 한 장으로 교체, 다중이면 기존 선택에 더한다)
+async function uploadFiles(files: File[]) {
+  if (!files.length || isUploading.value) return
+
+  isUploading.value = true
+  uploadError.value = ''
+
+  try {
+    const formData = new FormData()
+    for (const file of files) formData.append('files', file)
+
+    const result = await $fetch<{ items: MediaItem[] }>(
+      `${apiBase}/api/admin/media/upload`,
+      { method: 'POST', credentials: 'include', body: formData },
+    )
+
+    // 서버가 허용하지 않는 형식은 조용히 건너뛰므로 결과가 비어 있을 수 있다.
+    if (!result.items?.length) {
+      uploadError.value = '업로드된 이미지가 없습니다. 지원 형식을 확인해 주세요.'
+      return
+    }
+
+    await refresh()
+
+    const uploadedIds = result.items.map((item) => item.id)
+    selected.value = props.multiple
+      ? [...new Set([...selected.value, ...uploadedIds])]
+      : [uploadedIds[uploadedIds.length - 1]]
+  } catch (err: unknown) {
+    const e = err as { data?: { error?: string }, message?: string }
+    uploadError.value = e?.data?.error || e?.message || '업로드에 실패했습니다.'
+  } finally {
+    isUploading.value = false
+  }
+}
+
+function onFilesSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  input.value = ''
+  uploadFiles(files)
+}
 
 function toggle(id: string) {
   if (props.multiple) {
@@ -111,3 +176,18 @@ function confirm() {
   emit('pick', [...selected.value])
 }
 </script>
+
+<style scoped>
+/* 파일 input 을 감싼 label 이라 버튼처럼 보이게만 맞춰 준다.
+   (배경/테두리는 theme-form-submit 계열 클래스가 담당) */
+.media-picker-upload {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.media-picker-upload.disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+</style>

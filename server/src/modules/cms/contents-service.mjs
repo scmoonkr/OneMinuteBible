@@ -290,6 +290,9 @@ export async function createContent(data, authorId) {
     template: data.template || null,
     styleFamily: data.styleFamily || null,
     markdown: data.markdown || '',
+    // BibleHub 연결용 제목. contents/biblehub 내보내기의 people/place/events
+    // 항목명과 맞춰 두면 해당 문서로 이어갈 수 있다. (예: "Adam")
+    biblehubTitle: typeof data.biblehubTitle === 'string' ? data.biblehubTitle.trim() : '',
     html: compiled.html,
     blocks: compiled.blocks,
     plainText: compiled.plainText,
@@ -350,6 +353,7 @@ export async function updateContent(id, fields, userId) {
   const allowed = [
     'title', 'summary', 'markdown', 'template', 'styleFamily',
     'status', 'visibility', 'accessLevel', 'thumbnailImageId', 'meta',
+    'biblehubTitle',
   ]
   const update = { updatedAt: now, updatedBy: userId || null }
 

@@ -288,25 +288,21 @@ async function saveCategory() {
       order: Number(form.order) || 0,
     }
     if (isNewMode.value) {
-      const result = await $fetch<{ item: Category }>(
+      await $fetch<{ item: Category }>(
         `${apiBase}/api/admin/categories`,
         { method: 'POST', credentials: 'include', body },
       )
-      await refresh()
-      isNewMode.value = false
-      drawerId.value = result.item.id
-      form.slug = result.item.slug
-      message.value = '카테고리가 생성되었습니다.'
     } else {
-      const result = await $fetch<{ item: Category }>(
+      await $fetch<{ item: Category }>(
         `${apiBase}/api/admin/categories/${drawerId.value}`,
         { method: 'PUT', credentials: 'include', body },
       )
-      await refresh()
-      form.slug = result.item.slug
-      message.value = '저장되었습니다.'
     }
-    setTimeout(() => { message.value = '' }, 2200)
+
+    // 저장에 성공하면 드로어를 닫는다. 갱신된 목록이 그대로 결과 확인이 된다.
+    // (실패하면 아래 catch 에서 드로어를 열어 둔 채 오류만 보여 준다 — 입력 내용을 잃지 않도록)
+    await refresh()
+    closeDrawer()
   } catch (err: unknown) {
     isError.value = true
     const e = err as { data?: { error?: string }, message?: string }

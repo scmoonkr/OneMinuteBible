@@ -62,6 +62,12 @@ async function ensureCoreIndexes(database) {
     database.collection('menus').createIndexes([
       { key: { location: 1 }, name: 'menus_location' },
     ]),
+    // BibleHub Topical (10만 건). 목록 검색·상세 조회용.
+    database.collection('biblehub_topical').createIndexes([
+      { key: { tid: 1 }, name: 'biblehub_topical_tid' },
+      { key: { link: 1 }, name: 'biblehub_topical_link' },
+      { key: { char: 1, title: 1 }, name: 'biblehub_topical_char_title' },
+    ]),
     database.collection('media').createIndexes([
       { key: { createdAt: -1 }, name: 'media_createdAt' },
       { key: { ownerId: 1 }, name: 'media_ownerId' },

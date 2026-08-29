@@ -17,6 +17,7 @@ import { listCategories, createCategory, updateCategory, deleteCategory, getCate
 import { listTags, findOrCreateTagsByNames, getTagBySlug, getTagsByIds } from './tags-service.mjs'
 import { listMenus, createMenu, updateMenu, deleteMenu } from './menus-service.mjs'
 import { listAnalysisDocs, getAnalysisDoc, createAnalysisDoc, updateAnalysisDoc, deleteAnalysisDoc } from './analysis-service.mjs'
+import { listTopical, getTopicalByTid, getTopicalByLink, listTopicalChars } from './topical-service.mjs'
 import { buildProposalData, generatePdf } from './pdf-service.mjs'
 
 
@@ -631,6 +632,44 @@ async function handleUpdateCategory(req, res, categoryId, url) {
   } catch (err) {
     sendError(req, res, 400, err instanceof Error ? err.message : 'Failed to update category')
   }
+}
+
+async function handleListTopical(req, res, url) {
+  const auth = await checkAdmin(req, 'manager')
+  if (!auth.ok) { sendError(req, res, auth.status, auth.message); return }
+
+  const result = await listTopical({
+    q: url.searchParams.get('q') || '',
+    char: url.searchParams.get('char') || '',
+    rootOnly: url.searchParams.get('root') === '1',
+    limit: Number(url.searchParams.get('limit')) || 50,
+    skip: Number(url.searchParams.get('skip')) || 0,
+  })
+  sendJson(req, res, 200, result)
+}
+
+async function handleListTopicalChars(req, res) {
+  const auth = await checkAdmin(req, 'manager')
+  if (!auth.ok) { sendError(req, res, auth.status, auth.message); return }
+  sendJson(req, res, 200, { items: await listTopicalChars() })
+}
+
+async function handleGetTopical(req, res, tid) {
+  const auth = await checkAdmin(req, 'manager')
+  if (!auth.ok) { sendError(req, res, auth.status, auth.message); return }
+
+  const item = await getTopicalByTid(tid)
+  if (!item) { sendError(req, res, 404, 'Topic not found'); return }
+  sendJson(req, res, 200, { item })
+}
+
+async function handleGetTopicalByLink(req, res, link) {
+  const auth = await checkAdmin(req, 'manager')
+  if (!auth.ok) { sendError(req, res, auth.status, auth.message); return }
+
+  const item = await getTopicalByLink(link)
+  if (!item) { sendError(req, res, 404, 'Topic not found'); return }
+  sendJson(req, res, 200, { item })
 }
 
 async function handleListTags(req, res, url) {
@@ -2090,6 +2129,27 @@ async function cmsHandler(req, res, next) {
     if (adminCategoryMatch) {
       if (req.method === 'PUT') { await handleUpdateCategory(req, res, adminCategoryMatch[1], url); return }
       if (req.method === 'DELETE') { await handleDeleteCategory(req, res, adminCategoryMatch[1], url); return }
+    }
+
+    // ── Admin: BibleHub Topical ──────────────────────────────────────────────
+    if (req.method === 'GET' && url.pathname === '/api/admin/topical/chars') {
+      await handleListTopicalChars(req, res)
+      return
+    }
+    if (req.method === 'GET' && url.pathname === '/api/admin/topical') {
+      await handleListTopical(req, res, url)
+      return
+    }
+    // /api/admin/topical/{char}/{name} — biblehub 의 topical URL 모양 그대로
+    const topicalLinkMatch = url.pathname.match(/^\/api\/admin\/topical\/([a-z0-9])\/([^/]+)$/i)
+    if (req.method === 'GET' && topicalLinkMatch) {
+      await handleGetTopicalByLink(req, res, `${topicalLinkMatch[1]}/${decodeURIComponent(topicalLinkMatch[2])}.htm`)
+      return
+    }
+    const topicalTidMatch = url.pathname.match(/^\/api\/admin\/topical\/(\d+)$/)
+    if (req.method === 'GET' && topicalTidMatch) {
+      await handleGetTopical(req, res, topicalTidMatch[1])
+      return
     }
 
     // ── Admin: Tags ───────────────────────────────────────────────────────────
