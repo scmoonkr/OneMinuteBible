@@ -1,10 +1,10 @@
 <template>
   <div class="theme-default">
     <main class="category-shell">
-      <template v-if="category">
+      <template v-if="tag">
         <header class="category-head">
-          <p class="category-eyebrow">CATEGORY</p>
-          <h1>{{ category.name }}</h1>
+          <p class="category-eyebrow">TAG</p>
+          <h1>#{{ tag.name }}</h1>
           <p class="category-meta">{{ total }}개의 글</p>
         </header>
 
@@ -64,14 +64,14 @@
         </section>
 
         <section v-else class="category-empty">
-          <p>이 카테고리에 등록된 글이 없습니다.</p>
+          <p>이 태그가 붙은 글이 없습니다.</p>
           <NuxtLink to="/">← 홈으로</NuxtLink>
         </section>
       </template>
 
       <section v-else-if="error" class="category-empty">
         <h1>404</h1>
-        <p>요청하신 카테고리를 찾을 수 없습니다.</p>
+        <p>요청하신 태그를 찾을 수 없습니다.</p>
         <NuxtLink to="/">← 홈으로</NuxtLink>
       </section>
     </main>
@@ -83,7 +83,7 @@
 <script setup lang="ts">
 import DefaultThemeFooter from '~/components/public/DefaultThemeFooter.vue'
 
-type Category = { id: string; name: string; slug: string }
+type Tag = { id: string; name: string; slug: string; usageCount?: number }
 type LabelRef = { id: string; name: string; slug: string }
 type MediaInfo = { paths?: { original?: string }; title?: string; alt?: string }
 type AuthorInfo = { id: string; name: string; avatarUrl?: string }
@@ -101,7 +101,7 @@ type Item = {
   tagLabels?: LabelRef[]
 }
 type Response = {
-  category: Category
+  tag: Tag
   items: Item[]
   total: number
   mediaMap: Record<string, MediaInfo>
@@ -115,14 +115,14 @@ const apiBase = useApiBase()
 
 const slug = computed(() => String(route.params.slug || ''))
 const url = computed(
-  () => `${apiBase}/api/public/categories/${encodeURIComponent(slug.value)}?type=post`,
+  () => `${apiBase}/api/public/tags/${encodeURIComponent(slug.value)}?type=post`,
 )
 
 const { data, error } = await useFetch<Response>(url, {
-  key: () => `category:${slug.value}`,
+  key: () => `tag:${slug.value}`,
 })
 
-const category = computed(() => data.value?.category ?? null)
+const tag = computed(() => data.value?.tag ?? null)
 const items = computed<Item[]>(() => data.value?.items ?? [])
 const total = computed(() => data.value?.total ?? 0)
 const mediaMap = computed(() => data.value?.mediaMap ?? {})
@@ -139,7 +139,7 @@ function author(item: Item): AuthorInfo | null {
 }
 
 useHead(() => ({
-  title: category.value ? `${category.value.name} — Category` : '404',
+  title: tag.value ? `#${tag.value.name} — Tag` : '404',
 }))
 
 
@@ -161,10 +161,9 @@ if (error.value) {
 
 <style scoped>
 .category-shell {
-  /* 상단 메뉴바(.theme-topbar-inner)와 동일한 폭·좌우패딩으로 정렬 */
-  max-width: var(--theme-content-max);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px var(--theme-pad-x) 80px;
+  padding: 40px 24px 80px;
 }
 
 /* ── Header ── */
@@ -363,7 +362,7 @@ if (error.value) {
 /* ── Mobile ── */
 @media (max-width: 720px) {
   .category-shell {
-    padding: 28px var(--theme-pad-x) 60px;
+    padding: 28px 18px 60px;
   }
   .category-head h1 {
     font-size: 28px;

@@ -1,8 +1,10 @@
 <template>
   <div class="theme-default">
-    <DefaultThemeTopbar :items="navItems" />
-
-    <main :class="['public-content-shell', `tpl-${template}`, { 'public-content-shell-flush': useBanner && showEyebrow }]">
+    <!-- 맨 위가 대표 이미지(hero)이거나 배너면 shell 상단 패딩을 없애
+         헤더 바로 아래에 붙인다. -->
+    <main :class="['public-content-shell', `tpl-${template}`, {
+      'public-content-shell-flush': (useBanner && showEyebrow) || (heroUrl && !useBanner),
+    }]">
       <template v-if="content">
         <!-- Hero (basic/card layout only — banner templates use the title banner instead) -->
         <section v-if="heroUrl && !useBanner" class="public-content-hero">
@@ -35,14 +37,13 @@
                (and the summary line below it) so only the body blocks render —
                useful for "homepage"-style posts where the body provides its own title. -->
           <header v-else-if="showEyebrow" class="public-content-card">
-            <p class="public-content-eyebrow">
-              <template v-if="categoryLabels.length">
-                <template v-for="(c, i) in categoryLabels" :key="c.id">
-                  <NuxtLink :to="`/categories/${c.slug}`" class="public-content-eyebrow-link">{{ c.name }}</NuxtLink>
-                  <span v-if="i < categoryLabels.length - 1" class="public-content-eyebrow-sep">·</span>
-                </template>
+            <!-- 제목 위에는 카테고리만 보여 준다. 카테고리가 없으면 줄 자체를 비운다.
+                 (예전에는 POST / PAGE 같은 콘텐츠 타입을 대신 보여 줬다) -->
+            <p v-if="categoryLabels.length" class="public-content-eyebrow">
+              <template v-for="(c, i) in categoryLabels" :key="c.id">
+                <NuxtLink :to="`/categories/${c.slug}`" class="public-content-eyebrow-link">{{ c.name }}</NuxtLink>
+                <span v-if="i < categoryLabels.length - 1" class="public-content-eyebrow-sep">·</span>
               </template>
-              <span v-else>{{ contentType.toUpperCase() }}</span>
             </p>
             <h1>{{ content.title }}</h1>
             <p class="public-content-byline">
@@ -110,7 +111,6 @@
 </template>
 
 <script setup lang="ts">
-import DefaultThemeTopbar from '~/components/public/DefaultThemeTopbar.vue'
 import DefaultThemeFooter from '~/components/public/DefaultThemeFooter.vue'
 import BlockRenderer from '~/components/blocks/BlockRenderer.vue'
 
@@ -142,7 +142,7 @@ type PublicResponse = {
 }
 
 definePageMeta({
-  layout: 'insure',
+  layout: 'content',
   validate(route) {
     return ['post', 'page', 'notice', 'gallery'].includes(String(route.params.contentType))
   },
@@ -284,7 +284,6 @@ useHead(() => {
   }
 })
 
-const navItems = useSiteNav('header')
 
 const _fallbackFooter = [
   { title: 'Template', body: '코드로 정의된 Template 안에서만 레이아웃이 결정됩니다.' },
@@ -320,13 +319,9 @@ if (error.value) {
 }
 
 /* ── Template layouts (basic·narrow·wide·sidebar·backend) ──────────────
-   basic/narrow keep the default 1200px shell + 880px reading column. */
-.tpl-wide,
-.tpl-sidebar {
-  max-width: var(--theme-content-max);
-  padding-left: var(--theme-pad-x);
-  padding-right: var(--theme-pad-x);
-}
+   모든 템플릿이 기본 shell 폭(1200px / 좌우 24px)을 그대로 쓴다.
+   -> page(주로 wide) 와 post 의 본문 폭이 같아진다.
+   wide/sidebar 는 아래에서 안쪽 읽기 칼럼(.public-content)의 폭 제한만 푼다. */
 .tpl-backend {
   max-width: none;
   padding-left: var(--theme-pad-x);
@@ -371,14 +366,31 @@ if (error.value) {
 }
 
 /* ── Hero ── */
+/* 대표 이미지(featured image)는 본문 폭이 아니라 화면 전체 폭으로 깐다.
+   가운데 정렬된 부모(.public-content-shell / .public-content) 안에서
+   좌우로 빠져나오게 하는 방법이다. .theme-default 에 overflow-x: hidden 이
+   걸려 있어 스크롤바 폭으로 가로 스크롤이 생기지 않는다. */
 .public-content-hero {
   position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
 }
 .public-content-hero img {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 340px;
   object-fit: cover;
+}
+
+/* 배너 템플릿 page 는 대표 이미지가 배너 배경으로 들어간다. 같은 규격으로 맞춘다. */
+.public-content-page-banner {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+.public-content-page-banner :deep(.block-title-inner) {
+  min-height: 340px;
 }
 
 /* ── Article + meta card ── */
@@ -468,12 +480,17 @@ if (error.value) {
   color: var(--theme-fg-faint);
 }
 
+/* 요약(excerpt)은 본문 블록과 같은 좌우 위치(36px)에 두되,
+   인용 블록(.block-quote)과 같은 계열의 박스로 보여 준다. */
 .public-content-summary {
-  margin: 0 0 24px;
-  padding: 0 36px;
+  margin: 0 36px 28px;
+  padding: 24px 32px;
+  border-left: 6px solid var(--theme-fg-mute);
+  background: var(--theme-bg-sunken);
   font-size: 17px;
-  line-height: 1.6;
-  color: var(--theme-fg-dim);
+  font-style: italic;
+  line-height: 1.9;
+  color: var(--theme-fg);
 }
 
 .public-content :deep(.block-renderer) {
@@ -556,8 +573,10 @@ if (error.value) {
     font-size: 26px;
   }
   .public-content-summary {
-    padding: 0 22px;
+    margin: 0 22px 20px;
+    padding: 16px 18px;
     font-size: 15px;
+    line-height: 1.75;
   }
   .public-content :deep(.block-renderer) {
     padding: 0 22px;

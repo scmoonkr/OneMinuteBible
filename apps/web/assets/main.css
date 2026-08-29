@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #f5f1e8;
   --panel: #fffaf2;
   --ink: #2e241d;
@@ -42,20 +42,35 @@ button:disabled {
 
 .app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
+/* 본문이 짧아도 푸터가 화면 하단에 남도록 남은 높이를 본문이 가져간다. */
+.app-shell > .page-shell {
+  flex: 1 0 auto;
+}
+
+/* 헤더 바깥은 전체 폭을 유지한다. sticky 배경과 아래 구분선이 화면 끝까지 이어져야
+   스크롤 시 본문이 옆으로 비쳐 보이지 않는다. 폭 제한은 안쪽(.site-header-inner)에서만 건다. */
 .site-header {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.8rem;
-  align-items: center;
-  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--line);
   background: rgba(255, 250, 242, 0.88);
   backdrop-filter: blur(18px);
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+/* .page-shell 과 같은 계산식이라 로고/계정 아이콘이 본문 좌우 끝과 정확히 맞는다. */
+.site-header-inner {
+  width: min(1180px, calc(100vw - 2rem));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 1rem 0;
 }
 
 .site-mobile-toggle,
@@ -91,9 +106,72 @@ button:disabled {
   align-items: center;
 }
 
+/* 메뉴는 오른쪽 정렬. 계정 영역 바로 앞에 붙는다. */
 .site-nav {
-  justify-content: center;
+  justify-content: flex-end;
   min-width: 0;
+}
+
+/* 하위 메뉴를 가진 항목. 드롭다운의 기준점이 된다. */
+.site-nav-item {
+  position: relative;
+  display: flex;
+}
+
+.nav-link-parent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.site-nav-caret {
+  font-size: 0.62em;
+  transition: transform 140ms ease-out;
+}
+
+.nav-link-parent.open .site-nav-caret {
+  transform: rotate(180deg);
+}
+
+.site-submenu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 30;
+  min-width: 168px;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(255, 250, 242, 0.98);
+  box-shadow: 0 12px 30px rgba(49, 34, 22, 0.12);
+}
+
+.site-submenu-link {
+  display: block;
+  padding: 0.55rem 0.7rem;
+  border-radius: 5px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.site-submenu-link:hover,
+.site-submenu-link.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 좁은 화면에서는 드롭다운 없이 들여쓴 목록으로 나온다. */
+.site-mobile-subnav-link {
+  padding-left: 1.6rem;
+  font-size: 0.92rem;
+  color: var(--muted);
 }
 
 .site-account {
@@ -199,6 +277,73 @@ button:disabled {
   width: min(1180px, calc(100vw - 2rem));
   margin: 0 auto;
   padding: 1.5rem 0 3rem;
+}
+
+/* 푸터도 헤더와 같은 구조 - 바깥은 전체 폭, 안쪽만 본문 폭. */
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: rgba(255, 250, 242, 0.6);
+}
+
+.site-footer-inner {
+  width: min(1180px, calc(100vw - 2rem));
+  margin: 0 auto;
+  padding: 1.6rem 0 2rem;
+  display: grid;
+  gap: 0.9rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.site-footer-brand img {
+  display: block;
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+.site-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 1.1rem;
+}
+
+.site-footer-link {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.site-footer-link:hover {
+  color: var(--accent);
+}
+
+.site-footer-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 760px) {
+  .site-footer-inner {
+    width: min(100%, calc(100vw - 0.7rem));
+    padding: 1.2rem 0 1.6rem;
+    gap: 0.7rem;
+  }
+
+  .site-footer-brand img {
+    height: 26px;
+  }
+
+  .site-footer-nav {
+    gap: 0.3rem 0.8rem;
+  }
+
+  .site-footer-link,
+  .site-footer-copy {
+    font-size: 0.82rem;
+  }
 }
 
 .landing-page {
@@ -678,13 +823,13 @@ button:disabled {
 }
 
 @media (max-width: 920px) {
-  .site-header,
+  .site-header-inner,
   .hero-grid,
   .two-column {
     grid-template-columns: 1fr;
   }
 
-  .site-header {
+  .site-header-inner {
     grid-template-columns: 1fr auto;
     align-items: center;
   }
@@ -738,9 +883,10 @@ button:disabled {
   }
 }
 
+/* 나눔은 항상 드로어(오른쪽 사이드바)로 열리므로 본문이 전체 폭을 쓴다. */
 .reading-page {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 0.9fr);
+  grid-template-columns: 1fr;
   gap: 1.5rem;
 }
 
@@ -938,8 +1084,9 @@ button:disabled {
   font-size: 0.84rem;
 }
 
+/* 나눔 버튼. 화면 폭과 무관하게 항상 보인다(누르면 나눔 드로어가 열린다). */
 .mvp-quick-jump-button {
-  display: none;
+  display: inline-flex;
 }
 
 .mvp-palette {
@@ -1620,9 +1767,6 @@ button:disabled {
     top: 4.9rem;
   }
 
-  .mvp-quick-jump-button {
-    display: inline-flex;
-  }
 }
 
 @media (max-width: 760px) {
@@ -1812,9 +1956,11 @@ button:disabled {
 }
 
 @media (max-width: 760px) {
-  .site-header {
+  .site-header-inner {
+    /* 이 구간에서는 본문(.page-shell)이 더 좁은 여백을 쓰므로 같은 식으로 맞춘다. */
+    width: min(100%, calc(100vw - 0.7rem));
     gap: 0.35rem;
-    padding: 0.42rem 0.65rem;
+    padding: 0.42rem 0;
     min-height: 44px;
   }
 

@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import type { BibleChapter, BibleVerse, ReflectionItem, SelectedVerseItem } from '~/composables/useBible';
 import { categoryPalette, findPaletteItem, type PaletteItem } from '~/data/categoryPalette';
 import { bibleBooks } from '~/data/bibleTable';
@@ -21,7 +21,6 @@ const chapterInput = ref(String(chapterNo.value));
 const selectedCategory = ref(categoryPalette[0].category);
 const showSourceCategories = ref(false);
 const showAllSharing = ref(false);
-const quickJumpTarget = ref<'read' | 'share'>('read');
 const shareDrawerOpen = ref(false);
 const reflectionText = ref('');
 const toast = ref('');
@@ -333,47 +332,14 @@ function moveToPreviousChapter() { moveToChapter(bookNo.value, chapterNo.value -
 function moveToNextChapter() { moveToChapter(bookNo.value, chapterNo.value + 1); }
 function moveToLastChapter() { moveToChapter(bookNo.value, maxChapterNo.value); }
 
-function scrollToReadTop() {
-  quickJumpTarget.value = 'read';
-  readTopRef.value?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
-  });
-}
-
-function scrollToShareSection() {
-  quickJumpTarget.value = 'share';
-  shareSectionRef.value?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
-  });
-}
-
-function isShareDrawerViewport() {
-  return import.meta.client && window.matchMedia('(max-width: 1080px)').matches;
-}
-
 function closeShareDrawer() {
   shareDrawerOpen.value = false;
 }
 
+// 나눔은 화면 폭과 무관하게 항상 드로어로 연다.
+// (데스크톱에서는 오른쪽에서 밀려 나오는 사이드바 형태)
 function toggleQuickJump() {
-  if (shareDrawerOpen.value) {
-    closeShareDrawer();
-    return;
-  }
-
-  if (quickJumpTarget.value === 'read') {
-    if (isShareDrawerViewport()) {
-      shareDrawerOpen.value = true;
-      return;
-    }
-
-    scrollToShareSection();
-    return;
-  }
-
-  scrollToReadTop();
+  shareDrawerOpen.value = !shareDrawerOpen.value;
 }
 
 function submitChapterInput() {
@@ -1257,7 +1223,7 @@ watch(
               </button>
               <button type="button" class="mvp-toolbar-button" @click="resetCurrentChapter()">선택 초기화</button>
               <button type="button" class="mvp-toolbar-button mvp-quick-jump-button" @click="toggleQuickJump()">
-                {{ shareDrawerOpen ? '닫기' : (quickJumpTarget === 'read' ? '나눔' : '읽기') }}
+                {{ shareDrawerOpen ? '닫기' : '나눔' }}
               </button>
             </div>
           <!-- </div> -->
@@ -1579,103 +1545,111 @@ watch(
   }
 }
 
-@media (max-width: 1080px) {
-  .mvp-share-drawer-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 34px;
-    height: 34px;
-    margin: -0.2rem -0.15rem 0 0;
-    border: 1px solid rgba(80, 54, 29, 0.12);
-    border-radius: 5px;
-    background: #fffdfa;
-    color: #4b3c30;
-  }
+/* 나눔 드로어. 예전에는 max-width:1080px 에서만 적용했지만,
+   이제 데스크톱에서도 같은 오른쪽 사이드바 드로어를 쓴다. */
+.mvp-share-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin: -0.2rem -0.15rem 0 0;
+  border: 1px solid rgba(80, 54, 29, 0.12);
+  border-radius: 5px;
+  background: #fffdfa;
+  color: #4b3c30;
+}
 
-  .mvp-share-drawer-backdrop {
-    display: block;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 80;
-    width: 100vw;
-    border: 0;
-    background: rgba(35, 25, 17, 0.38);
-  }
+.mvp-share-drawer-backdrop {
+  display: block;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 80;
+  width: 100vw;
+  border: 0;
+  background: rgba(35, 25, 17, 0.38);
+}
 
+.reading-page .mvp-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  width: min(390px, 100vw);
+  max-width: 100vw;
+  height: 100dvh;
+  padding: 1.1rem;
+  overflow: hidden;
+  overflow-x: hidden;
+  background: rgba(255, 251, 244, 0.98);
+  border-left: 1px solid rgba(80, 54, 29, 0.14);
+  box-shadow: -18px 0 40px rgba(47, 32, 21, 0.18);
+  transform: translateX(100%);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 180ms ease-out, visibility 180ms ease-out;
+}
+
+.reading-page .mvp-share-drawer-scroll {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(74, 52, 38, 0.32) rgba(255, 251, 244, 0.98);
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar {
+  width: 7px;
+  background: rgba(255, 251, 244, 0.98);
+}
+
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track,
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track-piece {
+  background: rgba(255, 251, 244, 0.98);
+}
+
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 251, 244, 0.98);
+  border-radius: 999px;
+  background: rgba(74, 52, 38, 0.28);
+}
+
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 52, 38, 0.42);
+}
+
+.reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-corner {
+  background: rgba(255, 251, 244, 0.98);
+}
+
+.reading-page .mvp-textarea {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.reading-page .mvp-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.reading-page.is-share-drawer-open .mvp-sidebar {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* 데스크톱에서는 읽기 영역이 넓으므로 사이드바도 조금 더 준다. */
+@media (min-width: 1081px) {
   .reading-page .mvp-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 90;
-    width: min(390px, 100vw);
-    max-width: 100vw;
-    height: 100dvh;
-    padding: 1.1rem;
-    overflow: hidden;
-    overflow-x: hidden;
-    background: rgba(255, 251, 244, 0.98);
-    border-left: 1px solid rgba(80, 54, 29, 0.14);
-    box-shadow: -18px 0 40px rgba(47, 32, 21, 0.18);
-    transform: translateX(100%);
-    visibility: hidden;
-    pointer-events: none;
-    transition: transform 180ms ease-out, visibility 180ms ease-out;
-  }
-
-  .reading-page .mvp-share-drawer-scroll {
-    height: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-color: rgba(74, 52, 38, 0.32) rgba(255, 251, 244, 0.98);
-    scrollbar-width: thin;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar {
-    width: 7px;
-    background: rgba(255, 251, 244, 0.98);
-  }
-
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track,
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-track-piece {
-    background: rgba(255, 251, 244, 0.98);
-  }
-
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb {
-    border: 2px solid rgba(255, 251, 244, 0.98);
-    border-radius: 999px;
-    background: rgba(74, 52, 38, 0.28);
-  }
-
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(74, 52, 38, 0.42);
-  }
-
-  .reading-page .mvp-share-drawer-scroll::-webkit-scrollbar-corner {
-    background: rgba(255, 251, 244, 0.98);
-  }
-
-  .reading-page .mvp-textarea {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .reading-page .mvp-textarea::-webkit-scrollbar {
-    display: none;
-  }
-
-  .reading-page.is-share-drawer-open .mvp-sidebar {
-    transform: translateX(0);
-    visibility: visible;
-    pointer-events: auto;
+    width: min(420px, 100vw);
+    padding: 1.35rem;
   }
 }
 </style>
