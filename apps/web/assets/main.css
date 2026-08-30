@@ -883,11 +883,79 @@ button:disabled {
   }
 }
 
-/* 나눔은 항상 드로어(오른쪽 사이드바)로 열리므로 본문이 전체 폭을 쓴다. */
+/* 본문 3 : biblehub 사이드바 1.
+   나눔은 자리를 차지하지 않고 드로어로 겹쳐 뜬다(.mvp-sidebar). */
 .reading-page {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 3fr 1fr;
   gap: 1.5rem;
+  align-items: start;
+}
+
+/* biblehub 장별 인물·사건·장소 */
+/* sticky 를 쓰지 않는다. 항목을 모두 펼치면 사이드바가 화면보다 길어져
+   고정하면 아래쪽이 잘려 보이지 않는다. */
+.mvp-biblehub {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.mvp-biblehub-block {
+  padding: 0.9rem 1rem;
+}
+
+.mvp-biblehub-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.98rem;
+}
+
+.mvp-biblehub-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+/* 항목을 전부 펼쳐 보여 준다. 자체 스크롤을 두지 않으므로
+   내용이 길면 페이지 스크롤을 따라 내려간다. */
+.mvp-biblehub-list {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 앞에 ∙ 를 붙인다. 절대 배치라 줄이 넘어가도 글자가 들여쓰기에 맞춰 정렬된다. */
+.mvp-biblehub-list li {
+  position: relative;
+  padding-left: 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.mvp-biblehub-list li::before {
+  content: '∙';
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+}
+
+.mvp-biblehub-list a {
+  color: var(--ink);
+}
+
+/* 연결된 글이 없는 항목. 링크가 아니라는 게 보이도록 흐리게 둔다. */
+.mvp-biblehub-plain {
+  color: var(--muted);
+}
+
+.mvp-biblehub-list a:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .mvp-card {
@@ -1756,6 +1824,7 @@ button:disabled {
   .mvp-sidebar {
     position: static;
   }
+
 
   .mvp-reading-nav,
   .mvp-reading-nav-sticky {

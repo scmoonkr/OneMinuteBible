@@ -42,7 +42,12 @@ export async function listTopical({ q = '', char = '', rootOnly = false, limit =
   if (q) {
     // 정규식 특수문자를 그대로 넣으면 검색이 깨지므로 이스케이프한다.
     const escaped = String(q).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    if (escaped) filter.title = { $regex: escaped, $options: 'i' };
+    if (escaped) {
+      // 제목과 slug 를 함께 본다. slug 는 약 7만 건에만 있으므로,
+      // 없는 문서는 제목으로만 걸린다. (예: "love" -> "A Time for Love" / "a_time_for_love")
+      const rx = { $regex: escaped, $options: 'i' };
+      filter.$or = [{ title: rx }, { slug: rx }];
+    }
   }
 
   const [items, total] = await Promise.all([

@@ -1,4 +1,6 @@
-import { findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
+import {
+  findBiblehubChapter,
+  findPostsByBiblehubSlugs, findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
 import { calcWeight, sortByWeight, weightedPick } from './verse-topics.util.js';
 import { normalizeVerseId } from '../../utils/bible-book-meta.js';
 import { createAppError, parsePositiveInteger, requireTrimmedString } from '../../utils/validation.js';
@@ -293,4 +295,94 @@ export async function recordTopicVerseAction(body = {}) {
   });
 
   return { ok: true, skipped: false };
+}
+
+// 한글이 하나라도 들어 있으면 한글 제목으로 본다.
+const HANGUL = /[가-힣]/;
+
+// biblehub 항목의 연결 키. key 가 있으면 그대로 쓰고,
+// 없으면 link("/topical/a/adam.htm")에서 파일명만 뽑아 쓴다.
+function toBiblehubSlug(item) {
+  if (item?.key) return String(item.key);
+  if (!item?.link) return '';
+
+  const file = String(item.link).split('/').pop() || '';
+  return file.replace(/\.htm$/i, '');
+}
+
+// 읽기 화면 사이드바에 쓰는 장별 인물·장소·사건.
+//
+// biblehub 항목 자체를 보여 주는 게 아니라, 그 항목의 slug 와
+// contents.biblehubSlug 가 맞는 "공개된 글"을 찾아 글 제목으로 보여 준다.
+// 한 항목에 글이 여럿이면 모두 나열하고, 맞는 글이 없으면 목록에서 빠진다.
+export async function getBiblehubChapter(params = {}) {
+  const bookNo = Number(params.bookNo);
+  const chapterNo = Number(params.chapterNo);
+  const empty = { bookNo: null, chapterNo: null, people: [], place: [], events: [] };
+
+  if (!Number.isInteger(bookNo) || !Number.isInteger(chapterNo)) return empty;
+
+  const doc = await findBiblehubChapter(bookNo, chapterNo);
+  if (!doc) return { ...empty, bookNo, chapterNo };
+
+  const groups = {
+    people: doc.people ?? [],
+    place: doc.place ?? [],
+    events: doc.events ?? [],
+  };
+
+  // 세 그룹의 slug 를 한 번에 모아 글을 한 번만 조회한다.
+  const slugs = [...new Set(
+    Object.values(groups).flat().map(toBiblehubSlug).filter(Boolean),
+  )];
+  const posts = await findPostsByBiblehubSlugs(slugs);
+
+  const bySlug = new Map();
+  for (const post of posts) {
+    const key = post.biblehubSlug;
+    if (!bySlug.has(key)) bySlug.set(key, []);
+    bySlug.get(key).push({ title: post.title, slug: post.slug });
+  }
+
+  // 맞는 글이 있으면 글 제목(+ slug), 없으면 biblehub 항목 제목만 내려준다.
+  // slug 가 없는 항목은 화면에서 링크가 아니라 텍스트로 표시된다.
+  // 서로 다른 항목이 같은 글을 가리킬 수 있어 그룹 안에서 중복을 제거한다.
+  const resolve = (items) => {
+    const seen = new Set();
+    const out = [];
+
+    for (const item of items) {
+      const posts = bySlug.get(toBiblehubSlug(item)) ?? [];
+
+      if (posts.length) {
+        for (const post of posts) {
+          if (seen.has(`post:${post.slug}`)) continue;
+          seen.add(`post:${post.slug}`);
+          out.push(post);
+        }
+        continue;
+      }
+
+      const title = item?.title?.trim();
+      if (!title || seen.has(`title:${title}`)) continue;
+      seen.add(`title:${title}`);
+      out.push({ title });
+    }
+
+    // 한글 제목을 앞으로 뺀다. 연결된 글은 대개 한글이라 먼저 눈에 들어온다.
+    // 같은 부류 안에서는 원래 순서를 지킨다 — 사건(events)은 이야기 순서라
+    // 가나다순으로 다시 정렬하면 흐름이 깨진다.
+    return [
+      ...out.filter((x) => HANGUL.test(x.title)),
+      ...out.filter((x) => !HANGUL.test(x.title)),
+    ];
+  };
+
+  return {
+    bookNo,
+    chapterNo,
+    people: resolve(groups.people),
+    place: resolve(groups.place),
+    events: resolve(groups.events),
+  };
 }

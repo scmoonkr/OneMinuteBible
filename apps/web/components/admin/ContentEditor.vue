@@ -44,7 +44,7 @@
         <!-- BibleHub 연결 (post 전용) -->
         <label v-if="isPost" class="theme-form-field">
           <span>
-            BibleHub Title
+            BibleHub slug
             <a
               v-if="biblehubUrl"
               :href="biblehubUrl"
@@ -55,9 +55,9 @@
             >{{ biblehubUrl }}</a>
           </span>
           <input
-            v-model.trim="form.biblehubTitle"
+            v-model.trim="form.biblehubSlug"
             maxlength="120"
-            placeholder="예) Adam — BibleHub 의 people / place / event 항목명"
+            placeholder="예) god, a_time_for_love — biblehub_topical 의 slug"
           />
         </label>
 
@@ -654,7 +654,7 @@ const form = reactive({
   showEyebrow: true,
   bannerTextColor: 'white',
   // post-only
-  biblehubTitle: '',
+  biblehubSlug: '',
   categoryIds: [] as string[],
   tagNamesInput: '',
   featured: false,
@@ -664,13 +664,13 @@ const form = reactive({
   showInMenu: false,
 })
 
-// 입력한 제목으로 BibleHub topical 문서 주소를 만들어 확인용 링크로 보여 준다.
-// (BibleHub 규칙: 첫 글자 폴더 + 소문자 이름, 공백은 _)
+// 입력한 slug 로 BibleHub topical 문서 주소를 만들어 확인용 링크로 보여 준다.
+// (BibleHub 규칙: 첫 글자 폴더 + slug. 예: god -> /topical/g/god.htm)
 const biblehubUrl = computed(() => {
-  const raw = form.biblehubTitle?.trim()
+  const raw = form.biblehubSlug?.trim()
   if (!raw) return ''
-  const name = raw.toLowerCase().replace(/\s+/g, '_')
-  return `https://biblehub.com/topical/${name[0]}/${name}.htm`
+  const slug = raw.toLowerCase().replace(/\s+/g, '_')
+  return `https://biblehub.com/topical/${slug[0]}/${slug}.htm`
 })
 
 // ── Conditional fetches (admin-only: categories/tags/parent-options) ─────────
@@ -1080,7 +1080,7 @@ async function loadDetail() {
     form.thumbnailImageId = c.thumbnailImageId ? String(c.thumbnailImageId) : ''
     form.status = c.status || 'draft'
     form.accessLevel = c.accessLevel || 'public'
-    form.biblehubTitle = c.biblehubTitle || ''
+    form.biblehubSlug = c.biblehubSlug || ''
     form.categoryIds = (c.categoryIds || []).map(String)
     // showEyebrow defaults to true when meta is missing the field (preserves
     // existing posts' eyebrow visibility before this toggle existed).
@@ -1132,7 +1132,7 @@ function buildSaveBody(): Record<string, unknown> {
   }
   if (isPost.value) {
     base.tagNames = parseTagNames(form.tagNamesInput)
-    base.biblehubTitle = form.biblehubTitle.trim()
+    base.biblehubSlug = form.biblehubSlug.trim()
   }
   if (isAdmin.value) {
     base.status = form.status
@@ -1221,3 +1221,12 @@ function onCancel() {
   emit('cancel')
 }
 </script>
+
+<style scoped>
+/* 드로어 하단 버튼을 오른쪽으로 붙인다.
+   테마의 .theme-backend-posts-drawer-foot 는 justify-content 가 없어 왼쪽에 몰린다.
+   (상태 메시지는 마크업의 margin-right:auto 로 계속 왼쪽에 남는다) */
+.theme-backend-posts-drawer-foot {
+  justify-content: flex-end;
+}
+</style>

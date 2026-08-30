@@ -1,4 +1,4 @@
-﻿export type BibleVerse = {
+export type BibleVerse = {
   verse: string;
   verseNo: number;
   category?: string;
@@ -99,6 +99,22 @@ type ReadChapterParams = {
   chapterNo: number;
 };
 
+// 장별 인물·장소·사건에 연결된 "글". 서버가 biblehub 항목의 slug 와
+// contents.biblehubSlug 를 맞춰 공개된 글만 추려서 내려준다.
+export type BiblehubRef = {
+  title: string;
+  /** 연결된 글이 있을 때만 있다. 없으면 biblehub 항목 제목만 표시한다. */
+  slug?: string;
+};
+
+export type BiblehubChapter = {
+  bookNo: number | null;
+  chapterNo: number | null;
+  people: BiblehubRef[];
+  place: BiblehubRef[];
+  events: BiblehubRef[];
+};
+
 export function useBible() {
   const config = useRuntimeConfig();
 
@@ -111,6 +127,14 @@ export function useBible() {
   async function listBookChapters(query: { bookNo: number }) {
     return await $fetch<{ ok: boolean; data: BibleChapterSummary[] }>(
       `${config.public.apiBase}/api/bible/chapters`,
+      { query },
+    );
+  }
+
+  // biblehub 장별 부가정보. 아직 수집되지 않은 장은 빈 배열로 돌아온다.
+  async function readBiblehubChapter(query: { bookNo: number; chapterNo: number }) {
+    return await $fetch<{ ok: boolean; data: BiblehubChapter }>(
+      `${config.public.apiBase}/api/bible/biblehub`,
       { query },
     );
   }
@@ -216,6 +240,7 @@ export function useBible() {
   return {
     readChapter,
     listBookChapters,
+    readBiblehubChapter,
     listTopicVerses,
     recordTopicVerseAction,
     listReflections,

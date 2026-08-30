@@ -332,6 +332,28 @@ function moveToPreviousChapter() { moveToChapter(bookNo.value, chapterNo.value -
 function moveToNextChapter() { moveToChapter(bookNo.value, chapterNo.value + 1); }
 function moveToLastChapter() { moveToChapter(bookNo.value, maxChapterNo.value); }
 
+// ── biblehub 장별 부가정보 (인물 · 사건 · 장소) ───────────────────────────
+// key 를 장마다 다르게 준다. 고정 key 를 쓰면 장을 옮겨도 첫 장의 응답이
+// 캐시에서 그대로 나온다(위 bible-read-* 와 같은 방식).
+const { data: biblehubData } = await useAsyncData(
+  () => `read-biblehub-${bookNo.value}-${chapterNo.value}`,
+  () => bible.readBiblehubChapter({ bookNo: bookNo.value, chapterNo: chapterNo.value }),
+  {
+    watch: [bookNo, chapterNo],
+    default: () => ({ ok: true, data: { bookNo: null, chapterNo: null, people: [], place: [], events: [] } }),
+  },
+);
+
+// 표시 순서: 인물 -> 장소 -> 사건
+const biblehubGroups = computed(() => {
+  const d = biblehubData.value?.data;
+  return [
+    { key: 'people', label: '인물', items: d?.people ?? [] },
+    { key: 'place', label: '장소', items: d?.place ?? [] },
+    { key: 'events', label: '사건', items: d?.events ?? [] },
+  ];
+});
+
 function closeShareDrawer() {
   shareDrawerOpen.value = false;
 }
@@ -1276,6 +1298,28 @@ watch(
         </div>
       </section>
     </section>
+
+    <!-- 오른쪽 1/4: biblehub 의 장별 인물·사건·장소 -->
+    <aside class="mvp-biblehub">
+      <section
+        v-for="group in biblehubGroups"
+        :key="group.key"
+        class="mvp-reader-section mvp-biblehub-block"
+      >
+        <h3 class="mvp-biblehub-title">
+          {{ group.label }}
+          <span class="mvp-biblehub-count">{{ group.items.length }}</span>
+        </h3>
+        <ul v-if="group.items.length" class="mvp-biblehub-list">
+          <li v-for="item in group.items" :key="item.slug || item.title">
+            <!-- 연결된 글이 있으면 그 글로, 없으면 biblehub 항목 제목만 -->
+            <NuxtLink v-if="item.slug" :to="`/post/${item.slug}`">{{ item.title }}</NuxtLink>
+            <span v-else class="mvp-biblehub-plain">{{ item.title }}</span>
+          </li>
+        </ul>
+        <p v-else class="mvp-muted">자료가 없습니다.</p>
+      </section>
+    </aside>
 
     <button
       v-if="shareDrawerOpen"
