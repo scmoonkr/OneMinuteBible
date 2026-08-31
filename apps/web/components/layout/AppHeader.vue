@@ -33,6 +33,13 @@ onMounted(() => document.addEventListener('click', handleDocumentClick));
 onBeforeUnmount(() => document.removeEventListener('click', handleDocumentClick));
 
 function isMenuActive(path: string) {
+  // 하위 메뉴만 가진 상위 항목은 자기 경로가 없다(to: '').
+  // 이걸 걸러 두지 않으면 startsWith('/') 가 모든 경로에 걸려
+  // 드롭다운 메뉴가 항상 선택된 것으로 보인다.
+  if (!path) {
+    return false;
+  }
+
   if (path === '/') {
     return route.path === '/';
   }

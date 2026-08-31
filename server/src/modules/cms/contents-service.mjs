@@ -214,12 +214,18 @@ function serializeContent(doc) {
 export async function listContents({
   contentType = null,
   status = null,
+  categoryId = null,
+  tagId = null,
+  sort = 'updated',
   limit = 50,
   skip = 0,
 } = {}) {
   const db = await getMongoDb()
   const filter = { isDeleted: { $ne: true } }
   if (contentType) filter.contentType = contentType
+  // categoryIds/tagIds 는 ObjectId 배열이라 값 하나를 그대로 두면 배열 안에 있는지로 걸린다.
+  if (categoryId && ObjectId.isValid(categoryId)) filter.categoryIds = new ObjectId(categoryId)
+  if (tagId && ObjectId.isValid(tagId)) filter.tagIds = new ObjectId(tagId)
   if (status) {
     filter.status = status
   } else {
@@ -228,10 +234,17 @@ export async function listContents({
     filter.status = { $ne: 'deleted' }
   }
 
+  // 제목순은 페이지를 넘겨도 순서가 유지돼야 하므로 DB 에서 정렬한다.
+  // 기본 이진 정렬은 한글이 영문 뒤로 밀리고 대소문자도 갈라져서,
+  // 한국어 collation 으로 사람이 읽는 순서에 맞춘다.
+  const byTitle = sort === 'title'
+  let cursor = db.collection('contents')
+    .find(filter)
+    .sort(byTitle ? { title: 1 } : { updatedAt: -1 })
+  if (byTitle) cursor = cursor.collation({ locale: 'ko' })
+
   const [items, total] = await Promise.all([
-    db.collection('contents')
-      .find(filter)
-      .sort({ updatedAt: -1 })
+    cursor
       .skip(Number(skip) || 0)
       .limit(Math.min(Number(limit) || 50, 200))
       .toArray(),

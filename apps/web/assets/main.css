@@ -161,9 +161,16 @@ button:disabled {
   white-space: nowrap;
 }
 
-.site-submenu-link:hover,
-.site-submenu-link.active {
+.site-submenu-link:hover {
   background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* 고른 뒤에는 바탕색을 드롭다운 원래 색으로 되돌린다.
+   (마우스가 그대로 올려져 있어도 강조가 남지 않게 :hover 도 같이 지정한다) */
+.site-submenu-link.active,
+.site-submenu-link.active:hover {
+  background: transparent;
   color: var(--accent);
 }
 
@@ -266,11 +273,27 @@ button:disabled {
   object-fit: cover;
 }
 
-.nav-link.active,
 .primary-button {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+}
+
+/* 상단 메뉴는 마우스를 올렸을 때만 바탕색이 바뀐다. */
+.nav-link:hover,
+.nav-link-parent.open {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+/* 고른 메뉴는 바탕색을 원래대로 두고 글자색으로만 표시한다.
+   마우스가 그대로 올려져 있어도 강조가 남지 않도록 :hover 도 같이 지정한다. */
+.nav-link.active,
+.nav-link.active:hover {
+  background: white;
+  color: var(--accent);
+  border-color: var(--line);
 }
 
 .page-shell {

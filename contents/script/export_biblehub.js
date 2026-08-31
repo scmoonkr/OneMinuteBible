@@ -4,10 +4,13 @@
  * BibleHub 장(chapter) 페이지를 읽어 {BIBLEHUB}/biblehub/{bookNo}-{chapterNo}.json 으로 저장한다.
  * 저장 위치는 루트 .env 의 BIBLEHUB 값을 따른다(미설정 시 contents/biblehub 로 대체).
  *
- *   node contents/script/export_biblehub.js <bookNo> [chapterNo]
+ *   node contents/script/export_biblehub.js <bookNo> [chapterNo] [--from=N] [--to=M]
  *
- *   node contents/script/export_biblehub.js 50 1   -> 50-1.json (마태복음 1장)
- *   node contents/script/export_biblehub.js 50     -> 마태복음 28개 장 전부
+ *   node contents/script/export_biblehub.js 50 1            -> 50-1.json (마태복음 1장)
+ *   node contents/script/export_biblehub.js 50              -> 마태복음 28개 장 전부
+ *   node contents/script/export_biblehub.js 1 --from=13     -> 창세기 13장부터 끝까지
+ *   node contents/script/export_biblehub.js 1 --to=20       -> 창세기 1~20장
+ *   node contents/script/export_biblehub.js 1 --from=13 --to=20  -> 창세기 13~20장
  *
  * bookNo 는 docs/content/bible_table.js 기준(구약 1~46, 신약 50~76).
  *
@@ -293,16 +296,42 @@ async function exportChapter(book, chapterNo) {
 // ── CLI ──────────────────────────────────────────────────────────────────────
 
 function usage() {
-  console.error('사용법: node contents/script/export_biblehub.js <bookNo> [chapterNo]');
+  console.error('사용법: node contents/script/export_biblehub.js <bookNo> [chapterNo] [--from=N] [--to=M]');
   console.error('  bookNo    docs/content/bible_table.js 기준 (구약 1~46, 신약 50~76)');
   console.error('  chapterNo 생략하면 해당 권의 모든 장을 각각 저장');
+  console.error('  --from=N  N 장부터 (생략하면 1)');
+  console.error('  --to=M    M 장까지 (생략하면 마지막 장)');
   console.error('');
-  console.error('예) node contents/script/export_biblehub.js 50 1   -> 50-1.json');
-  console.error('    node contents/script/export_biblehub.js 50     -> 마태복음 28개 장');
+  console.error('예) node contents/script/export_biblehub.js 50 1              -> 50-1.json');
+  console.error('    node contents/script/export_biblehub.js 50                -> 마태복음 28개 장');
+  console.error('    node contents/script/export_biblehub.js 1 --from=13 --to=20  -> 창세기 13~20장');
+}
+
+// --from=13 처럼 값이 붙은 것은 opts 로, 나머지는 위치 인자로 나눈다.
+function parseArgv(argv) {
+  const opts = {};
+  const positional = [];
+  for (const a of argv) {
+    const m = a.match(/^--([A-Za-z][A-Za-z0-9-]*)(?:=(.*))?$/);
+    if (m) opts[m[1]] = m[2] === undefined ? true : m[2];
+    else positional.push(a);
+  }
+  return { opts, positional };
+}
+
+// --from / --to 값을 검사해 숫자로 바꾼다. 없으면 undefined.
+function parseBound(value, name, maxChapter) {
+  if (value === undefined) return undefined;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > maxChapter) {
+    throw new Error(`--${name} 은 1 ~ ${maxChapter} 사이의 정수여야 합니다 (받은 값: ${value}).`);
+  }
+  return n;
 }
 
 async function main() {
-  const [bookArg, chapterArg] = process.argv.slice(2);
+  const { opts, positional } = parseArgv(process.argv.slice(2));
+  const [bookArg, chapterArg] = positional;
 
   if (!bookArg) {
     usage();
@@ -328,8 +357,29 @@ async function main() {
 
   let chapters;
   if (chapterArg === undefined) {
-    chapters = Array.from({ length: book.chapter }, (_, i) => i + 1);
+    // 범위를 주지 않으면 1 ~ 마지막 장.
+    let from;
+    let to;
+    try {
+      from = parseBound(opts.from, 'from', book.chapter) ?? 1;
+      to = parseBound(opts.to, 'to', book.chapter) ?? book.chapter;
+    } catch (error) {
+      console.error(error.message);
+      process.exitCode = 1;
+      return;
+    }
+    if (from > to) {
+      console.error(`--from(${from}) 이 --to(${to}) 보다 큽니다.`);
+      process.exitCode = 1;
+      return;
+    }
+    chapters = Array.from({ length: to - from + 1 }, (_, i) => from + i);
   } else {
+    if (opts.from !== undefined || opts.to !== undefined) {
+      console.error('chapterNo 를 직접 준 경우에는 --from/--to 를 함께 쓸 수 없습니다.');
+      process.exitCode = 1;
+      return;
+    }
     const chapterNo = Number(chapterArg);
     if (!Number.isInteger(chapterNo) || chapterNo < 1 || chapterNo > book.chapter) {
       console.error(`chapterNo 는 1 ~ ${book.chapter} 사이여야 합니다 (${book.english}).`);
@@ -340,7 +390,8 @@ async function main() {
   }
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  console.log(`${book.english} (${book.church || book.catholic}) — ${chapters.length}개 장`);
+  const range = chapters.length > 1 ? ` (${chapters[0]}~${chapters[chapters.length - 1]}장)` : '';
+  console.log(`${book.english} (${book.church || book.catholic}) — ${chapters.length}개 장${range}`);
 
   const failures = [];
 

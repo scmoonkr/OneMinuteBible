@@ -34,5 +34,9 @@ yarn-error.log*
 
 *.zip
 
+# topical 은 LLM 으로 글을 만드는 작업 폴더다.
+# 내보낸 주제 json 과 LLM 결과물이 오가는 자리라 저장소에는 넣지 않는다.
+contents/topical/
+
 .DS_Store
 Thumbs.db

@@ -865,6 +865,9 @@ async function handleListContents(req, res, url) {
   const { items, total } = await listContents({
     contentType: url.searchParams.get('type') || null,
     status: url.searchParams.get('status') || null,
+    categoryId: url.searchParams.get('category') || null,
+    tagId: url.searchParams.get('tag') || null,
+    sort: url.searchParams.get('sort') || 'updated',
     limit: url.searchParams.get('limit') || 50,
     skip: url.searchParams.get('skip') || 0,
   })

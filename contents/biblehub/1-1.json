@@ -1,0 +1,191 @@
+{
+  "book": "Genesis",
+  "bookNo": 1,
+  "chapterNo": 1,
+  "title": "The Creation",
+  "excerpt": "God speaks the universe into being, crafting “the heavens and the earth” from nothing. At first the planet is “formless and void,” wrapped in darkness, while “the Spirit of God was hovering over the surface of the waters”. God commands, “Let there be light,” separating light from darkness and naming them Day and Night. Evening and morning mark the first day. A “vault” (expanse) is formed to divide the waters, creating the sky and setting boundaries for the oceans below. Evening and morning—day two. Dry ground emerges, called Earth, with gathered waters named Seas. God fills the land with grass, herbs, and fruit trees, each producing seed “according to its kind.” Evening and morning—day three. Lights are set in the sky “for signs and seasons, and for days and years.” The greater light rules the day, the lesser the night, along with the stars. Evening and morning—day four. Waters and skies burst with life—fish of every size, birds to soar above. God blesses them to “be fruitful and multiply.” Evening and morning—day five. Livestock, creeping things, and wild beasts appear, each “according to its kind.” God sees they are good. “Let Us make man in Our image.” Male and female are created, blessed to rule over earth and creatures. God grants plants for food and surveys all He has made: “very good.” Evening and morning—the sixth day.In Genesis Chapter 1, the captivating account of the world's creation unfolds, displaying God's omnipotent hand shaping the universe from formlessness into a realm teeming with life and abundance. From the establishment of light and darkness to the formation of diverse life forms, the chapter takes the reader on a remarkable journey through the six days of creation.",
+  "paragraphs": [
+    {
+      "paragraphNo": 1,
+      "startVerse": 1,
+      "endVerse": 2,
+      "title": "Creation’s Opening Scene",
+      "summary": "God speaks the universe into being, crafting “the heavens and the earth” from nothing. At first the planet is “formless and void,” wrapped in darkness, while “the Spirit of God was hovering over the surface of the waters”."
+    },
+    {
+      "paragraphNo": 2,
+      "startVerse": 3,
+      "endVerse": 5,
+      "title": "Day One: Light",
+      "summary": "God commands, “Let there be light,” separating light from darkness and naming them Day and Night. Evening and morning mark the first day."
+    },
+    {
+      "paragraphNo": 3,
+      "startVerse": 6,
+      "endVerse": 8,
+      "title": "Day Two: Sky and Sea",
+      "summary": "A “vault” (expanse) is formed to divide the waters, creating the sky and setting boundaries for the oceans below. Evening and morning—day two."
+    },
+    {
+      "paragraphNo": 4,
+      "startVerse": 9,
+      "endVerse": 13,
+      "title": "Day Three: Land and Plants",
+      "summary": "Dry ground emerges, called Earth, with gathered waters named Seas. God fills the land with grass, herbs, and fruit trees, each producing seed “according to its kind.” Evening and morning—day three."
+    },
+    {
+      "paragraphNo": 5,
+      "startVerse": 14,
+      "endVerse": 19,
+      "title": "Day Four: Sun, Moon, and Stars",
+      "summary": "Lights are set in the sky “for signs and seasons, and for days and years.” The greater light rules the day, the lesser the night, along with the stars. Evening and morning—day four."
+    },
+    {
+      "paragraphNo": 6,
+      "startVerse": 20,
+      "endVerse": 23,
+      "title": "Day Five: Fish and Birds",
+      "summary": "Waters and skies burst with life—fish of every size, birds to soar above. God blesses them to “be fruitful and multiply.” Evening and morning—day five."
+    },
+    {
+      "paragraphNo": 7,
+      "startVerse": 24,
+      "endVerse": 25,
+      "title": "First Part of Day Six: Land Animals",
+      "summary": "Livestock, creeping things, and wild beasts appear, each “according to its kind.” God sees they are good."
+    },
+    {
+      "paragraphNo": 8,
+      "startVerse": 26,
+      "endVerse": 31,
+      "title": "Second Part of Day Six: Humankind",
+      "summary": "“Let Us make man in Our image.” Male and female are created, blessed to rule over earth and creatures. God grants plants for food and surveys all He has made: “very good.” Evening and morning—the sixth day.In Genesis Chapter 1, the captivating account of the world's creation unfolds, displaying God's omnipotent hand shaping the universe from formlessness into a realm teeming with life and abundance. From the establishment of light and darkness to the formation of diverse life forms, the chapter takes the reader on a remarkable journey through the six days of creation."
+    }
+  ],
+  "people": [
+    {
+      "name": "God (Elohim)",
+      "description": "Description: The central figure in Genesis 1, God is the Creator of the heavens and the earth. The Hebrew word used here is \"Elohim\" (אֱלֹהִים), which is a plural noun but is used with singular verbs, indicating the complexity and unity of God. Genesis 1:1 states, \"In the beginning God created the heavens and the earth.\""
+    },
+    {
+      "name": "The Spirit of God (Ruach Elohim)",
+      "description": "Description: The Spirit of God is mentioned as moving over the surface of the waters. The Hebrew term \"Ruach\" (רוּחַ) can mean spirit, wind, or breath, indicating the active presence of God in creation. Genesis 1:2 says, \"Now the earth was formless and void, and darkness was over the surface of the deep. And the Spirit of God was hovering over the surface of the waters.\""
+    },
+    {
+      "name": "Man (Adam)",
+      "description": "Description: Although not named in Genesis 1, humanity is created in the image of God. The term \"Adam\" (אָדָם) is used in Genesis 1:26-27 to refer to mankind collectively. Genesis 1:26 states, \"Then God said, 'Let Us make man in Our image, after Our likeness, to rule over the fish of the sea and the birds of the air, over the livestock, and over all the earth itself and every creature that crawls upon it.'\""
+    }
+  ],
+  "place": [
+    {
+      "name": "The Heavens (שָׁמַיִם, shamayim)",
+      "description": "Genesis 1:1: \"In the beginning God created the heavens and the earth.\" The term \"heavens\" refers to the expanse above the earth, encompassing the sky and the celestial realm. In Hebrew, \"shamayim\" can denote both the physical sky and the spiritual heavens."
+    },
+    {
+      "name": "The Earth (אֶרֶץ, eretz)",
+      "description": "Genesis 1:1: \"In the beginning God created the heavens and the earth.\" \"Eretz\" in Hebrew signifies the physical land or ground. It is the foundational element of creation, representing the material world that God formed and filled."
+    },
+    {
+      "name": "The Deep (תְּהוֹם, tehom)",
+      "description": "Genesis 1:2: \"Now the earth was formless and void, and darkness was over the surface of the deep.\" \"Tehom\" refers to the primordial waters or abyss. It conveys the concept of a chaotic, unformed state before God's creative order was established."
+    },
+    {
+      "name": "The Waters (מַיִם, mayim)",
+      "description": "Genesis 1:2: \"And the Spirit of God was hovering over the surface of the waters.\" \"Mayim\" is the Hebrew word for waters, indicating the presence of water as a fundamental element in the creation narrative. It is separated and organized by God during creation."
+    },
+    {
+      "name": "The Expanse (רָקִיעַ, raqia)",
+      "description": "Genesis 1:6: \"And God said, 'Let there be an expanse between the waters, to separate the waters from the waters.'\" \"Raqia\" is often translated as \"firmament\" or \"expanse.\" It describes the sky or atmosphere that God created to divide the waters above from the waters below."
+    },
+    {
+      "name": "Dry Ground (יַבָּשָׁה, yabashah)",
+      "description": "Genesis 1:9: \"And God said, 'Let the waters under the heavens be gathered into one place, so that the dry land may appear.'\" \"Yabashah\" refers to the dry land that emerged when God gathered the waters. It is the solid ground that became the habitat for terrestrial life."
+    }
+  ],
+  "events": [
+    {
+      "name": "Creation of the Heavens and the Earth",
+      "description": "\"In the beginning God created the heavens and the earth.\" (Genesis 1:1) The Hebrew word for \"created\" is \"בָּרָא\" (bara), indicating creation ex nihilo, or creation out of nothing."
+    },
+    {
+      "name": "The Earth Formless and Void",
+      "description": "\"Now the earth was formless and void, and darkness was over the surface of the deep. And the Spirit of God was hovering over the surface of the waters.\" (Genesis 1:2) \"Formless and void\" translates from \"תֹהוּ וָבֹהוּ\" (tohu va-bohu), suggesting chaos or emptiness."
+    },
+    {
+      "name": "Creation of Light",
+      "description": "\"And God said, 'Let there be light,' and there was light.\" (Genesis 1:3) The Hebrew word for \"light\" is \"אוֹר\" (or)."
+    },
+    {
+      "name": "Separation of Light from Darkness",
+      "description": "\"God saw that the light was good, and He separated the light from the darkness.\" (Genesis 1:4) The act of separation is \"בָּדַל\" (badal) in Hebrew."
+    },
+    {
+      "name": "Naming of Day and Night",
+      "description": "\"God called the light 'day,' and the darkness He called 'night.' And there was evening, and there was morning—the first day.\" (Genesis 1:5) \"Day\" is \"יוֹם\" (yom) and \"night\" is \"לַיְלָה\" (laylah)."
+    },
+    {
+      "name": "Creation of the Expanse (Sky)",
+      "description": "\"And God said, 'Let there be an expanse between the waters, to separate the waters from the waters.'\" (Genesis 1:6) \"Expanse\" is \"רָקִיעַ\" (raqia), often translated as \"firmament.\""
+    },
+    {
+      "name": "Separation of Waters",
+      "description": "\"So God made the expanse and separated the waters beneath it from the waters above. And it was so.\" (Genesis 1:7)"
+    },
+    {
+      "name": "Naming of Heaven",
+      "description": "\"God called the expanse 'heaven.' And there was evening, and there was morning—the second day.\" (Genesis 1:8) \"Heaven\" is \"שָׁמַיִם\" (shamayim)."
+    },
+    {
+      "name": "Gathering of Waters and Appearance of Dry Land",
+      "description": "\"And God said, 'Let the waters under the heavens be gathered into one place, so that the dry land may appear.' And it was so.\" (Genesis 1:9)"
+    },
+    {
+      "name": "Naming of Earth and Seas",
+      "description": "\"God called the dry land 'earth,' and the gathering of waters He called 'seas.' And God saw that it was good.\" (Genesis 1:10) \"Earth\" is \"אֶרֶץ\" (eretz) and \"seas\" is \"יָם\" (yam)."
+    },
+    {
+      "name": "Creation of Vegetation",
+      "description": "\"Then God said, 'Let the earth bring forth vegetation: seed-bearing plants and fruit trees, each bearing fruit with seed according to its kind.' And it was so.\" (Genesis 1:11)"
+    },
+    {
+      "name": "Creation of Lights in the Expanse",
+      "description": "\"And God said, 'Let there be lights in the expanse of the heavens to separate the day from the night, and let them serve as signs to mark the seasons and days and years.'\" (Genesis 1:14)"
+    },
+    {
+      "name": "Creation of Sun, Moon, and Stars",
+      "description": "\"God made two great lights—the greater light to rule the day and the lesser light to rule the night. He also made the stars.\" (Genesis 1:16)"
+    },
+    {
+      "name": "Placement of Lights in the Expanse",
+      "description": "\"God set them in the expanse of the heavens to give light on the earth,\" (Genesis 1:17)"
+    },
+    {
+      "name": "Creation of Sea Creatures and Birds",
+      "description": "\"And God said, 'Let the waters teem with living creatures, and let birds fly above the earth in the open expanse of the sky.'\" (Genesis 1:20)"
+    },
+    {
+      "name": "Blessing of Sea Creatures and Birds",
+      "description": "\"God blessed them and said, 'Be fruitful and multiply and fill the waters of the seas, and let birds multiply on the earth.'\" (Genesis 1:22)"
+    },
+    {
+      "name": "Creation of Land Animals",
+      "description": "\"And God said, 'Let the earth bring forth living creatures according to their kinds: livestock, creatures that move along the ground, and wild animals, each according to its kind.' And it was so.\" (Genesis 1:24)"
+    },
+    {
+      "name": "Creation of Mankind",
+      "description": "\"Then God said, 'Let Us make man in Our image, after Our likeness, to rule over the fish of the sea and the birds of the air and the livestock, and over all the earth itself and every creature that crawls upon it.'\" (Genesis 1:26) \"Image\" is \"צֶלֶם\" (tselem) and \"likeness\" is \"דְּמוּת\" (demut)."
+    },
+    {
+      "name": "Blessing of Mankind",
+      "description": "\"God blessed them and said to them, 'Be fruitful and multiply, and fill the earth and subdue it; rule over the fish of the sea and the birds of the air and every creature that crawls upon the earth.'\" (Genesis 1:28)"
+    },
+    {
+      "name": "Provision of Food",
+      "description": "\"Then God said, 'Behold, I have given you every seed-bearing plant on the face of all the earth and every tree whose fruit contains seed. They will be yours for food.'\" (Genesis 1:29)"
+    },
+    {
+      "name": "Completion of Creation",
+      "description": "\"God saw all that He had made, and it was very good. And there was evening, and there was morning—the sixth day.\" (Genesis 1:31)"
+    }
+  ]
+}

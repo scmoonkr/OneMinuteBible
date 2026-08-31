@@ -1,0 +1,161 @@
+{
+  "book": "Genesis",
+  "bookNo": 1,
+  "chapterNo": 3,
+  "title": "The Serpent's Deception",
+  "excerpt": "The crafty serpent questions God’s word and motives, persuading Eve to focus on what is forbidden and to distrust God’s goodness. Eve eats, Adam follows, and their eyes open to shame; they sew fig leaves together, attempting self–made cover-ups. God walks in the cool of the day; the pair hide. Loving but just, He probes with “Where are you?” and each blames another. The serpent is sentenced to crawl and taste dust. God foretells enmity between the serpent’s line and the woman’s Seed: a wound to the heel, a crushed head. Pain intensifies in childbirth; relationships feel the strain of rivalry. Adam’s labor becomes toil, ending in death—“for dust you are.” Adam names his wife “Eve.” God clothes them with skins—grace amid judgment—and stations cherubim to guard the way to the tree of life.Genesis Chapter 3 marks a pivotal moment in humanity's divine narrative—the disobedience of Adam and Eve leading to the original sin, and their subsequent expulsion from the Garden of Eden. The crafty serpent's successful deception ushers in a sequence of events that fundamentally alters the state of the created world and humanity's place within it.",
+  "paragraphs": [
+    {
+      "paragraphNo": 1,
+      "startVerse": 1,
+      "endVerse": 5,
+      "title": "The Serpent’s Deception",
+      "summary": "The crafty serpent questions God’s word and motives, persuading Eve to focus on what is forbidden and to distrust God’s goodness."
+    },
+    {
+      "paragraphNo": 2,
+      "startVerse": 6,
+      "endVerse": 7,
+      "title": "The Fall and Awakening",
+      "summary": "Eve eats, Adam follows, and their eyes open to shame; they sew fig leaves together, attempting self–made cover-ups."
+    },
+    {
+      "paragraphNo": 3,
+      "startVerse": 8,
+      "endVerse": 13,
+      "title": "Confrontation in the Garden",
+      "summary": "God walks in the cool of the day; the pair hide. Loving but just, He probes with “Where are you?” and each blames another."
+    },
+    {
+      "paragraphNo": 4,
+      "startVerse": 14,
+      "endVerse": 15,
+      "title": "Curses upon the Serpent and Promise",
+      "summary": "The serpent is sentenced to crawl and taste dust. God foretells enmity between the serpent’s line and the woman’s Seed: a wound to the heel, a crushed head."
+    },
+    {
+      "paragraphNo": 5,
+      "startVerse": 16,
+      "endVerse": 19,
+      "title": "Consequences for Woman and Man",
+      "summary": "Pain intensifies in childbirth; relationships feel the strain of rivalry. Adam’s labor becomes toil, ending in death—“for dust you are.”"
+    },
+    {
+      "paragraphNo": 6,
+      "startVerse": 20,
+      "endVerse": 24,
+      "title": "Exile and Hope",
+      "summary": "Adam names his wife “Eve.” God clothes them with skins—grace amid judgment—and stations cherubim to guard the way to the tree of life.Genesis Chapter 3 marks a pivotal moment in humanity's divine narrative—the disobedience of Adam and Eve leading to the original sin, and their subsequent expulsion from the Garden of Eden. The crafty serpent's successful deception ushers in a sequence of events that fundamentally alters the state of the created world and humanity's place within it."
+    }
+  ],
+  "people": [
+    {
+      "name": "The LORD God",
+      "description": "Description: The Creator and sovereign ruler who commands Adam and Eve and later pronounces judgment upon them and the serpent. In Hebrew, \"LORD\" is represented as \"Yahweh\" (יהוה), and \"God\" is \"Elohim\" (אֱלֹהִים).Relevant Scripture: Genesis 3:8-9 - \"Then the man and his wife heard the voice of the LORD God walking in the garden in the breeze of the day, and they hid themselves from the presence of the LORD God among the trees of the garden. But the LORD God called out to the man, 'Where are you?'\""
+    },
+    {
+      "name": "The Serpent",
+      "description": "Description: A creature described as more cunning than any other beast, used by Satan to tempt Eve. The Hebrew word for serpent is \"nachash\" (נָחָשׁ).Relevant Scripture: Genesis 3:1 - \"Now the serpent was more crafty than any beast of the field that the LORD God had made. And he said to the woman, 'Did God really say, ‘You must not eat from any tree in the garden’?'\""
+    },
+    {
+      "name": "The Woman (Eve)",
+      "description": "Description: The first woman, created by God as a companion for Adam. She is tempted by the serpent and eats the forbidden fruit, then gives some to Adam.Relevant Scripture: Genesis 3:6 - \"When the woman saw that the tree was good for food and pleasing to the eyes, and that it was desirable for obtaining wisdom, she took the fruit and ate it. She also gave some to her husband, who was with her, and he ate it.\""
+    },
+    {
+      "name": "The Man (Adam)",
+      "description": "Description: The first man, created by God and placed in the Garden of Eden. He eats the forbidden fruit given to him by Eve, leading to the fall.Relevant Scripture: Genesis 3:6 - \"She also gave some to her husband, who was with her, and he ate it.\""
+    }
+  ],
+  "place": [
+    {
+      "name": "The Garden of Eden",
+      "description": "The primary setting of Genesis 3, the Garden of Eden is where Adam and Eve reside. It is described as a lush and fertile place created by God, filled with various trees, including the tree of the knowledge of good and evil. The Hebrew word for \"garden\" is \"גַּן\" (gan), and \"Eden\" is \"עֵדֶן\" (eden), which can mean \"delight\" or \"pleasure.\""
+    },
+    {
+      "name": "The Tree of the Knowledge of Good and Evil",
+      "description": "Located within the Garden of Eden, this tree is central to the narrative of Genesis 3. God commands Adam and Eve not to eat from it, but they disobey, leading to the fall. The Hebrew word for \"knowledge\" is \"דַּעַת\" (da'at), indicating a deep, experiential understanding."
+    },
+    {
+      "name": "The East of the Garden of Eden",
+      "description": "After Adam and Eve are expelled from the Garden, God places cherubim and a flaming sword \"to the east of the Garden of Eden\" to guard the way to the tree of life (Genesis 3:24). The direction \"east\" in Hebrew is \"קֶדֶם\" (kedem), often associated with beginnings or origins."
+    }
+  ],
+  "events": [
+    {
+      "name": "The Serpent's Temptation",
+      "description": "The chapter begins with the serpent, described as \"more crafty than any beast of the field that the LORD God had made\" (Genesis 3:1). The Hebrew word for \"crafty\" is עָרוּם (arum), indicating shrewdness or cunning. The serpent questions Eve about God's command regarding the forbidden fruit."
+    },
+    {
+      "name": "Eve's Response",
+      "description": "Eve responds to the serpent by explaining God's command: \"We may eat the fruit of the trees of the garden, but of the fruit of the tree in the middle of the garden, God has said, 'You must not eat of it or touch it, or you will die.'\" (Genesis 3:2-3). This response shows her understanding of God's command, though she adds \"or touch it,\" which was not part of the original command."
+    },
+    {
+      "name": "The Serpent's Deception",
+      "description": "The serpent contradicts God, saying, \"You will not surely die\" (Genesis 3:4). The Hebrew phrase לֹא מוֹת תְּמוּתוּן (lo mot temutun) emphasizes the serpent's direct challenge to God's warning."
+    },
+    {
+      "name": "The Promise of Knowledge",
+      "description": "The serpent further entices Eve by claiming, \"For God knows that in the day you eat of it, your eyes will be opened, and you will be like God, knowing good and evil\" (Genesis 3:5). The Hebrew word for \"knowing\" is יֹדֵעַ (yodea), suggesting an experiential knowledge."
+    },
+    {
+      "name": "Eve's Decision",
+      "description": "Eve observes that the tree is \"good for food and pleasing to the eyes, and that it was desirable for obtaining wisdom\" (Genesis 3:6). She takes the fruit and eats it, then gives some to Adam, who also eats."
+    },
+    {
+      "name": "The Eyes of Both Were Opened",
+      "description": "After eating the fruit, \"the eyes of both of them were opened, and they knew that they were naked\" (Genesis 3:7). The Hebrew word for \"opened\" is נִפְקְחוּ (nifkechu), indicating a sudden realization or awareness."
+    },
+    {
+      "name": "The Covering of Nakedness",
+      "description": "Realizing their nakedness, Adam and Eve sew fig leaves together to make loincloths (Genesis 3:7). This act represents their attempt to cover their shame and guilt."
+    },
+    {
+      "name": "God's Presence in the Garden",
+      "description": "They hear \"the sound of the LORD God walking in the garden in the cool of the day\" (Genesis 3:8). The Hebrew word for \"cool\" is רוּחַ (ruach), which can also mean \"spirit\" or \"wind,\" suggesting a time of day or a spiritual presence."
+    },
+    {
+      "name": "The Confrontation",
+      "description": "God calls out to Adam, \"Where are you?\" (Genesis 3:9). Adam responds by explaining his fear and hiding due to his nakedness (Genesis 3:10)."
+    },
+    {
+      "name": "God's Inquiry and Adam's Blame",
+      "description": "God questions Adam about eating the forbidden fruit. Adam blames Eve, saying, \"The woman You gave me, she gave me fruit from the tree, and I ate it\" (Genesis 3:12)."
+    },
+    {
+      "name": "Eve's Blame on the Serpent",
+      "description": "When God questions Eve, she blames the serpent: \"The serpent deceived me, and I ate\" (Genesis 3:13)."
+    },
+    {
+      "name": "The Curse on the Serpent",
+      "description": "God curses the serpent, saying, \"Because you have done this, cursed are you above all livestock and every beast of the field\" (Genesis 3:14). The serpent is condemned to crawl on its belly and eat dust."
+    },
+    {
+      "name": "The Promise of Enmity",
+      "description": "God declares enmity between the serpent and the woman, and between their offspring: \"He will crush your head, and you will strike his heel\" (Genesis 3:15). This verse is often seen as the protoevangelium, or the first gospel, foreshadowing Christ's victory over sin."
+    },
+    {
+      "name": "The Curse on Eve",
+      "description": "God tells Eve that her pain in childbirth will be greatly increased and that her desire will be for her husband, who will rule over her (Genesis 3:16)."
+    },
+    {
+      "name": "The Curse on Adam",
+      "description": "God curses the ground because of Adam, declaring that he will toil and struggle to produce food from it until he returns to the ground (Genesis 3:17-19)."
+    },
+    {
+      "name": "The Naming of Eve",
+      "description": "Adam names his wife Eve, \"because she would become the mother of all the living\" (Genesis 3:20). The name Eve (חַוָּה, Chavah) is related to the Hebrew word for \"living\" (חַי, chai)."
+    },
+    {
+      "name": "God's Provision of Garments",
+      "description": "God makes garments of skin for Adam and Eve and clothes them (Genesis 3:21), signifying a more permanent covering than the fig leaves."
+    },
+    {
+      "name": "Expulsion from the Garden",
+      "description": "To prevent them from eating from the tree of life and living forever, God banishes Adam and Eve from the Garden of Eden (Genesis 3:22-24)."
+    },
+    {
+      "name": "The Guarding of the Tree of Life",
+      "description": "God places cherubim and a flaming sword to guard the way to the tree of life (Genesis 3:24), ensuring that humanity cannot access it in their fallen state."
+    }
+  ]
+}

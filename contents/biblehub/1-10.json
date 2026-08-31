@@ -1,0 +1,434 @@
+{
+  "book": "Genesis",
+  "bookNo": 1,
+  "chapterNo": 10,
+  "title": "The Table of Nations",
+  "excerpt": "The sons of Noah’s oldest boy, Japheth—Gomer, Magog, Madai, Javan, Tubal, Meshech, and Tiras—father the peoples who move north and west. From them come the early settlers of Europe and parts of Asia Minor. “From these, the maritime peoples separated into their territories, according to their languages, by clans within their nations.” (v. 5) Ham’s sons—Cush, Mizraim, Put, and Canaan—become the ancestors of Africa, Arabia, and the Levant. Cush’s son Nimrod “was a mighty hunter before the LORD” (v. 9), founding cities like Babel and Nineveh. Mizraim’s line gives birth to the Philistines, while Canaan’s sons populate the land later promised to Abraham. Sidon, Heth, the Jebusites, Amorites, Girgashites, and others fill the region stretching “from Sidon toward Gerar as far as Gaza, then toward Sodom, Gomorrah … as far as Lasha” (v. 19). These tribes occupy the strategic land bridge between Africa, Asia, and Europe. Shem fathers Elam, Asshur, Arphaxad, Lud, and Aram. Through Arphaxad comes Eber, the forefather of the Hebrews. One of Eber’s sons is Peleg, “for in his days the earth was divided” (v. 25), hinting at the scattering in chapter 11. Joktan’s clan heads south toward Arabia. “These are the families of Noah’s sons, according to their genealogies, by their nations. From these the nations spread out over the earth after the flood.” (v. 32)This chapter provides a comprehensive account of Noah's descendants, tracing the lineages of his sons Shem, Ham, and Japheth after the flood. It reveals the spread of these families into various territories, the emergence of different languages and clans, and the establishment of nations.",
+  "paragraphs": [
+    {
+      "paragraphNo": 1,
+      "startVerse": 1,
+      "endVerse": 5,
+      "title": "Japheth’s Line Spreads to the Coastlands",
+      "summary": "The sons of Noah’s oldest boy, Japheth—Gomer, Magog, Madai, Javan, Tubal, Meshech, and Tiras—father the peoples who move north and west. From them come the early settlers of Europe and parts of Asia Minor. “From these, the maritime peoples separated into their territories, according to their languages, by clans within their nations.” (v. 5)"
+    },
+    {
+      "paragraphNo": 2,
+      "startVerse": 6,
+      "endVerse": 14,
+      "title": "Ham’s Line and the Rise of Early Empires",
+      "summary": "Ham’s sons—Cush, Mizraim, Put, and Canaan—become the ancestors of Africa, Arabia, and the Levant. Cush’s son Nimrod “was a mighty hunter before the LORD” (v. 9), founding cities like Babel and Nineveh. Mizraim’s line gives birth to the Philistines, while Canaan’s sons populate the land later promised to Abraham."
+    },
+    {
+      "paragraphNo": 3,
+      "startVerse": 15,
+      "endVerse": 20,
+      "title": "Canaan’s Peoples Listed",
+      "summary": "Sidon, Heth, the Jebusites, Amorites, Girgashites, and others fill the region stretching “from Sidon toward Gerar as far as Gaza, then toward Sodom, Gomorrah … as far as Lasha” (v. 19). These tribes occupy the strategic land bridge between Africa, Asia, and Europe."
+    },
+    {
+      "paragraphNo": 4,
+      "startVerse": 21,
+      "endVerse": 31,
+      "title": "Shem’s Line and the Roots of Israel",
+      "summary": "Shem fathers Elam, Asshur, Arphaxad, Lud, and Aram. Through Arphaxad comes Eber, the forefather of the Hebrews. One of Eber’s sons is Peleg, “for in his days the earth was divided” (v. 25), hinting at the scattering in chapter 11. Joktan’s clan heads south toward Arabia."
+    },
+    {
+      "paragraphNo": 5,
+      "startVerse": 32,
+      "endVerse": 32,
+      "title": "Summary Statement",
+      "summary": "“These are the families of Noah’s sons, according to their genealogies, by their nations. From these the nations spread out over the earth after the flood.” (v. 32)This chapter provides a comprehensive account of Noah's descendants, tracing the lineages of his sons Shem, Ham, and Japheth after the flood. It reveals the spread of these families into various territories, the emergence of different languages and clans, and the establishment of nations."
+    }
+  ],
+  "people": [
+    {
+      "name": "Japheth",
+      "description": "One of Noah's three sons, considered the ancestor of many Indo-European peoples."
+    },
+    {
+      "name": "Gomer",
+      "description": "Son of Japheth, traditionally associated with the Cimmerians and other groups in Asia Minor."
+    },
+    {
+      "name": "Magog",
+      "description": "Son of Japheth, often linked to peoples in the northern regions, possibly the Scythians."
+    },
+    {
+      "name": "Madai",
+      "description": "Son of Japheth, associated with the Medes, an ancient Iranian people."
+    },
+    {
+      "name": "Javan",
+      "description": "Son of Japheth, considered the progenitor of the Greeks (Ionians)."
+    },
+    {
+      "name": "Tubal",
+      "description": "Son of Japheth, linked to peoples in Anatolia."
+    },
+    {
+      "name": "Meshech",
+      "description": "Son of Japheth, associated with regions in modern-day Turkey."
+    },
+    {
+      "name": "Tiras",
+      "description": "Son of Japheth, possibly linked to the Thracians."
+    },
+    {
+      "name": "Ashkenaz",
+      "description": "Son of Gomer, associated with regions in Eastern Europe."
+    },
+    {
+      "name": "Riphath",
+      "description": "Son of Gomer, possibly linked to ancient peoples in Europe."
+    },
+    {
+      "name": "Togarmah",
+      "description": "Son of Gomer, associated with regions in Anatolia."
+    },
+    {
+      "name": "Elishah",
+      "description": "Son of Javan, linked to the Greeks or Cypriots."
+    },
+    {
+      "name": "Tarshish",
+      "description": "Son of Javan, possibly linked to a region in Spain or Sardinia."
+    },
+    {
+      "name": "Kittim",
+      "description": "Son of Javan, associated with Cyprus."
+    },
+    {
+      "name": "Dodanim",
+      "description": "Son of Javan, possibly linked to the Dardanians or Rhodians."
+    },
+    {
+      "name": "Ham",
+      "description": "One of Noah's three sons, considered the ancestor of many African and Near Eastern peoples."
+    },
+    {
+      "name": "Cush",
+      "description": "Son of Ham, associated with regions in Africa, particularly Ethiopia."
+    },
+    {
+      "name": "Mizraim",
+      "description": "Son of Ham, the Hebrew name for Egypt."
+    },
+    {
+      "name": "Put",
+      "description": "Son of Ham, associated with regions in North Africa, possibly Libya."
+    },
+    {
+      "name": "Canaan",
+      "description": "Son of Ham, the ancestor of the Canaanites."
+    },
+    {
+      "name": "Seba",
+      "description": "Son of Cush, associated with regions in Africa."
+    },
+    {
+      "name": "Havilah",
+      "description": "Son of Cush, possibly linked to regions in Arabia or Africa."
+    },
+    {
+      "name": "Sabtah",
+      "description": "Son of Cush, associated with regions in Arabia."
+    },
+    {
+      "name": "Raamah",
+      "description": "Son of Cush, linked to regions in Arabia."
+    },
+    {
+      "name": "Sabteca",
+      "description": "Son of Cush, associated with regions in Africa or Arabia."
+    },
+    {
+      "name": "Sheba",
+      "description": "Son of Raamah, linked to the Sabeans in Arabia."
+    },
+    {
+      "name": "Dedan",
+      "description": "Son of Raamah, associated with regions in Arabia."
+    },
+    {
+      "name": "Nimrod",
+      "description": "Grandson of Cush, described as a mighty hunter and the founder of several cities, including Babel."
+    },
+    {
+      "name": "Ludim",
+      "description": "Son of Mizraim, associated with regions in Egypt."
+    },
+    {
+      "name": "Anamim",
+      "description": "Son of Mizraim, linked to regions in Egypt."
+    },
+    {
+      "name": "Lehabim",
+      "description": "Son of Mizraim, associated with regions in Libya."
+    },
+    {
+      "name": "Naphtuhim",
+      "description": "Son of Mizraim, linked to regions in Egypt."
+    },
+    {
+      "name": "Pathrusim",
+      "description": "Son of Mizraim, associated with Upper Egypt."
+    },
+    {
+      "name": "Casluhim",
+      "description": "Son of Mizraim, from whom the Philistines are said to have come."
+    },
+    {
+      "name": "Caphtorim",
+      "description": "Son of Mizraim, associated with Crete."
+    },
+    {
+      "name": "Sidon",
+      "description": "Firstborn of Canaan, associated with the city of Sidon in Phoenicia."
+    },
+    {
+      "name": "Heth",
+      "description": "Son of Canaan, ancestor of the Hittites."
+    },
+    {
+      "name": "Jebusites",
+      "description": "Descendants of Canaan, associated with Jerusalem."
+    },
+    {
+      "name": "Amorites",
+      "description": "Descendants of Canaan, a prominent ancient Near Eastern people."
+    },
+    {
+      "name": "Girgashites",
+      "description": "Descendants of Canaan, associated with regions in Canaan."
+    },
+    {
+      "name": "Hivites",
+      "description": "Descendants of Canaan, associated with regions in Canaan."
+    },
+    {
+      "name": "Arkites",
+      "description": "Descendants of Canaan, associated with regions in Lebanon."
+    },
+    {
+      "name": "Sinites",
+      "description": "Descendants of Canaan, associated with regions in Lebanon."
+    },
+    {
+      "name": "Arvadites",
+      "description": "Descendants of Canaan, associated with the island of Arwad."
+    },
+    {
+      "name": "Zemarites",
+      "description": "Descendants of Canaan, associated with regions in Lebanon."
+    },
+    {
+      "name": "Hamathites",
+      "description": "Descendants of Canaan, associated with the city of Hamath in Syria."
+    },
+    {
+      "name": "Shem",
+      "description": "One of Noah's three sons, considered the ancestor of many Semitic peoples."
+    },
+    {
+      "name": "Elam",
+      "description": "Son of Shem, associated with the Elamites in southwestern Iran."
+    },
+    {
+      "name": "Asshur",
+      "description": "Son of Shem, associated with the Assyrians."
+    },
+    {
+      "name": "Arphaxad",
+      "description": "Son of Shem, ancestor of the Hebrews."
+    },
+    {
+      "name": "Lud",
+      "description": "Son of Shem, associated with the Lydians in Anatolia."
+    },
+    {
+      "name": "Aram",
+      "description": "Son of Shem, associated with the Arameans in Syria."
+    },
+    {
+      "name": "Uz",
+      "description": "Son of Aram, associated with regions in Arabia."
+    },
+    {
+      "name": "Hul",
+      "description": "Son of Aram, possibly linked to regions in Syria."
+    },
+    {
+      "name": "Gether",
+      "description": "Son of Aram, possibly linked to regions in Mesopotamia."
+    },
+    {
+      "name": "Mash",
+      "description": "Son of Aram, possibly linked to regions in Mesopotamia."
+    },
+    {
+      "name": "Salah",
+      "description": "Son of Arphaxad, ancestor of Eber."
+    },
+    {
+      "name": "Eber",
+      "description": "Descendant of Shem, considered the ancestor of the Hebrews."
+    },
+    {
+      "name": "Peleg",
+      "description": "Son of Eber, during whose time the earth was divided."
+    },
+    {
+      "name": "Joktan",
+      "description": "Son of Eber, ancestor of various Arabian tribes."
+    },
+    {
+      "name": "Almodad",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Sheleph",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Hazarmaveth",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Jerah",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Hadoram",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Uzal",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Diklah",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Obal",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Abimael",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Sheba",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Ophir",
+      "description": "Son of Joktan, associated with regions known for gold."
+    },
+    {
+      "name": "Havilah",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    },
+    {
+      "name": "Jobab",
+      "description": "Son of Joktan, associated with regions in Arabia."
+    }
+  ],
+  "place": [
+    {
+      "name": "Shinar",
+      "description": "Genesis 10:10: \"The beginning of his kingdom was Babel, Erech, Accad, and Calneh, in the land of Shinar.\" Shinar is often associated with the region of Mesopotamia, particularly the area around Babylon. The Hebrew term \"שִׁנְעָר\" (Shin'ar) is used here."
+    },
+    {
+      "name": "Babel",
+      "description": "Genesis 10:10: \"The beginning of his kingdom was Babel, Erech, Accad, and Calneh, in the land of Shinar.\" Babel is the Hebrew name for Babylon, a significant city in ancient Mesopotamia. The Hebrew word \"בָּבֶל\" (Bavel) is used."
+    },
+    {
+      "name": "Erech",
+      "description": "Genesis 10:10: \"The beginning of his kingdom was Babel, Erech, Accad, and Calneh, in the land of Shinar.\" Erech is identified with the ancient city of Uruk in southern Mesopotamia. The Hebrew term \"אֶרֶךְ\" (Erek) is used."
+    },
+    {
+      "name": "Accad",
+      "description": "Genesis 10:10: \"The beginning of his kingdom was Babel, Erech, Accad, and Calneh, in the land of Shinar.\" Accad is associated with the Akkadian Empire, an ancient Mesopotamian civilization. The Hebrew word \"אַכַּד\" (Akkad) is used."
+    },
+    {
+      "name": "Calneh",
+      "description": "Genesis 10:10: \"The beginning of his kingdom was Babel, Erech, Accad, and Calneh, in the land of Shinar.\" Calneh is a city whose exact location is uncertain, but it is thought to be in Mesopotamia. The Hebrew term \"כַּלְנֵה\" (Kalneh) is used."
+    },
+    {
+      "name": "Asshur",
+      "description": "Genesis 10:11: \"From that land he went to Assyria, where he built Nineveh, Rehoboth-Ir, Calah,\" Asshur is the Hebrew name for Assyria, a major Mesopotamian kingdom. The Hebrew word \"אַשּׁוּר\" (Ashur) is used."
+    },
+    {
+      "name": "Nineveh",
+      "description": "Genesis 10:11: \"From that land he went to Assyria, where he built Nineveh, Rehoboth-Ir, Calah,\" Nineveh was a prominent city in ancient Assyria, located on the eastern bank of the Tigris River. The Hebrew term \"נִינְוֵה\" (Nineveh) is used."
+    },
+    {
+      "name": "Rehoboth-Ir",
+      "description": "Genesis 10:11: \"From that land he went to Assyria, where he built Nineveh, Rehoboth-Ir, Calah,\" Rehoboth-Ir is a city mentioned alongside Nineveh and Calah, though its exact location is not well-known. The Hebrew term \"רְחֹבֹת עִיר\" (Rechovot Ir) is used."
+    },
+    {
+      "name": "Calah",
+      "description": "Genesis 10:11: \"From that land he went to Assyria, where he built Nineveh, Rehoboth-Ir, Calah,\" Calah, also known as Nimrud, was an important city in ancient Assyria. The Hebrew word \"כָּלַח\" (Kalach) is used."
+    },
+    {
+      "name": "Resen",
+      "description": "Genesis 10:12: \"and Resen, which is between Nineveh and the great city of Calah.\" Resen is described as being located between Nineveh and Calah. The Hebrew term \"רֶסֶן\" (Resen) is used."
+    },
+    {
+      "name": "Sidon",
+      "description": "Genesis 10:15: \"Canaan was the father of Sidon his firstborn, and of the Hittites,\" Sidon is an ancient Phoenician city located in modern-day Lebanon. The Hebrew word \"צִידוֹן\" (Tzidon) is used."
+    },
+    {
+      "name": "Gaza",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Gaza is a city located on the Mediterranean coast, historically part of the land of the Philistines. The Hebrew term \"עַזָּה\" (Azzah) is used."
+    },
+    {
+      "name": "Sodom",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Sodom is one of the cities of the plain, known for its destruction in Genesis 19. The Hebrew word \"סְדֹם\" (Sedom) is used."
+    },
+    {
+      "name": "Gomorrah",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Gomorrah is another city of the plain, also destroyed in Genesis 19. The Hebrew term \"עֲמֹרָה\" (Amorah) is used."
+    },
+    {
+      "name": "Admah",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Admah is one of the cities of the plain mentioned alongside Sodom and Gomorrah. The Hebrew word \"אַדְמָה\" (Admah) is used."
+    },
+    {
+      "name": "Zeboiim",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Zeboiim is another city of the plain. The Hebrew term \"צְבֹיִים\" (Tzevoyim) is used."
+    },
+    {
+      "name": "Lasha",
+      "description": "Genesis 10:19: \"and the borders of Canaan extended from Sidon toward Gerar as far as Gaza, and then toward Sodom, Gomorrah, Admah, and Zeboiim, as far as Lasha.\" Lasha is a location mentioned as the extent of Canaan's borders, though its exact location is uncertain. The Hebrew word \"לָשָׁע\" (Lasha) is used."
+    }
+  ],
+  "events": [
+    {
+      "name": "Introduction of Noah's Sons",
+      "description": "The chapter begins by listing the sons of Noah: Shem, Ham, and Japheth, from whom the nations spread across the earth after the flood (Genesis 10:1)."
+    },
+    {
+      "name": "Descendants of Japheth",
+      "description": "The descendants of Japheth are listed, including Gomer, Magog, Madai, Javan, Tubal, Meshech, and Tiras. These names are associated with various regions and peoples, often linked to the Indo-European nations (Genesis 10:2-5)."
+    },
+    {
+      "name": "Descendants of Ham",
+      "description": "The descendants of Ham are detailed, including Cush, Mizraim, Put, and Canaan. These names are traditionally associated with African and Near Eastern regions (Genesis 10:6-20)."
+    },
+    {
+      "name": "Nimrod's Kingdom",
+      "description": "Nimrod, a descendant of Cush, is described as a mighty hunter and the founder of several cities, including Babel, Erech, Akkad, and Calneh in the land of Shinar (Genesis 10:8-12). The Hebrew root for \"mighty\" (גִּבּוֹר, gibbor) emphasizes his strength and influence."
+    },
+    {
+      "name": "Descendants of Shem",
+      "description": "The descendants of Shem are listed, including Elam, Asshur, Arphaxad, Lud, and Aram. These names are linked to various Semitic peoples and regions (Genesis 10:21-31)."
+    },
+    {
+      "name": "Division of the Earth",
+      "description": "The chapter concludes by summarizing the division of the earth among the nations, each with its own language, family, and nation, as they spread out after the flood (Genesis 10:32)."
+    }
+  ]
+}

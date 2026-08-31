@@ -1,0 +1,176 @@
+{
+  "book": "Genesis",
+  "bookNo": 1,
+  "chapterNo": 5,
+  "title": "The Descendants of Adam",
+  "excerpt": "Records the creation of mankind in God’s likeness, stressing both “male and female” and the blessing bestowed on them. Adam fathers Seth at 130, lives 930 years, and dies. The line of promise shifts from Abel (now dead) to Seth. Seth fathers Enosh at 105, lives 912 years, and dies. The expanding family line keeps moving forward. Enosh fathers Kenan at 90, lives 905 years, and dies. Kenan fathers Mahalalel at 70, lives 910 years, and dies. Mahalalel fathers Jared at 65, lives 895 years, and dies. Jared fathers Enoch at 162, lives 962 years, and dies. Enoch fathers Methuselah at 65, walks with God 300 years, then “was no more, because God had taken him away.” Methuselah fathers Lamech at 187, lives 969 years—the longest lifespan recorded—and dies. Lamech fathers Noah at 182, names him with hope of relief from the curse on the ground, lives 777 years, and dies. At 500, Noah fathers Shem, Ham, and Japheth, setting the stage for the Flood narrative.The fifth chapter of Genesis presents a fascinating chronicle of time, outlining the lineage from Adam to Noah. The chapter encapsulates the divinely appointed lives, tracing an extraordinary chain of generations and the remarkably prolonged lifespans.",
+  "paragraphs": [
+    {
+      "paragraphNo": 1,
+      "startVerse": 1,
+      "endVerse": 2,
+      "title": "The Book of Adam",
+      "summary": "Records the creation of mankind in God’s likeness, stressing both “male and female” and the blessing bestowed on them."
+    },
+    {
+      "paragraphNo": 2,
+      "startVerse": 3,
+      "endVerse": 5,
+      "title": "Adam to Seth",
+      "summary": "Adam fathers Seth at 130, lives 930 years, and dies. The line of promise shifts from Abel (now dead) to Seth."
+    },
+    {
+      "paragraphNo": 3,
+      "startVerse": 6,
+      "endVerse": 8,
+      "title": "Seth to Enosh",
+      "summary": "Seth fathers Enosh at 105, lives 912 years, and dies. The expanding family line keeps moving forward."
+    },
+    {
+      "paragraphNo": 4,
+      "startVerse": 9,
+      "endVerse": 11,
+      "title": "Enosh to Kenan",
+      "summary": "Enosh fathers Kenan at 90, lives 905 years, and dies."
+    },
+    {
+      "paragraphNo": 5,
+      "startVerse": 12,
+      "endVerse": 14,
+      "title": "Kenan to Mahalalel",
+      "summary": "Kenan fathers Mahalalel at 70, lives 910 years, and dies."
+    },
+    {
+      "paragraphNo": 6,
+      "startVerse": 15,
+      "endVerse": 17,
+      "title": "Mahalalel to Jared",
+      "summary": "Mahalalel fathers Jared at 65, lives 895 years, and dies."
+    },
+    {
+      "paragraphNo": 7,
+      "startVerse": 18,
+      "endVerse": 20,
+      "title": "Jared to Enoch",
+      "summary": "Jared fathers Enoch at 162, lives 962 years, and dies."
+    },
+    {
+      "paragraphNo": 8,
+      "startVerse": 21,
+      "endVerse": 24,
+      "title": "Enoch Walks with God",
+      "summary": "Enoch fathers Methuselah at 65, walks with God 300 years, then “was no more, because God had taken him away.”"
+    },
+    {
+      "paragraphNo": 9,
+      "startVerse": 25,
+      "endVerse": 27,
+      "title": "Methuselah to Lamech",
+      "summary": "Methuselah fathers Lamech at 187, lives 969 years—the longest lifespan recorded—and dies."
+    },
+    {
+      "paragraphNo": 10,
+      "startVerse": 28,
+      "endVerse": 31,
+      "title": "Lamech to Noah",
+      "summary": "Lamech fathers Noah at 182, names him with hope of relief from the curse on the ground, lives 777 years, and dies."
+    },
+    {
+      "paragraphNo": 11,
+      "startVerse": 32,
+      "endVerse": 32,
+      "title": "Noah’s Three Sons",
+      "summary": "At 500, Noah fathers Shem, Ham, and Japheth, setting the stage for the Flood narrative.The fifth chapter of Genesis presents a fascinating chronicle of time, outlining the lineage from Adam to Noah. The chapter encapsulates the divinely appointed lives, tracing an extraordinary chain of generations and the remarkably prolonged lifespans."
+    }
+  ],
+  "people": [
+    {
+      "name": "Adam",
+      "description": "Adam is the first human created by God, as described in Genesis. His name in Hebrew, אָדָם ('Adam), means \"man\" or \"mankind.\" He is the father of Seth and lived 930 years."
+    },
+    {
+      "name": "Seth",
+      "description": "Seth is Adam's son, born after the death of Abel. His name in Hebrew, שֵׁת (Shet), means \"appointed\" or \"placed.\" Seth lived 912 years."
+    },
+    {
+      "name": "Enosh",
+      "description": "Enosh is the son of Seth. His name in Hebrew, אֱנוֹשׁ (Enosh), means \"man\" or \"mortal.\" He lived 905 years."
+    },
+    {
+      "name": "Kenan",
+      "description": "Kenan, also spelled Cainan, is the son of Enosh. His name in Hebrew, קֵינָן (Qeynan), is of uncertain meaning but is often associated with \"possession\" or \"sorrow.\" He lived 910 years."
+    },
+    {
+      "name": "Mahalalel",
+      "description": "Mahalalel is the son of Kenan. His name in Hebrew, מַהֲלַלְאֵל (Mahalal'el), means \"praise of God.\" He lived 895 years."
+    },
+    {
+      "name": "Jared",
+      "description": "Jared is the son of Mahalalel. His name in Hebrew, יֶרֶד (Yered), means \"descent\" or \"to descend.\" He lived 962 years."
+    },
+    {
+      "name": "Enoch",
+      "description": "Enoch is the son of Jared. His name in Hebrew, חֲנוֹךְ (Chanokh), means \"dedicated\" or \"initiated.\" Enoch is notable for being taken by God, as he \"walked with God\" and did not die. He lived 365 years."
+    },
+    {
+      "name": "Methuselah",
+      "description": "Methuselah is the son of Enoch. His name in Hebrew, מְתוּשֶׁלַח (Methushelach), is often interpreted as \"man of the dart\" or \"his death shall bring.\" He is known for being the longest-lived person in the Bible, living 969 years."
+    },
+    {
+      "name": "Lamech",
+      "description": "Lamech is the son of Methuselah. His name in Hebrew, לֶמֶךְ (Lemek), is of uncertain meaning. He lived 777 years and is the father of Noah."
+    },
+    {
+      "name": "Noah",
+      "description": "Noah is the son of Lamech. His name in Hebrew, נֹחַ (Noach), means \"rest\" or \"comfort.\" He is known for building the ark and surviving the Flood. Noah lived 950 years."
+    }
+  ],
+  "place": [
+    {
+      "name": "Eden",
+      "description": "While not mentioned directly in Genesis 5, Eden is the initial setting for humanity, where Adam and Eve lived before the Fall. The Hebrew word for Eden (עֵדֶן, 'Eden') suggests a place of delight or pleasure."
+    },
+    {
+      "name": "The Land of Nod",
+      "description": "Although not in Genesis 5, this is where Cain settled after being banished from Eden (Genesis 4:16). The Hebrew word \"Nod\" (נוֹד) means \"wandering,\" indicating a place of exile and restlessness."
+    },
+    {
+      "name": "The Earth",
+      "description": "Throughout Genesis 5, the term \"the earth\" is used to describe the broader setting where humanity lived and multiplied. The Hebrew word for earth is \"erets\" (אֶרֶץ), which can mean land, country, or the whole world."
+    }
+  ],
+  "events": [
+    {
+      "name": "Introduction to the Generations of Adam",
+      "description": "The chapter begins by stating, \"This is the book of the generations of Adam\" (Genesis 5:1). It emphasizes the creation of man in the likeness of God, referring back to Genesis 1:26-27, where \"likeness\" (Hebrew: דְּמוּת, demut) signifies the image and resemblance to God."
+    },
+    {
+      "name": "Creation of Male and Female",
+      "description": "The text reiterates that God created them male and female, and He blessed them and named them \"Man\" (Genesis 5:2). The Hebrew word for \"Man\" is אָדָם (adam), which is also used as the name for the first human."
+    },
+    {
+      "name": "Adam's Descendants",
+      "description": "Adam lived 130 years and fathered a son in his own likeness, after his image, and named him Seth (Genesis 5:3). This mirrors the language of being made in God's image, highlighting the continuation of God's likeness through generations."
+    },
+    {
+      "name": "Lifespan of Adam",
+      "description": "Adam lived a total of 930 years before he died (Genesis 5:5). The long lifespans in this chapter are a notable feature, reflecting the early generations' proximity to creation."
+    },
+    {
+      "name": "Genealogy from Seth to Noah",
+      "description": "The chapter continues with the genealogy, listing the descendants from Seth to Noah. Each entry follows a pattern: the age at which the patriarch fathers his named son, the additional years he lives, and his total lifespan. This includes Enosh, Kenan, Mahalalel, Jared, Enoch, Methuselah, and Lamech (Genesis 5:6-31)."
+    },
+    {
+      "name": "Enoch's Walk with God",
+      "description": "Enoch is highlighted for his unique relationship with God. \"Enoch walked with God, and then he was no more, because God took him away\" (Genesis 5:24). The Hebrew verb for \"walked\" (הָלַךְ, halak) implies a continuous, intimate relationship with God, and Enoch's departure is seen as a divine act."
+    },
+    {
+      "name": "Birth of Noah",
+      "description": "Lamech, at 182 years old, fathers a son named Noah, saying, \"He will comfort us in the labor and painful toil of our hands caused by the ground the LORD has cursed\" (Genesis 5:29). The name \"Noah\" (נֹחַ, Noach) is related to the Hebrew word for \"comfort\" or \"rest\" (נָחַם, nacham)."
+    },
+    {
+      "name": "Lifespan of Lamech and Noah",
+      "description": "Lamech lived 777 years before he died (Genesis 5:31). Noah was 500 years old when he fathered Shem, Ham, and Japheth (Genesis 5:32), setting the stage for the narrative of the flood in the subsequent chapters."
+    }
+  ]
+}
