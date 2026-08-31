@@ -9,17 +9,27 @@ export type SiteMenu = {
 
 export function useSiteMenus() {
   const mainMenus: SiteMenu[] = [
-    { label: 'Home', to: '/' },
     { label: '말씀으로', to: '/read' },
-    { label: '말씀 펼쳐보기', to: '/bible' },
-    { label: '주제별 보기', to: '/topics' },
-    { label: '돌아보기', to: '/review' },
+    { label: '말씀 더보기', to: '',
+      children: [
+        { label: '말씀 펼쳐보기', to: '/bible' },
+        { label: '주제별 보기', to: '/topics' },
+        { label: '돌아보기', to: '/review' },
+      ]
+     },
     { label: '성경이야기', to: '',
+      children: [
+        { label: '인물이야기', to: '/categories/인물이야기' },
+        { label: '사건이야기', to: '/categories/사건이야기' },
+        { label: '지명이야기', to: '/categories/지명이야기' },
+        { label: '성경이야기', to: '/categories/성경이야기' },
+      ]
+     },
+    { label: '커뮤니티', to: '',
       children: [
         { label: '공지사항', to: '/categories/notice' },
         { label: 'News', to: '/categories/news' },
         { label: '이벤트', to: '/categories/events' },
-        { label: '돌아보기1', to: '/categories/events' },
       ]
      },
   ];

@@ -161,9 +161,11 @@ if (error.value) {
 
 <style scoped>
 .category-shell {
-  max-width: 1200px;
+  /* read(.page-shell)와 동일한 본문 폭으로 맞춘다. */
+  width: min(1180px, calc(100vw - 2rem));
+  max-width: none;
   margin: 0 auto;
-  padding: 40px 24px 80px;
+  padding: 40px 0 80px;
 }
 
 /* ── Header ── */
@@ -360,9 +362,10 @@ if (error.value) {
 }
 
 /* ── Mobile ── */
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .category-shell {
-    padding: 28px 18px 60px;
+    width: 100%;
+    padding: 28px 0 60px;
   }
   .category-head h1 {
     font-size: 28px;
