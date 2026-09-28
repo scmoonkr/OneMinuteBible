@@ -31,6 +31,7 @@ export const menuSections: MenuSection[] = [
     children: [
       { label: 'View', to: '/biblehub/view' },
       { label: 'Edit', to: '/biblehub/edit' },
+      { label: 'Topical', to: '/biblehub/topical' },
     ],
   },
 ];

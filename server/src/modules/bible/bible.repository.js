@@ -113,6 +113,68 @@ export async function updateBibleEditRows(bookNo, chapterNo, { info, rows }, ind
   return { matched: result.matchedCount + result.upsertedCount, modified: result.modifiedCount + result.upsertedCount };
 }
 
+// 한 장의 biblehub 원문 문서 전체 (영문 요약·단락·기도·토론 질문 등).
+export async function findBiblehubDocument(bookNo, chapterNo) {
+  return getDatabase().collection('biblehub').findOne(
+    { bookNo, chapterNo },
+    { projection: { _id: 0 } },
+  );
+}
+
+// 단락 나누기를 통째로 바꾼다 (editHub 저장).
+// 1) 절 행의 subject/excerpt 를 모두 지우고 2) 새 단락 시작 절에만 다시 넣는다.
+// 장 정보(verseNo 0)는 없으면 만들고, 절 행은 새로 만들지 않는다.
+export async function replaceBibleParagraphs(bookNo, chapterNo, { info, paragraphs }, index0) {
+  const collection = getDatabase().collection(env.mongoCollectionBibleEdit);
+  const operations = [
+    {
+      updateMany: {
+        filter: { bookNo, chapterNo, verseNo: { $gt: 0 } },
+        update: { $unset: { subject: '', excerpt: '' } },
+      },
+    },
+    ...paragraphs.map((p) => ({
+      updateOne: {
+        filter: { bookNo, chapterNo, verseNo: p.verseNo },
+        update: { $set: p.excerpt ? { subject: p.subject, excerpt: p.excerpt } : { subject: p.subject } },
+      },
+    })),
+  ];
+
+  if (info) {
+    const $set = {};
+    if (info.subject) $set.subject = info.subject;
+    if (info.excerpt) $set.excerpt = info.excerpt;
+    if (Object.keys($set).length) {
+      operations.push({
+        updateOne: {
+          filter: { bookNo, chapterNo, verseNo: 0 },
+          update: { $set, $setOnInsert: { bookNo, chapterNo, verseNo: 0, index: index0 } },
+          upsert: true,
+        },
+      });
+    }
+  }
+
+  return collection.bulkWrite(operations, { ordered: true });
+}
+
+export async function findExistingVerseNos(bookNo, chapterNo) {
+  const rows = await getDatabase()
+    .collection(env.mongoCollectionBibleEdit)
+    .find({ bookNo, chapterNo, verseNo: { $gt: 0 } }, { projection: { _id: 0, verseNo: 1 } })
+    .toArray();
+  return new Set(rows.map((r) => r.verseNo));
+}
+
+export async function setChapterAudio(bookNo, chapterNo, audio, index0) {
+  await getDatabase().collection(env.mongoCollectionBibleEdit).updateOne(
+    { bookNo, chapterNo, verseNo: 0 },
+    { $set: { audio }, $setOnInsert: { bookNo, chapterNo, verseNo: 0, index: index0 } },
+    { upsert: true },
+  );
+}
+
 // biblehub 컬렉션에서 장 단위 부가정보(인물·장소·사건)를 읽는다.
 // 세 필드 모두 [{ title, link, key }] 형태이고 link 는 biblehub 의 /topical/... 경로다.
 export async function findBiblehubChapter(bookNo, chapterNo) {

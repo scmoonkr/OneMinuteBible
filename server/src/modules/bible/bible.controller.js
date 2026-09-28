@@ -1,6 +1,30 @@
 import {
-  getBibleEdit, getBiblehubChapter, getBibleChapter, getChapterAudioPath, listBibleChapters, listTopicVerses,
-  recordTopicVerseAction, saveBibleEdit } from './bible.service.js';
+  enableChapterAudio, getBibleEdit, getBiblehubChapter, getBiblehubSource, getBibleChapter, getChapterAudioPath,
+  listBibleChapters, listTopicVerses, recordTopicVerseAction, saveBibleEdit, saveBibleParagraphs } from './bible.service.js';
+
+export async function readBiblehubSource(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await getBiblehubSource(req.params) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateBibleParagraphs(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await saveBibleParagraphs(req.params, req.body) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateChapterAudio(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await enableChapterAudio(req.params) });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export async function readBibleEdit(req, res, next) {
   try {

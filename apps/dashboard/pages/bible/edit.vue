@@ -203,7 +203,10 @@ function revert() {
     <ChapterPicker />
 
     <div v-if="status === 'idle' || status === 'pending'" class="panel state">불러오는 중…</div>
-    <div v-else-if="error" class="panel state error">본문을 불러오지 못했습니다. ({{ error.statusCode || error.message }})</div>
+    <div v-else-if="error" class="panel state error">
+      <template v-if="isMissingRoute(error)">{{ apiErrorMessage(error) }}</template>
+      <template v-else>본문을 불러오지 못했습니다. ({{ error.statusCode || error.message }})</template>
+    </div>
     <template v-else-if="form">
       <!-- 장 주제·요약 (verseNo 0) -->
       <div class="panel chapter-info">

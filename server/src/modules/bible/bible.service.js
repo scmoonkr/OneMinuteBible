@@ -1,5 +1,6 @@
 import {
   findBibleEditRows, updateBibleEditRows,
+  findBiblehubDocument, findExistingVerseNos, replaceBibleParagraphs, setChapterAudio,
   findBiblehubChapter,
   findPostsByBiblehubSlugs, findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
 import { calcWeight, sortByWeight, weightedPick } from './verse-topics.util.js';
@@ -303,6 +304,82 @@ export async function saveBibleEdit(params = {}, body = {}) {
   );
 
   return { ...result, chapter: await getBibleEdit({ bookNo, chapterNo }) };
+}
+
+// ── editHub: biblehub 영문 요약을 번역해 단락 주제·요약으로 넣는 화면 ──────────
+
+// biblehub 원문 한 장 (chaptersummaries 화면과 editHub 가 함께 쓴다).
+export async function getBiblehubSource(params = {}) {
+  const { bookNo, chapterNo } = parseChapterKey(params);
+  const doc = await findBiblehubDocument(bookNo, chapterNo);
+
+  if (!doc) {
+    throw createAppError('Biblehub chapter not found.', 404);
+  }
+
+  const english = findBibleBookMetaByNo(bookNo)?.english || '';
+
+  return {
+    ...doc,
+    bookEnglish: english,
+    biblehubUrl: english
+      ? `https://biblehub.com/chaptersummaries/${english.toLowerCase().replace(/ /g, '_')}/${chapterNo}.htm`
+      : '',
+  };
+}
+
+// 번역된 단락 목록으로 이 장의 단락 나누기를 바꾼다.
+// body: { subject, excerpt, paragraphs: [{ verseNo, subject, excerpt }] }
+export async function saveBibleParagraphs(params = {}, body = {}) {
+  const { bookNo, chapterNo } = parseChapterKey(params);
+
+  if (!Array.isArray(body.paragraphs) || !body.paragraphs.length) {
+    throw createAppError('paragraphs must be a non-empty array.', 400);
+  }
+
+  const paragraphs = body.paragraphs.map((p) => ({
+    verseNo: parsePositiveInteger(p?.verseNo, 'paragraphs.verseNo'),
+    subject: requireTrimmedString(p?.subject, 'paragraphs.subject'),
+    excerpt: String(p?.excerpt ?? '').trim(),
+  }));
+
+  const seen = new Set();
+  for (const p of paragraphs) {
+    if (seen.has(p.verseNo)) throw createAppError(`${p.verseNo}절이 두 번 들어 있습니다.`, 400);
+    seen.add(p.verseNo);
+  }
+
+  // 없는 절에 단락을 만들지 않도록 먼저 확인한다.
+  const existing = await findExistingVerseNos(bookNo, chapterNo);
+  const missing = paragraphs.filter((p) => !existing.has(p.verseNo)).map((p) => p.verseNo);
+  if (missing.length) {
+    throw createAppError(`본문에 없는 절입니다: ${missing.join(', ')}`, 400);
+  }
+
+  await replaceBibleParagraphs(
+    bookNo,
+    chapterNo,
+    {
+      info: { subject: String(body.subject ?? '').trim(), excerpt: String(body.excerpt ?? '').trim() },
+      paragraphs,
+    },
+    formatChurchKorVerseId({ bookNo, chapterNo, verseNo: 0 }),
+  );
+
+  return getBibleEdit({ bookNo, chapterNo });
+}
+
+// 장 정보에 낭독 경로를 기록한다. 파일이 있을 때만.
+export async function enableChapterAudio(params = {}) {
+  const { bookNo, chapterNo } = parseChapterKey(params);
+
+  if (!getChapterAudioPath({ bookNo, chapterNo })) {
+    throw createAppError('이 장의 낭독 파일이 없습니다.', 404);
+  }
+
+  const audio = `/bible/audio/${bookNo}/${chapterNo}`;
+  await setChapterAudio(bookNo, chapterNo, audio, formatChurchKorVerseId({ bookNo, chapterNo, verseNo: 0 }));
+  return { bookNo, chapterNo, audio };
 }
 
 // 장별 낭독 mp3 경로. 파일이 없으면 null.
