@@ -4,6 +4,7 @@ import authRouter from './modules/auth/auth.routes.js';
 import bibleRouter from './modules/bible/bible.routes.js';
 import reflectionRouter from './modules/reflections/reflection.routes.js';
 import readingRouter from './modules/reading/reading.routes.js';
+import confessionRouter from './modules/confession/confession.routes.js';
 import cmsHandler from './modules/cms/index.mjs';
 import { attachCmsSession } from './modules/cms/session-bridge.js';
 import { getConfig } from './modules/cms/config.mjs';
@@ -51,6 +52,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/bible', bibleRouter);
 app.use('/api/reflections', reflectionRouter);
 app.use('/api/reading', readingRouter);
+app.use('/api/confession', confessionRouter);
 
 app.use((error, req, res, next) => {
   console.error(error);

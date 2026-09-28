@@ -1,8 +1,12 @@
 import {
+  findBibleEditRows, updateBibleEditRows,
   findBiblehubChapter,
   findPostsByBiblehubSlugs, findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
 import { calcWeight, sortByWeight, weightedPick } from './verse-topics.util.js';
-import { normalizeVerseId } from '../../utils/bible-book-meta.js';
+import { findBibleBookMetaByNo, formatChurchKorVerseId, normalizeVerseId } from '../../utils/bible-book-meta.js';
+import { env } from '../../config/env.js';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createAppError, parsePositiveInteger, requireTrimmedString } from '../../utils/validation.js';
 
 const TOPIC_INITIAL_COUNT = 3;
@@ -209,6 +213,108 @@ export async function getBibleChapter(params = {}) {
     rows,
     chapter: convertToBibleChapter(rows),
   };
+}
+
+function parseChapterKey(params) {
+  return {
+    bookNo: parsePositiveInteger(params.bookNo, 'bookNo'),
+    chapterNo: parsePositiveInteger(params.chapterNo, 'chapterNo'),
+  };
+}
+
+// 편집 화면용 한 장: 장 정보(verseNo 0)와 절 행 목록.
+export async function getBibleEdit(params = {}) {
+  const { bookNo, chapterNo } = parseChapterKey(params);
+  const rows = await findBibleEditRows(bookNo, chapterNo);
+  const info = rows.find((row) => row.verseNo === 0);
+
+  return {
+    bookNo,
+    chapterNo,
+    subject: info?.subject || '',
+    excerpt: info?.excerpt || '',
+    rows: rows
+      .filter((row) => row.verseNo > 0)
+      .map((row) => ({
+        verseNo: row.verseNo,
+        subject: row.subject || '',
+        excerpt: row.excerpt || '',
+        verses: (row.verses || []).map((v) => ({
+          category: v.category || '',
+          verse: v.verse || '',
+          say: v.say === true,
+        })),
+      })),
+  };
+}
+
+function optionalText(value, fieldName) {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') throw createAppError(`${fieldName} must be a string.`, 400);
+  return value.trim();
+}
+
+function parseEditRows(value) {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value)) throw createAppError('rows must be an array.', 400);
+
+  return value.map((row) => {
+    const verseNo = parsePositiveInteger(row?.verseNo, 'rows.verseNo');
+    let verses;
+
+    if (row.verses !== undefined) {
+      if (!Array.isArray(row.verses)) throw createAppError('rows.verses must be an array.', 400);
+      verses = row.verses
+        .map((v) => ({
+          category: String(v?.category ?? '').trim(),
+          verse: String(v?.verse ?? '').trim(),
+          say: v?.say === true,
+        }))
+        // 엔터로 쪼개다 남은 빈 조각은 저장하지 않는다. (읽기 화면에서도 버려지는 값)
+        .filter((v) => v.verse);
+      if (!verses.length) throw createAppError(`${verseNo}절 본문이 비어 있습니다.`, 400);
+    }
+
+    return {
+      verseNo,
+      subject: optionalText(row.subject, 'rows.subject'),
+      excerpt: optionalText(row.excerpt, 'rows.excerpt'),
+      verses,
+    };
+  });
+}
+
+export async function saveBibleEdit(params = {}, body = {}) {
+  const { bookNo, chapterNo } = parseChapterKey(params);
+  const subject = optionalText(body.subject, 'subject');
+  const excerpt = optionalText(body.excerpt, 'excerpt');
+  const rows = parseEditRows(body.rows);
+  const info = subject !== undefined || excerpt !== undefined ? { subject, excerpt } : undefined;
+
+  if (!info && !rows?.length) {
+    throw createAppError('No editable fields were provided.', 400);
+  }
+
+  const result = await updateBibleEditRows(
+    bookNo,
+    chapterNo,
+    { info, rows },
+    formatChurchKorVerseId({ bookNo, chapterNo, verseNo: 0 }),
+  );
+
+  return { ...result, chapter: await getBibleEdit({ bookNo, chapterNo }) };
+}
+
+// 장별 낭독 mp3 경로. 파일이 없으면 null.
+export function getChapterAudioPath(params = {}) {
+  const bookNo = parsePositiveInteger(params.bookNo, 'bookNo');
+  const chapterNo = parsePositiveInteger(params.chapterNo, 'chapterNo');
+  const english = findBibleBookMetaByNo(bookNo)?.english;
+
+  if (!english) return null;
+
+  const file = path.resolve(env.bibleAudioDir, english, `${chapterNo}.mp3`);
+  return fs.existsSync(file) ? file : null;
 }
 
 export async function listBibleChapters(params = {}) {

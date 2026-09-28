@@ -43,6 +43,9 @@ const mongoUri =
     mongoQueryString ? `?${mongoQueryString}` : ''
   }`;
 
+// 장별 낭독 mp3: <dir>/<english 책이름>/<장>.mp3 (node/bible 의 uploadPath/bible 과 같은 구조)
+const bibleAudioDir = process.env.BIBLE_AUDIO_DIR || '/backup/ImageBible/bible';
+
 const jwtAccessSecret = process.env.JWT_ACCESS_SECRET || 'dev-access-secret';
 const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret';
 const kakaoClientId = process.env.KAKAO_ID || process.env.KAKAO_CLIENT_ID || '';
@@ -55,6 +58,7 @@ export const env = {
   mongoDbName,
   mongoCollectionBibleEdit,
   mongoCollectionVerseTopics,
+  bibleAudioDir,
   jwtAccessSecret,
   jwtRefreshSecret,
   kakaoClientId,

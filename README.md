@@ -23,12 +23,17 @@ pnpm run dev:server
 
 ```bash
 pnpm run dev:web
+pnpm run dev:dashboard
 ```
 
 기본 개발 주소:
 
 - Web: `http://localhost:7711`
+- Dashboard: `http://localhost:7712`
 - Server: `http://localhost:3001`
+
+
+
 
 ## 빌드
 

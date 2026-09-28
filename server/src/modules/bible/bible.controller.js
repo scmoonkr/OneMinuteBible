@@ -1,5 +1,37 @@
 import {
-  getBiblehubChapter, getBibleChapter, listBibleChapters, listTopicVerses, recordTopicVerseAction } from './bible.service.js';
+  getBibleEdit, getBiblehubChapter, getBibleChapter, getChapterAudioPath, listBibleChapters, listTopicVerses,
+  recordTopicVerseAction, saveBibleEdit } from './bible.service.js';
+
+export async function readBibleEdit(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await getBibleEdit(req.params) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function updateBibleEdit(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await saveBibleEdit(req.params, req.body) });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export function readChapterAudio(req, res, next) {
+  try {
+    const file = getChapterAudioPath(req.params);
+
+    if (!file) {
+      return res.status(404).json({ ok: false, message: 'Audio not found.' });
+    }
+
+    // sendFile 이 Range 요청을 처리하므로 재생 위치 이동(seek)이 된다.
+    return res.sendFile(file, { maxAge: '7d' });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export async function readChapter(req, res, next) {
   try {

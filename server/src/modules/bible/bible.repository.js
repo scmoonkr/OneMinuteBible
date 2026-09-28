@@ -61,6 +61,58 @@ export async function findBibleChaptersByBookNo(bookNo) {
   return rows;
 }
 
+// 편집 화면용: 한 장의 원본 행(verseNo 0 = 장 정보, 1.. = 절)을 그대로 읽는다.
+export async function findBibleEditRows(bookNo, chapterNo) {
+  return getDatabase()
+    .collection(env.mongoCollectionBibleEdit)
+    .find(
+      { bookNo, chapterNo },
+      { projection: { _id: 0, bookNo: 1, chapterNo: 1, verseNo: 1, subject: 1, excerpt: 1, verses: 1 }, sort: { verseNo: 1 } },
+    )
+    .toArray();
+}
+
+// 편집 화면 저장. 행을 지우고 다시 넣지 않고, 절마다 편집 필드만 고친다.
+// 빈 문자열인 subject/excerpt 는 필드를 지운다(원래 없던 것과 같게).
+// 장 정보(verseNo 0) 행은 없는 장도 있어서 없으면 만든다. 절 행은 새로 만들지 않는다.
+export async function updateBibleEditRows(bookNo, chapterNo, { info, rows }, index0) {
+  const operations = [];
+
+  const fieldUpdate = (fields) => {
+    const $set = {};
+    const $unset = {};
+    for (const [key, value] of Object.entries(fields)) {
+      if (value === undefined) continue;
+      if (value === '') $unset[key] = '';
+      else $set[key] = value;
+    }
+    const update = {};
+    if (Object.keys($set).length) update.$set = $set;
+    if (Object.keys($unset).length) update.$unset = $unset;
+    return update;
+  };
+
+  if (info) {
+    const update = fieldUpdate({ subject: info.subject, excerpt: info.excerpt });
+    update.$setOnInsert = { bookNo, chapterNo, verseNo: 0, index: index0 };
+    operations.push({ updateOne: { filter: { bookNo, chapterNo, verseNo: 0 }, update, upsert: true } });
+  }
+
+  for (const row of rows ?? []) {
+    const update = fieldUpdate({ subject: row.subject, excerpt: row.excerpt, verses: row.verses });
+    if (!Object.keys(update).length) continue;
+    operations.push({ updateOne: { filter: { bookNo, chapterNo, verseNo: row.verseNo }, update } });
+  }
+
+  if (!operations.length) return { matched: 0, modified: 0 };
+
+  const result = await getDatabase()
+    .collection(env.mongoCollectionBibleEdit)
+    .bulkWrite(operations, { ordered: true });
+
+  return { matched: result.matchedCount + result.upsertedCount, modified: result.modifiedCount + result.upsertedCount };
+}
+
 // biblehub 컬렉션에서 장 단위 부가정보(인물·장소·사건)를 읽는다.
 // 세 필드 모두 [{ title, link, key }] 형태이고 link 는 biblehub 의 /topical/... 경로다.
 export async function findBiblehubChapter(bookNo, chapterNo) {

@@ -4,11 +4,14 @@
   "scripts": {
     "dev:server": "pnpm --dir server run dev",
     "dev:web": "pnpm --dir apps/web exec nuxt dev --port 7711",
+    "dev:dashboard": "pnpm --dir apps/dashboard exec nuxt dev --port 7712",
     "build:server": "pnpm --dir server run build",
     "build:web": "pnpm --dir apps/web run build",
-    "build:all": "pnpm run build:server && pnpm run build:web",
+    "build:dashboard": "pnpm --dir apps/dashboard run build",
+    "build:all": "pnpm run build:server && pnpm run build:web && pnpm run build:dashboard",
     "start:server": "pnpm --dir server run start",
     "start:web": "pnpm --dir apps/web run start",
+    "start:dashboard": "pnpm --dir apps/dashboard run start",
     "install:all": "pnpm --dir server install && pnpm --dir apps/web install"
   },
   "pnpm": {
