@@ -1767,7 +1767,13 @@
 .block-text h4 { font-size: 19px; margin: 10px 0 4px; font-weight: 700; }
 .block-text h5 { font-size: 18px; margin: 8px 0 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 .block-text h6 { font-size: 17px; margin: 8px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--theme-fg-dim); }
-.block-text p { margin: 8px 0; }
+/* 문단 간격 = 한 줄 높이. 에디터에서 빈 줄 하나를 넣으면 화면에서도 빈 줄 하나로 보인다.
+   layouts/content.vue 의 `.theme-default p { margin: 0 }` 리셋이 나중에 로드되며
+   특이도가 같아 덮어쓰므로, .theme-default 를 붙인 선택자로 특이도를 올린다. */
+.block-text p,
+.theme-default .block-text p { margin: 0 0 1.8em; }
+.block-text p:last-child,
+.theme-default .block-text p:last-child { margin-bottom: 0; }
 
 /* Lists — both ordered and unordered, supports nesting */
 .block-text ul,
