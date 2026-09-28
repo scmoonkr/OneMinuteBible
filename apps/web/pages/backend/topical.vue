@@ -81,9 +81,20 @@
         </section>
 
         <div v-if="total > pageSize" class="topical-pager">
-          <button type="button" :disabled="skip === 0" @click="skip = Math.max(0, skip - pageSize)">이전</button>
-          <span class="theme-meta">{{ skip + 1 }}–{{ Math.min(skip + pageSize, total) }} / {{ total.toLocaleString() }}</span>
-          <button type="button" :disabled="skip + pageSize >= total" @click="skip = skip + pageSize">다음</button>
+          <button type="button" class="pg-btn" :disabled="currentPage === 1" aria-label="처음" @click="goPage(1)">«</button>
+          <button type="button" class="pg-btn" :disabled="currentPage === 1" aria-label="이전" @click="goPage(currentPage - 1)">‹</button>
+          <span v-if="pageWindow.hasLeft" class="pg-ellipsis">…</span>
+          <button
+            v-for="p in pageWindow.pages"
+            :key="p"
+            type="button"
+            class="pg-btn"
+            :class="{ active: p === currentPage }"
+            @click="goPage(p)"
+          >{{ p }}</button>
+          <span v-if="pageWindow.hasRight" class="pg-ellipsis">…</span>
+          <button type="button" class="pg-btn" :disabled="currentPage === totalPages" aria-label="다음" @click="goPage(currentPage + 1)">›</button>
+          <button type="button" class="pg-btn" :disabled="currentPage === totalPages" aria-label="마지막" @click="goPage(totalPages)">»</button>
         </div>
       </main>
     </div>
@@ -229,6 +240,28 @@ const { data, pending } = useFetch<{ items: TopicalRow[]; total: number }>(
 )
 const items = computed(() => data.value?.items ?? [])
 const total = computed(() => data.value?.total ?? 0)
+
+// ── 페이지네이션 ──
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
+const currentPage = computed(() => Math.floor(skip.value / pageSize) + 1)
+
+// 현재 페이지를 가운데 두고 최대 5개 번호를 보여준다. 앞/뒤로 더 있으면 … 로 표시.
+const pageWindow = computed(() => {
+  const tp = totalPages.value
+  const cur = currentPage.value
+  const size = 5
+  let start = Math.max(1, cur - Math.floor(size / 2))
+  const end = Math.min(tp, start + size - 1)
+  start = Math.max(1, end - size + 1)
+  const pages: number[] = []
+  for (let i = start; i <= end; i += 1) pages.push(i)
+  return { pages, hasLeft: start > 1, hasRight: end < tp }
+})
+
+function goPage(n: number) {
+  const clamped = Math.min(Math.max(1, n), totalPages.value)
+  skip.value = (clamped - 1) * pageSize
+}
 
 // 검색어나 첫 글자가 바뀌면 첫 페이지로
 watch([query, char], () => { skip.value = 0 })
@@ -382,9 +415,44 @@ function renderContent(raw?: string) {
 .topical-pager {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 14px;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+.pg-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--theme-line);
+  border-radius: 8px;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.pg-btn:hover:not(:disabled):not(.active) {
+  border-color: var(--theme-fg-faint);
+  background: var(--theme-bg-soft);
+}
+.pg-btn.active {
+  background: var(--theme-fg);
+  border-color: var(--theme-fg);
+  color: var(--theme-bg);
+  font-weight: 700;
+}
+.pg-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pg-ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--theme-fg-faint);
 }
 
 /* ── Drawer ── */
