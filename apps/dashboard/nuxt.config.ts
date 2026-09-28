@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 
-const apiTarget = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:7710';
+// /api/** 프록시는 server/api/[...path].ts (Nitro) 가 맡는다. dev·빌드 공통.
 
 export default defineNuxtConfig({
   alias: {
@@ -23,9 +23,6 @@ export default defineNuxtConfig({
       // apps/web/data 를 dev 서버가 읽을 수 있게 한다.
       fs: {
         allow: [fileURLToPath(new URL('../..', import.meta.url))],
-      },
-      proxy: {
-        '/api': { target: apiTarget, changeOrigin: true },
       },
     },
   },

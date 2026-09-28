@@ -12,7 +12,7 @@
     "start:server": "pnpm --dir server run start",
     "start:web": "pnpm --dir apps/web run start",
     "start:dashboard": "pnpm --dir apps/dashboard run start",
-    "install:all": "pnpm --dir server install && pnpm --dir apps/web install"
+    "install:all": "pnpm --dir server install && pnpm --dir apps/web install && pnpm --dir apps/dashboard install"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
