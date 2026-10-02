@@ -128,7 +128,9 @@ function readKorean(): any[] | null {
   try {
     parsed = JSON.parse(text);
   } catch {
-    parseError.value = 'JSON 형식이 아닙니다.';
+    parseError.value = looksLikeCsv(text)
+      ? 'CSV 형식입니다. CSV 버튼을 누르면 JSON 으로 바꿔 채웁니다.'
+      : 'JSON 형식이 아닙니다.';
     return null;
   }
   if (!Array.isArray(parsed)) {
@@ -174,6 +176,172 @@ function parseByVerse() {
   }
   parseError.value = matched === parsed.length ? '' : `${parsed.length}줄 중 ${matched}줄만 절 번호가 맞았습니다.`;
 }
+
+// ── CSV 붙여넣기 ───────────────────────────────────────────────
+// 형식(첫 줄 머리글, 탭 또는 쉼표 구분):
+//   chapter  verseStart  title  message
+// verseStart 0 은 장 전체(제목 = 장 주제, message = 장 요약), 나머지는 단락.
+// CSV 버튼을 누르면 위 형식을 번역 JSON 으로 바꿔 모달로 보여 준다. (아래 줄에는 적용하지 않음)
+
+const CSV_COLUMNS = ['chapter', 'verseStart', 'title', 'message'] as const;
+
+function looksLikeCsv(text: string) {
+  const head = text.split(/\r?\n/, 1)[0].toLowerCase();
+  return head.includes('versestart') && head.includes('title');
+}
+
+// 따옴표("...")로 감싼 칸 안의 구분자·줄바꿈·"" 를 처리하는 작은 CSV/TSV 파서.
+function parseDelimited(text: string, delimiter: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"' && text[i + 1] === '"') { cell += '"'; i += 1; }
+      else if (ch === '"') quoted = false;
+      else cell += ch;
+    } else if (ch === '"' && cell === '') {
+      quoted = true;
+    } else if (ch === delimiter) {
+      row.push(cell); cell = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(cell); cell = '';
+      if (row.some((c) => c.trim())) rows.push(row);
+      row = [];
+    } else {
+      cell += ch;
+    }
+  }
+  row.push(cell);
+  if (row.some((c) => c.trim())) rows.push(row);
+  return rows;
+}
+
+function csvToJson() {
+  parseError.value = '';
+  const text = jsonKor.value.trim();
+  if (!text) {
+    parseError.value = 'jsonKor 칸에 CSV 를 붙여 넣으세요.';
+    return;
+  }
+
+  const firstLine = text.split(/\r?\n/, 1)[0];
+  const delimiter = firstLine.includes('\t') ? '\t' : ',';
+  const [header, ...body] = parseDelimited(text, delimiter);
+  const index = Object.fromEntries(
+    CSV_COLUMNS.map((name) => [name, header.findIndex((h) => h.trim().toLowerCase() === name.toLowerCase())]),
+  ) as Record<(typeof CSV_COLUMNS)[number], number>;
+
+  const missing = CSV_COLUMNS.filter((name) => index[name] < 0);
+  if (missing.length) {
+    parseError.value = `머리글에 ${missing.join(', ')} 이(가) 없습니다. (chapter, verseStart, title, message)`;
+    return;
+  }
+
+  const cell = (row: string[], name: (typeof CSV_COLUMNS)[number]) => (row[index[name]] ?? '').trim();
+
+  if (!body.length) {
+    parseError.value = 'CSV 에 머리글 말고 내용 줄이 없습니다.';
+    return;
+  }
+
+  // 여러 장이 섞여 있어도 모두 담는다. chapter 가 비어 있으면 지금 장으로 본다.
+  // 책 번호는 CSV 에 없으므로 지금 고른 책을 쓴다. (모달에서 고쳐 저장할 수 있다)
+  const json = body.map((row) => {
+    const verseNo = Number(cell(row, 'verseStart'));
+    const item: Record<string, unknown> = {
+      bookNo: bookNo.value,
+      chapterNo: Number(cell(row, 'chapter')) || chapterNo.value,
+      verseNo,
+      subject: cell(row, 'title'),
+    };
+    // 장 전체(0)의 message 는 장 요약(excerpt), 단락은 단락 요약(summary)
+    item[verseNo === 0 ? 'excerpt' : 'summary'] = cell(row, 'message');
+    return item;
+  });
+
+  openJsonModal(JSON.stringify(json, null, 2));
+}
+
+// ── CSV 변환 결과 모달: 확인·복사하거나, JSON 의 위치대로 저장한다 ─────────
+
+const csvModal = ref<{ json: string } | null>(null);
+const csvCopied = ref(false);
+const modalSaving = ref(false);
+const modalResult = ref<{ type: 'ok' | 'error'; text: string } | null>(null);
+
+function openJsonModal(json: string) {
+  csvModal.value = { json };
+  csvCopied.value = false;
+  modalResult.value = null;
+}
+
+// 모달 JSON 을 읽어 저장할 항목으로 바꾼다. 형식이 틀리면 이유를 돌려준다.
+const modalItems = computed<{ items: any[] } | { error: string }>(() => {
+  if (!csvModal.value) return { items: [] };
+  let parsed: any;
+  try {
+    parsed = JSON.parse(csvModal.value.json);
+  } catch {
+    return { error: 'JSON 형식이 아닙니다.' };
+  }
+  if (!Array.isArray(parsed) || !parsed.length) return { error: '배열([...])에 한 줄 이상 있어야 합니다.' };
+  return { items: parsed };
+});
+
+// 모달 머리에 보여 줄 요약: 몇 줄, 어느 책·장
+const modalSummary = computed(() => {
+  const value = modalItems.value;
+  if ('error' in value) return value.error;
+  const chapters = [...new Set(value.items.map((i) => `${i.bookNo}:${i.chapterNo}`))];
+  const books = [...new Set(value.items.map((i) => i.bookNo))];
+  const chapterNos = [...new Set(value.items.map((i) => Number(i.chapterNo)))].sort((a, b) => a - b);
+  const range = chapterNos.length > 1 ? `${chapterNos[0]}~${chapterNos.at(-1)}장` : `${chapterNos[0]}장`;
+  return `${value.items.length}줄 · 책 ${books.join(', ')} · ${chapters.length}개 장(${range})`;
+});
+
+async function copyCsvJson() {
+  if (!csvModal.value) return;
+  try {
+    await navigator.clipboard.writeText(csvModal.value.json);
+    csvCopied.value = true;
+  } catch {
+    modalResult.value = { type: 'error', text: '복사하지 못했습니다. (브라우저 권한 확인)' };
+  }
+}
+
+// JSON 의 bookNo/chapterNo/verseNo 마다 subject, summary 를 저장한다. (지금 장과 무관)
+async function saveModalJson() {
+  const value = modalItems.value;
+  if ('error' in value) {
+    modalResult.value = { type: 'error', text: value.error };
+    return;
+  }
+  modalSaving.value = true;
+  modalResult.value = null;
+  try {
+    const res = await $fetch<{ data: { count: number; chapters: number; modified: number } }>('/api/bible/excerpts', {
+      method: 'PATCH',
+      body: { items: value.items },
+    });
+    const d = res.data;
+    modalResult.value = { type: 'ok', text: `${d.chapters}개 장 ${d.count}줄 저장했습니다. (실제로 바뀐 행 ${d.modified}개)` };
+  } catch (e) {
+    modalResult.value = { type: 'error', text: apiErrorMessage(e) };
+  } finally {
+    modalSaving.value = false;
+  }
+}
+
+function onModalKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && !modalSaving.value) csvModal.value = null;
+}
+onMounted(() => window.addEventListener('keydown', onModalKeydown));
+onBeforeUnmount(() => window.removeEventListener('keydown', onModalKeydown));
 
 // ── 저장 ───────────────────────────────────────────────────────
 
@@ -249,15 +417,16 @@ async function enableAudio() {
     <template v-else-if="source && lines.length">
       <!-- jsonEng | jsonKor | 저장·Parsing·Audio -->
       <div class="block">
-        <textarea :value="jsonEng" rows="5" readonly placeholder="jsonEng" title="클릭하면 번역용 JSON 을 복사합니다" @click="copy('번역용 원문', jsonForTranslation())" />
+        <textarea :value="jsonEng" rows="7" readonly placeholder="jsonEng" title="클릭하면 번역용 JSON 을 복사합니다" @click="copy('번역용 원문', jsonForTranslation())" />
         <div class="col">
-          <textarea v-model="jsonKor" rows="5" placeholder="jsonKor" @input="applyKorean" />
+          <textarea v-model="jsonKor" rows="7" placeholder="jsonKor (JSON 또는 CSV: chapter / verseStart / title / message)" @input="applyKorean" />
           <small v-if="parseError" class="parse-error">{{ parseError }}</small>
         </div>
         <div class="buttons">
           <button class="btn indigo" :disabled="busy" @click="save">저장</button>
           <button class="btn orange" @click="parseByVerse">Parsing</button>
           <button class="btn indigo" :disabled="busy" @click="enableAudio">Audio</button>
+          <button class="btn orange" title="chapter / verseStart / title / message 형식을 JSON 으로 바꿔 보여 줍니다" @click="csvToJson">CSV</button>
         </div>
       </div>
 
@@ -282,6 +451,30 @@ async function enableAudio() {
         </div>
       </div>
     </template>
+
+    <!-- CSV → JSON 변환 결과 -->
+    <div v-if="csvModal" class="modal-backdrop" @click="!modalSaving && (csvModal = null)">
+      <div class="modal" role="dialog" aria-label="CSV 변환 결과" @click.stop>
+        <div class="modal-head">
+          <strong>CSV → JSON <small>{{ modalSummary }}</small></strong>
+          <button type="button" class="modal-close" aria-label="닫기" :disabled="modalSaving" @click="csvModal = null">×</button>
+        </div>
+        <p class="modal-note">
+          저장하면 지금 보는 장과 상관없이, 각 줄의 <code>bookNo · chapterNo · verseNo</code> 위치에
+          <code>subject</code>(주제)와 <code>summary</code>(요약, verseNo 0 은 <code>excerpt</code>)를 저장합니다.
+          다른 절의 단락 나누기는 그대로 둡니다. 저장 전에 아래 JSON 을 고칠 수 있습니다.
+        </p>
+        <textarea id="csv-modal-json" v-model="csvModal.json" class="modal-json" spellcheck="false" />
+        <div class="modal-foot">
+          <span v-if="modalResult" class="modal-result" :class="modalResult.type">{{ modalResult.text }}</span>
+          <button type="button" class="btn orange" @click="copyCsvJson">{{ csvCopied ? '복사됨 ✓' : '복사' }}</button>
+          <button type="button" class="btn save" :disabled="modalSaving || 'error' in modalItems" @click="saveModalJson">
+            {{ modalSaving ? '저장 중…' : '저장' }}
+          </button>
+          <button type="button" class="btn indigo" :disabled="modalSaving" @click="csvModal = null">닫기</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -362,6 +555,15 @@ input[readonly] {
   gap: 8px;
 }
 
+/* 버튼 칸 높이를 옆 textarea 높이에 맞춰 나눠 가진다. */
+.buttons .btn {
+  flex: 1;
+}
+
+.block > textarea {
+  height: 100%;
+}
+
 .btn {
   width: 100%;
   padding: 8px 0;
@@ -424,5 +626,106 @@ input[readonly] {
   .line {
     grid-template-columns: 42px 1fr;
   }
+}
+
+/* ── CSV 변환 결과 모달 ── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 20, 30, 0.45);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 860px);
+  max-height: calc(100vh - 40px);
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.modal-head small {
+  margin-left: 6px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.modal-close {
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.modal-note {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.modal-json {
+  flex: 1;
+  min-height: 360px;
+  font-family: ui-monospace, Consolas, 'D2Coding', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-foot {
+  align-items: center;
+}
+
+.modal-foot .btn {
+  width: auto;
+  padding: 8px 18px;
+}
+
+.btn.save {
+  background: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.modal-result {
+  margin-right: auto;
+  font-size: 13px;
+}
+
+.modal-result.ok {
+  color: #2b8a3e;
+}
+
+.modal-result.error {
+  color: #c92a2a;
+}
+
+.modal-note code {
+  font-size: 12px;
 }
 </style>

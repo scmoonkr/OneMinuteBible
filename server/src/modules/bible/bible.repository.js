@@ -159,6 +159,59 @@ export async function replaceBibleParagraphs(bookNo, chapterNo, { info, paragrap
   return collection.bulkWrite(operations, { ordered: true });
 }
 
+// 위치(bookNo, chapterNo, verseNo)마다 subject/excerpt 만 바꾼다. 여러 장에 걸쳐도 된다.
+// 단락 나누기 전체를 바꾸지 않으므로 다른 절의 subject 는 그대로 둔다.
+// 장 정보(verseNo 0) 행은 없으면 만들고, 절 행은 새로 만들지 않는다(호출 전에 존재를 확인한다).
+export async function updateVerseExcerpts(items, index0Of) {
+  if (!items.length) return { matched: 0, modified: 0 };
+
+  const operations = items.map((item) => {
+    const $set = {};
+    if (item.subject !== undefined) $set.subject = item.subject;
+    if (item.excerpt !== undefined) $set.excerpt = item.excerpt;
+    const filter = { bookNo: item.bookNo, chapterNo: item.chapterNo, verseNo: item.verseNo };
+
+    if (item.verseNo === 0) {
+      return {
+        updateOne: {
+          filter,
+          update: { $set, $setOnInsert: { ...filter, index: index0Of(item) } },
+          upsert: true,
+        },
+      };
+    }
+    return { updateOne: { filter, update: { $set } } };
+  });
+
+  const result = await getDatabase()
+    .collection(env.mongoCollectionBibleEdit)
+    .bulkWrite(operations, { ordered: false });
+
+  return { matched: result.matchedCount + result.upsertedCount, modified: result.modifiedCount + result.upsertedCount };
+}
+
+// 주어진 위치들 중 실제로 있는 절 행을 돌려준다. ("bookNo:chapterNo:verseNo" 집합)
+export async function findExistingVerseKeys(positions) {
+  if (!positions.length) return new Set();
+
+  // 장마다 한 조건으로 묶는다: { bookNo, chapterNo, verseNo: { $in: [...] } }
+  const byChapter = new Map();
+  for (const p of positions) {
+    const key = `${p.bookNo}:${p.chapterNo}`;
+    if (!byChapter.has(key)) byChapter.set(key, { bookNo: p.bookNo, chapterNo: p.chapterNo, verseNos: [] });
+    byChapter.get(key).verseNos.push(p.verseNo);
+  }
+
+  const rows = await getDatabase()
+    .collection(env.mongoCollectionBibleEdit)
+    .find(
+      { $or: [...byChapter.values()].map((c) => ({ bookNo: c.bookNo, chapterNo: c.chapterNo, verseNo: { $in: c.verseNos } })) },
+      { projection: { _id: 0, bookNo: 1, chapterNo: 1, verseNo: 1 } },
+    )
+    .toArray();
+  return new Set(rows.map((r) => `${r.bookNo}:${r.chapterNo}:${r.verseNo}`));
+}
+
 export async function findExistingVerseNos(bookNo, chapterNo) {
   const rows = await getDatabase()
     .collection(env.mongoCollectionBibleEdit)

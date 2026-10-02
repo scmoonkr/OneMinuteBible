@@ -1,6 +1,15 @@
 import {
   enableChapterAudio, getBibleEdit, getBiblehubChapter, getBiblehubSource, getBibleChapter, getChapterAudioPath,
-  listBibleChapters, listTopicVerses, recordTopicVerseAction, saveBibleEdit, saveBibleParagraphs } from './bible.service.js';
+  listBibleChapters, listTopicVerses, recordTopicVerseAction, saveBibleEdit, saveBibleParagraphs,
+  saveVerseExcerpts } from './bible.service.js';
+
+export async function updateVerseExcerpts(req, res, next) {
+  try {
+    return res.json({ ok: true, data: await saveVerseExcerpts(req.body) });
+  } catch (error) {
+    return next(error);
+  }
+}
 
 export async function readBiblehubSource(req, res, next) {
   try {

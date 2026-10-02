@@ -1,6 +1,7 @@
 import {
   findBibleEditRows, updateBibleEditRows,
   findBiblehubDocument, findExistingVerseNos, replaceBibleParagraphs, setChapterAudio,
+  findExistingVerseKeys, updateVerseExcerpts,
   findBiblehubChapter,
   findPostsByBiblehubSlugs, findBibleChaptersByBookNo, findBibleRows, findRecentVerseTopicAction, findVerseTopicsByCategory, incrementVerseTopicScore, saveVerseTopicAction } from './bible.repository.js';
 import { calcWeight, sortByWeight, weightedPick } from './verse-topics.util.js';
@@ -367,6 +368,64 @@ export async function saveBibleParagraphs(params = {}, body = {}) {
   );
 
   return getBibleEdit({ bookNo, chapterNo });
+}
+
+const MAX_EXCERPT_ITEMS = 5000;
+
+// 번역 JSON 을 위치별로 저장한다. (editHub 의 CSV 모달 저장)
+// body: { items: [{ bookNo, chapterNo, verseNo, subject, summary | excerpt }] }
+// 여러 책·장이 섞여도 되고, 각 위치의 subject 와 excerpt(= summary)만 바꾼다.
+// 없는 절이 하나라도 있으면 아무것도 저장하지 않고 그 목록을 알려 준다.
+export async function saveVerseExcerpts(body = {}) {
+  const raw = Array.isArray(body.items) ? body.items : null;
+  if (!raw || !raw.length) {
+    throw createAppError('items must be a non-empty array.', 400);
+  }
+  if (raw.length > MAX_EXCERPT_ITEMS) {
+    throw createAppError(`한 번에 ${MAX_EXCERPT_ITEMS}줄까지 저장할 수 있습니다.`, 400);
+  }
+
+  const seen = new Set();
+  const items = raw.map((item, i) => {
+    const at = `${i + 1}번째 줄`;
+    const bookNo = parsePositiveInteger(item?.bookNo, `${at} bookNo`);
+    const chapterNo = parsePositiveInteger(item?.chapterNo, `${at} chapterNo`);
+    const verseNo = Number(item?.verseNo);
+    if (!Number.isInteger(verseNo) || verseNo < 0) {
+      throw createAppError(`${at}: verseNo 는 0 이상의 정수여야 합니다.`, 400);
+    }
+
+    const key = `${bookNo}:${chapterNo}:${verseNo}`;
+    if (seen.has(key)) throw createAppError(`${at}: ${key} 위치가 두 번 들어 있습니다.`, 400);
+    seen.add(key);
+
+    // 요약 안의 줄바꿈은 기존 데이터처럼 '|' 로 저장한다.
+    const text = (value) => (value === undefined || value === null ? undefined : String(value).replace(/\r?\n/g, '|').trim());
+    const subject = text(item.subject);
+    const excerpt = text(item.summary ?? item.excerpt);
+    if (!subject && !excerpt) {
+      throw createAppError(`${at}: subject 와 summary 가 모두 비어 있습니다.`, 400);
+    }
+
+    return { bookNo, chapterNo, verseNo, subject: subject || undefined, excerpt: excerpt || undefined };
+  });
+
+  // 절 행은 새로 만들지 않는다. 없는 절이 있으면 전부 거절한다.
+  const verses = items.filter((item) => item.verseNo > 0);
+  const existing = await findExistingVerseKeys(verses);
+  const missing = verses
+    .map((item) => `${item.bookNo}:${item.chapterNo}:${item.verseNo}`)
+    .filter((key) => !existing.has(key));
+  if (missing.length) {
+    const shown = missing.slice(0, 10).join(', ');
+    throw createAppError(`본문에 없는 절이 ${missing.length}개 있습니다: ${shown}${missing.length > 10 ? ' …' : ''}`, 400);
+  }
+
+  const result = await updateVerseExcerpts(items, (item) =>
+    formatChurchKorVerseId({ bookNo: item.bookNo, chapterNo: item.chapterNo, verseNo: 0 }));
+
+  const chapters = [...new Set(items.map((item) => `${item.bookNo}:${item.chapterNo}`))];
+  return { count: items.length, chapters: chapters.length, ...result };
 }
 
 // 장 정보에 낭독 경로를 기록한다. 파일이 있을 때만.

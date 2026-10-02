@@ -39,7 +39,8 @@ app.use(cmsHandler);
 // 업로드된 미디어 파일 서빙 (/uploads/**).
 app.use('/uploads', express.static(getConfig().uploadDir));
 
-app.use(express.json());
+// 기본 100KB 는 여러 장의 번역 JSON(/api/bible/excerpts)을 한 번에 보내기에 작다.
+app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (req, res) => {
   res.json({

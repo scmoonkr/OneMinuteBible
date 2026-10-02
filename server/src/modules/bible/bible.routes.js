@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   readBibleEdit, readBiblehubChapter, readBiblehubSource, readBookChapters, readChapter, readChapterAudio,
   readTopicVerses, updateBibleEdit, updateBibleParagraphs, updateChapterAudio, updateTopicVerseAction,
+  updateVerseExcerpts,
 } from './bible.controller.js';
 import { requireBackendRole } from '../../middlewares/backend-role.middleware.js';
 
@@ -22,5 +23,7 @@ router.patch('/edit/:bookNo/:chapterNo', requireBackendRole, updateBibleEdit);
 router.get('/hub/:bookNo/:chapterNo', readBiblehubSource);
 router.patch('/edit/:bookNo/:chapterNo/paragraphs', requireBackendRole, updateBibleParagraphs);
 router.patch('/edit/:bookNo/:chapterNo/audio', requireBackendRole, updateChapterAudio);
+// 번역 JSON 위치별 저장 (여러 장 가능): [{ bookNo, chapterNo, verseNo, subject, summary }]
+router.patch('/excerpts', requireBackendRole, updateVerseExcerpts);
 
 export default router;
