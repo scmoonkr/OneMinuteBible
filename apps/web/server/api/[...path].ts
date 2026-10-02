@@ -1,53 +1,10 @@
-import {
-  appendResponseHeader,
-  getRequestHeaders,
-  getRequestURL,
-  readRawBody,
-  setResponseStatus,
-} from 'h3';
+import { getRequestURL, proxyRequest } from 'h3';
 
-const HOP_BY_HOP_HEADERS = new Set([
-  'connection',
-  'content-length',
-  'host',
-  'keep-alive',
-  'proxy-authenticate',
-  'proxy-authorization',
-  'te',
-  'trailer',
-  'transfer-encoding',
-  'upgrade',
-]);
-
-export default defineEventHandler(async (event) => {
-  const targetBase = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:7710';
-  const requestUrl = getRequestURL(event);
-  const targetUrl = new URL(requestUrl.pathname + requestUrl.search, targetBase);
-  const method = event.method || 'GET';
-  const incomingHeaders = getRequestHeaders(event);
-  const headers = Object.fromEntries(
-    Object.entries(incomingHeaders).filter(
-      (entry): entry is [string, string] => (
-        typeof entry[1] === 'string'
-        && !HOP_BY_HOP_HEADERS.has(entry[0].toLowerCase())
-      ),
-    ),
-  );
-  const body = method === 'GET' || method === 'HEAD' ? undefined : await readRawBody(event, false);
-
-  const response = await $fetch.raw(targetUrl.toString(), {
-    method,
-    headers,
-    body,
-    redirect: 'manual',
-  });
-
-  setResponseStatus(event, response.status, response.statusText);
-
-  for (const [key, value] of response.headers.entries()) {
-    if (HOP_BY_HOP_HEADERS.has(key.toLowerCase())) continue;
-    appendResponseHeader(event, key, value);
-  }
-
-  return response._data;
+// /api/** 를 API 서버(server/ 의 Express, 기본 7710)로 넘긴다. 대상은 NUXT_API_PROXY_TARGET.
+// proxyRequest 는 상태 코드·헤더(쿠키)·본문을 그대로 넘기고 스트리밍한다.
+// ($fetch.raw 로 넘기면 API 의 404·401 같은 응답이 예외가 되어 모두 500 으로 바뀌었다)
+export default defineEventHandler((event) => {
+  const target = process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:7710';
+  const url = getRequestURL(event);
+  return proxyRequest(event, new URL(url.pathname + url.search, target).toString());
 });
