@@ -31,7 +31,7 @@ pnpm run dev:server
 ```
 
 - 내부적으로 `server` 디렉터리의 `pnpm run dev`를 실행합니다.
-- 기본 포트는 `3001`입니다.
+- 기본 포트는 `7710`입니다. (루트 `.env` 의 `PORT`)
 - 서버는 루트 `.env` 파일을 읽습니다.
 - MongoDB 연결 정보가 필요하면 `.env`에 `MONGODB_URI` 또는 `MONGODB_ADDR`를 설정합니다.
 
