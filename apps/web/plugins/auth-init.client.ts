@@ -1,5 +1,9 @@
 export default defineNuxtPlugin(async () => {
   const auth = useAuth();
+  const config = useRuntimeConfig();
+
+  // 쿠키 도메인을 켠 뒤 처음 열 때, 예전 "현재 호스트 전용" 로그인 쿠키를 도메인 쿠키로 옮긴다.
+  migrateHostOnlyAuthCookies(config.public.cookieDomain as string);
 
   auth.syncSession();
 

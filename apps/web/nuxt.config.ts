@@ -18,6 +18,11 @@ export default defineNuxtConfig({
       // CMS 콘텐츠 페이지의 사이트명/설명 폴백. DB(site-config)에 값이 있으면 그쪽이 우선.
       siteName: process.env.SITE_NAME || '',
       siteDescription: process.env.SITE_DESCRIPTION || '',
+      // 로그인 쿠키(omb-*) 도메인. 운영에서 '.oneminutebible.co.kr' 로 두면
+      // 대시보드(dashboard.oneminutebible.co.kr)와 로그인을 공유한다. 비우면 현재 호스트에만.
+      cookieDomain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN || '',
+      // 로그인 후 돌아갈 수 있는 대시보드 주소. /login?redirect= 에 이 호스트의 절대 URL 을 허용한다.
+      dashboardBase: process.env.NUXT_PUBLIC_DASHBOARD_BASE || 'http://localhost:7712',
     },
   },
   vite: {

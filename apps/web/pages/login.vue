@@ -7,14 +7,22 @@ const auth = useAuth();
 const router = useRouter();
 const route = useRoute();
 
-// 가드(middleware/backend.ts 등)가 붙여준 복귀 경로.
-// 오픈 리다이렉트를 막기 위해 같은 오리진의 절대경로만 허용한다.
-const redirectTo = computed(() => {
-  const raw = route.query.redirect;
-  const value = Array.isArray(raw) ? raw[0] : raw;
-  if (typeof value !== 'string') return '/account';
-  return value.startsWith('/') && !value.startsWith('//') ? value : '/account';
-});
+const config = useRuntimeConfig();
+
+// 가드(middleware/backend.ts 등)나 대시보드가 붙여준 복귀 경로.
+// 오픈 리다이렉트를 막기 위해 같은 사이트의 절대경로와 대시보드 주소만 허용한다.
+const redirectTo = computed(() =>
+  resolveAuthRedirect(route.query.redirect, config.public.dashboardBase as string),
+);
+
+async function goAfterLogin() {
+  const target = redirectTo.value;
+  if ('external' in target) {
+    await navigateTo(target.external, { external: true });
+  } else {
+    await router.push(target.path);
+  }
+}
 
 const form = reactive({
   email: '',
@@ -32,7 +40,7 @@ async function submit() {
 
   try {
     await auth.login(form);
-    await router.push(redirectTo.value);
+    await goAfterLogin();
   } catch (error: any) {
     errorMessage.value = error?.data?.message || error?.message || '로그인 중 오류가 발생했습니다.';
   } finally {
@@ -41,6 +49,8 @@ async function submit() {
 }
 
 async function openKakao() {
+  // 카카오를 다녀온 뒤 콜백 화면에서 같은 곳으로 돌아가게 기억해 둔다.
+  rememberLoginRedirect(route.query.redirect);
   try {
     const result = await auth.getKakaoAuthorizeUrl();
     if (result.ok && result.url) {

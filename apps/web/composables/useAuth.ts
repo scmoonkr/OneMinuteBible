@@ -21,16 +21,18 @@ type AuthPayload = {
 
 export function useAuth() {
   const config = useRuntimeConfig();
+  // cookieDomain 이 있으면 하위 도메인(대시보드)과 로그인 쿠키를 공유한다.
+  const cookieOptions = authCookieOptions(config.public.cookieDomain as string);
   const tokenCookie = useCookie<string>('omb-access-token', {
-    sameSite: 'lax',
+    ...cookieOptions,
     default: () => '',
   });
   const refreshTokenCookie = useCookie<string>('omb-refresh-token', {
-    sameSite: 'lax',
+    ...cookieOptions,
     default: () => '',
   });
   const userCookie = useCookie<AuthUser | null>('omb-auth-user', {
-    sameSite: 'lax',
+    ...cookieOptions,
     default: () => null,
   });
   const token = useState<string>('auth-token', () => tokenCookie.value || '');

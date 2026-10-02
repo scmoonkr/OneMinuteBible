@@ -30,6 +30,9 @@ const inSection = (to: string) => route.path === to || route.path.startsWith(`${
           </NuxtLink>
         </div>
       </nav>
+
+      <!-- 하단 계정: 웹 상단 메뉴 오른쪽의 로그인/아바타와 같은 동작 -->
+      <AccountMenu />
     </aside>
 
     <main class="content">
@@ -45,11 +48,23 @@ const inSection = (to: string) => route.path === to || route.path.startsWith(`${
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
   width: 220px;
+  height: 100vh;
   flex-shrink: 0;
   background: var(--sidebar);
   color: var(--sidebar-text);
-  padding: 20px 12px;
+  padding: 20px 12px 14px;
+}
+
+/* 메뉴가 길어지면 메뉴만 스크롤하고 계정 영역은 맨 아래에 붙어 있게 한다. */
+.sidebar nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .brand {
@@ -106,7 +121,9 @@ const inSection = (to: string) => route.path === to || route.path.startsWith(`${
   }
 
   .sidebar {
+    position: static;
     width: auto;
+    height: auto;
   }
 
   .content {

@@ -6,6 +6,7 @@ definePageMeta({
 const auth = useAuth();
 const route = useRoute();
 const router = useRouter();
+const config = useRuntimeConfig();
 const message = ref('카카오 로그인 처리 중입니다.');
 
 onMounted(async () => {
@@ -19,7 +20,10 @@ onMounted(async () => {
   try {
     await auth.loginWithKakaoCode(code);
     message.value = '카카오 로그인이 완료되었습니다.';
-    await router.push('/account');
+    // 로그인 화면이 기억해 둔 복귀 주소(대시보드 등)로, 없으면 계정 허브로.
+    const target = resolveAuthRedirect(takeLoginRedirect(), config.public.dashboardBase as string);
+    if ('external' in target) await navigateTo(target.external, { external: true });
+    else await router.push(target.path);
   } catch (error: any) {
     message.value = error?.data?.message || error?.message || '카카오 로그인 처리 중 오류가 발생했습니다.';
   }

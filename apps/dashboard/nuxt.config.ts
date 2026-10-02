@@ -13,6 +13,8 @@ export default defineNuxtConfig({
     public: {
       // 연결된 글(/post/:slug)을 여는 웹 앱 주소.
       webBase: process.env.NUXT_PUBLIC_WEB_BASE || 'http://localhost:7711',
+      // 웹과 같은 로그인 쿠키(omb-*) 도메인. 운영 '.oneminutebible.co.kr', 로컬은 비움(localhost 공유).
+      cookieDomain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN || '',
     },
   },
   devServer: {
